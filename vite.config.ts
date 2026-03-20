@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: '/', // GitHub Pages 根域名部署用 '/'，如果是子路径则改为 '/仓库名/'
+  base: '/sale_speed/', // GitHub Pages 子路径部署
   plugins: [
     // The React and Tailwind plugins are both required for Make, even if
     // Tailwind is not being actively used – do not remove them
