@@ -49,16 +49,6 @@ export function ProjectTable({ filterLabel, indicatorType = '合同', period = '
   const tableToolbarClass = stickyHeader
     ? 'sticky top-[138px] z-30 bg-white'
     : '';
-  const visibleTableFields = visibleFields.filter((field) => field === '套数' || field === '金额' || field === '回款现金' || field === '回款贷款' || field === '回款合计');
-  const stickyGridTemplateColumns = [
-    'minmax(128px,1.5fr)',
-    ...visibleTableFields.map((field) => {
-      if (field === '金额') return '110px';
-      if (field === '回款现金' || field === '回款贷款' || field === '回款合计') return '96px';
-      return '80px';
-    }),
-    '40px',
-  ].join(' ');
 
   return (
     <div className="bg-white rounded-lg">
@@ -94,35 +84,10 @@ export function ProjectTable({ filterLabel, indicatorType = '合同', period = '
         />
       )}
 
-      {stickyHeader && (
-        <div
-          className="sticky top-[195px] z-40 border-b border-[#f0f0f0] bg-[#fafafa]"
-          style={{ display: 'grid', gridTemplateColumns: stickyGridTemplateColumns }}
-        >
-          <div className="px-4 py-3 text-left text-[#6a7282] text-[12px] font-medium">项目名称</div>
-          {visibleFields.includes('套数') && (
-            <div className="px-4 py-3 text-center text-[#6a7282] text-[12px] font-medium whitespace-nowrap">套数</div>
-          )}
-          {visibleFields.includes('金额') && (
-            <div className="px-4 py-3 text-center text-[#6a7282] text-[12px] font-medium whitespace-nowrap">金额（万元）</div>
-          )}
-          {visibleFields.includes('回款现金') && (
-            <div className="px-4 py-3 text-center text-[#6a7282] text-[12px] font-medium whitespace-nowrap">回款现金</div>
-          )}
-          {visibleFields.includes('回款贷款') && (
-            <div className="px-4 py-3 text-center text-[#6a7282] text-[12px] font-medium whitespace-nowrap">回款贷款</div>
-          )}
-          {visibleFields.includes('回款合计') && (
-            <div className="px-4 py-3 text-center text-[#6a7282] text-[12px] font-medium whitespace-nowrap">回款合计</div>
-          )}
-          <div className="px-4 py-3" />
-        </div>
-      )}
-
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className={stickyHeader ? 'sr-only' : ''}>
+      <div className="overflow-x-auto scrollbar-hide">
+        <table className="w-full min-w-max">
+          <thead className={stickyHeader ? 'sticky top-[195px] z-40' : ''}>
             <tr className="bg-[#fafafa]">
               <th className="bg-[#fafafa] px-4 py-3 text-left text-[#6a7282] text-[12px] font-medium min-w-[128px]">
                 项目名称
