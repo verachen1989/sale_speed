@@ -799,6 +799,17 @@ export default function ProjectDetail({
     scrollLayoutCardIntoView(label);
   };
 
+  const handleResetFilters = () => {
+    setPeriod(initialPeriod);
+    setPhase(allPhaseOption);
+    setPropertyType(initialPropertyType);
+    setBusinessCategory('合同');
+    setMetricType('套数');
+    setSelectedSecondaryType('全部');
+    setSelectedVersion('年度经营计划版');
+    setSelectedLayout('全部已售');
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Top Navigation Bar */}
@@ -844,7 +855,8 @@ export default function ProjectDetail({
       <div className="px-4 pt-0 pb-20">
         <div className="sticky top-0 z-30 -mx-4 mb-2 bg-[#f5f5f5] px-4 pt-0 pb-1">
           {/* Filter Row */}
-          <div className="flex items-center gap-0.5 overflow-x-auto px-1 py-2 scrollbar-hide">
+          <div className="flex items-center justify-between gap-2 px-1 py-2">
+            <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto scrollbar-hide">
               <div className="flex-shrink-0 relative">
                 <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
                   <SelectTrigger className="h-8 px-2 bg-transparent border-0 text-[14px] text-[#1a1a1a] font-medium hover:bg-gray-50 transition-all w-auto gap-0.5 focus:ring-0 focus:ring-offset-0">
@@ -914,7 +926,14 @@ export default function ProjectDetail({
                   </SelectContent>
                 </Select>
               </div>
-
+            </div>
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="shrink-0 rounded-full border border-[#d7e6df] bg-white px-3 py-1 text-[12px] font-medium text-[#007440] transition-colors hover:bg-[#f3fbf7]"
+            >
+              重置
+            </button>
           </div>
 
           <div className="rounded-tl-[10px] rounded-tr-[20px] bg-[#e8f5f0] px-4 py-2.5">
@@ -1222,11 +1241,8 @@ export default function ProjectDetail({
 
         {/* Detail Table Card */}
         <div className="bg-white rounded-[12px] p-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
             <h3 className="text-[#1a1a1a] text-[15px] font-semibold">{detailTitle}</h3>
-            <span className="text-[#8c8c8c] text-[12px]">
-              {businessCategory === '来访' ? '单位：组' : '单位：套数字段为套，其余为万'}
-            </span>
           </div>
 
           {/* Table */}
@@ -1234,7 +1250,14 @@ export default function ProjectDetail({
             <table className="w-full min-w-[640px]">
               <thead>
                 <tr className="border-b border-[#e5e7eb]">
-                  <th className="sticky left-0 z-10 bg-white text-left py-3 px-2 text-[#007440] text-[13px] font-semibold min-w-[80px]">指标</th>
+                  <th className="sticky left-0 z-10 bg-white text-left py-3 px-2 min-w-[112px]">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[#007440] text-[13px] font-semibold">指标</span>
+                      <span className="text-[#8c8c8c] text-[10px] font-normal leading-[14px]">
+                        {businessCategory === '来访' ? '单位：组' : '单位：套/万'}
+                      </span>
+                    </div>
+                  </th>
                   {sortedMonths.map((month) => {
                     const [start, end] = month.split('-');
 
