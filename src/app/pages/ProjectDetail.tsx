@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from '../components/ui/select';
 
+type BusinessCategory = '协议' | '合同' | '来访';
+
 interface RealLayoutRow {
   secondbusinesstypecode?: string;
   secondbusinesstypename?: string;
@@ -118,7 +120,7 @@ export default function ProjectDetail({
   const [period, setPeriod] = useState<Period>(initialPeriod);
   const [phase, setPhase] = useState(allPhaseOption);
   const [propertyType, setPropertyType] = useState<PropertyType>(initialPropertyType);
-  const [indicatorType, setIndicatorType] = useState<IndicatorType>('合同');
+  const [businessCategory, setBusinessCategory] = useState<BusinessCategory>('合同');
   const [metricType, setMetricType] = useState<MetricType>('套数');
   const [selectedSecondaryType, setSelectedSecondaryType] = useState('全部');
   const [selectedVersion, setSelectedVersion] = useState<'年度经营计划版' | '首开定价会版' | '全景会版' | '经营策划会版' | '交底会版'>('年度经营计划版');
@@ -142,6 +144,22 @@ export default function ProjectDetail({
   useEffect(() => {
     setPropertyType(initialPropertyType);
   }, [initialPropertyType]);
+
+  const isFullScopeOnlyCategory = businessCategory === '来访';
+  const indicatorType: IndicatorType = businessCategory === '协议' ? '协议' : '合同';
+
+  useEffect(() => {
+    if (!isFullScopeOnlyCategory) {
+      return;
+    }
+
+    setPhase(allPhaseOption);
+    setSelectedSecondaryType('全部');
+    setSelectedLayout('全部已售');
+    if (metricType === '金额' && businessCategory === '来访') {
+      setMetricType('套数');
+    }
+  }, [businessCategory, isFullScopeOnlyCategory, metricType]);
 
   const selectedPhaseCode = phase === allPhaseOption
     ? ''
@@ -547,8 +565,20 @@ export default function ProjectDetail({
         visits: item.visits,
       }))
     : baseTrendData;
+  const totalVisits = versionAdjustedData.reduce((sum, item) => sum + item.visits, 0);
+  const fullScopeLayoutSummary = {
+    label: '全盘',
+    count: businessCategory === '来访'
+      ? totalVisits
+      : businessCategory === '认购'
+        ? project.agreementUnits
+        : projectUnits,
+    amount: businessCategory === '来访' ? 0 : projectAmount,
+    inventory: businessCategory === '来访' ? 0 : Math.round(project.agreementUnits * 0.23),
+  };
+  const displayedLayoutSummaries = isFullScopeOnlyCategory ? [fullScopeLayoutSummary] : filteredLayoutSummaries;
 
-  const isAllLayoutSelected = selectedLayout === '全部已售';
+  const isAllLayoutSelected = isFullScopeOnlyCategory || selectedLayout === '全部已售';
   const activeTrendRatio =
     !isAllLayoutSelected
       ? (filteredLayoutSummaries.find((item) => item.label === selectedLayout)?.count ?? projectUnits) / Math.max(projectUnits, 1)
@@ -587,34 +617,60 @@ export default function ProjectDetail({
     target: Math.round(item.target * estimatedPrices[index]),
     actual: Math.round(item.actual * estimatedPrices[index]),
   }));
-  const chartData = metricType === '金额' ? amountTrendData : trendData;
+  const visitTrendData = trendData.map((item) => ({
+    ...item,
+    target: 0,
+    actual: item.visits,
+  }));
+  const purchaseUnitTrendData = trendData.map((item) => ({
+    ...item,
+    target: item.target,
+    actual: item.actual,
+  }));
+  const purchaseAmountTrendData = amountTrendData.map((item) => ({
+    ...item,
+    target: item.target,
+    actual: item.actual,
+  }));
+  const chartData = businessCategory === '来访'
+    ? visitTrendData
+    : metricType === '金额'
+        ? amountTrendData
+        : trendData;
   const derivedAmounts = trendData.map((item, index) => Math.round(item.actual * estimatedPrices[index]));
   const contractAmountSeries = amountTrendData.map((item) => item.actual);
   const totalPaymentSeries = contractAmountSeries.map((value) => Math.round(value * 0.92));
   const cashPaymentSeries = contractAmountSeries.map((value) => Math.round(value * 0.46));
   const mortgagePaymentSeries = totalPaymentSeries.map((value, index) => Math.max(value - cashPaymentSeries[index], 0));
-  const detailData: Array<{ indicator: string; values: Array<number | string> }> = [
-    {
-      indicator: '合同套数',
-      values: trendData.map((item) => item.actual.toLocaleString()),
-    },
-    {
-      indicator: '合同金额',
-      values: contractAmountSeries.map((value) => value.toLocaleString()),
-    },
-    {
-      indicator: '回款合计',
-      values: totalPaymentSeries.map((value) => value.toLocaleString()),
-    },
-    {
-      indicator: '回款现金',
-      values: cashPaymentSeries.map((value) => value.toLocaleString()),
-    },
-    {
-      indicator: '回款按揭',
-      values: mortgagePaymentSeries.map((value) => value.toLocaleString()),
-    },
-  ];
+  const detailData: Array<{ indicator: string; values: Array<number | string> }> = businessCategory === '来访'
+    ? [
+        {
+          indicator: '来访组数',
+          values: visitTrendData.map((item) => item.actual.toLocaleString()),
+        },
+      ]
+    : [
+          {
+            indicator: `${indicatorType}套数`,
+            values: trendData.map((item) => item.actual.toLocaleString()),
+          },
+          {
+            indicator: `${indicatorType}金额`,
+            values: contractAmountSeries.map((value) => value.toLocaleString()),
+          },
+          {
+            indicator: '回款合计',
+            values: totalPaymentSeries.map((value) => value.toLocaleString()),
+          },
+          {
+            indicator: '回款现金',
+            values: cashPaymentSeries.map((value) => value.toLocaleString()),
+          },
+          {
+            indicator: '回款按揭',
+            values: mortgagePaymentSeries.map((value) => value.toLocaleString()),
+          },
+        ];
 
   const parsePeriodLabel = (label: string, period: Period) => {
     if (period === '当年' && label.includes('月')) {
@@ -659,9 +715,17 @@ export default function ProjectDetail({
   const inventory = isAllLayoutSelected && selectedSecondaryType === '全部' && toNumber(latestRealSalesTrend?.kcQty) > 0
     ? toNumber(latestRealSalesTrend?.kcQty)
     : selectedSecondaryInventory;
-  const trendTitle = `${periodTitle[period]}${!isAllLayoutSelected ? `-${selectedLayout}` : ''}`;
-  const detailTitle = `${periodTitle[period]}-明细${!isAllLayoutSelected ? `-${selectedLayout}` : ''}`;
+  const trendScopeLabel = isFullScopeOnlyCategory ? `全盘${businessCategory}` : !isAllLayoutSelected ? selectedLayout : '';
+  const trendTitle = `${periodTitle[period]}${trendScopeLabel ? `-${trendScopeLabel}` : ''}`;
+  const detailTitle = `${trendScopeLabel || '全盘'}明细`;
+  const fullScopeNotice = businessCategory === '来访'
+    ? '当前项目来访数据仅提供全盘口径，已自动禁用分期、业态/户型筛选。'
+    : '';
   const updateSelectedLayoutByScroll = () => {
+    if (isFullScopeOnlyCategory) {
+      return;
+    }
+
     const container = layoutScrollRef.current;
     if (!container || filteredLayoutSummaries.length === 0) {
       return;
@@ -727,6 +791,10 @@ export default function ProjectDetail({
   }, [filteredLayoutSummaries, selectedLayout]);
 
   const handleLayoutFilterClick = (label: string) => {
+    if (isFullScopeOnlyCategory) {
+      return;
+    }
+
     setSelectedLayout(label);
     scrollLayoutCardIntoView(label);
   };
@@ -791,8 +859,8 @@ export default function ProjectDetail({
               </div>
 
               <div className="flex-shrink-0 relative">
-                <Select value={phase} onValueChange={setPhase}>
-                  <SelectTrigger className="h-8 px-2 bg-transparent border-0 text-[14px] text-[#1a1a1a] font-medium hover:bg-gray-50 transition-all w-auto gap-0.5 focus:ring-0 focus:ring-offset-0">
+                <Select value={phase} onValueChange={setPhase} disabled={isFullScopeOnlyCategory}>
+                  <SelectTrigger className="h-8 px-2 bg-transparent border-0 text-[14px] text-[#1a1a1a] font-medium hover:bg-gray-50 transition-all w-auto gap-0.5 focus:ring-0 focus:ring-offset-0 disabled:opacity-45 disabled:cursor-not-allowed">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -814,8 +882,9 @@ export default function ProjectDetail({
                     setSelectedSecondaryType(nextSecondaryType);
                     setSelectedLayout('全部已售');
                   }}
+                  disabled={isFullScopeOnlyCategory}
                 >
-                  <SelectTrigger className="h-8 px-2 bg-transparent border-0 text-[14px] text-[#1a1a1a] font-medium hover:bg-gray-50 transition-all w-auto gap-0.5 focus:ring-0 focus:ring-offset-0">
+                  <SelectTrigger className="h-8 px-2 bg-transparent border-0 text-[14px] text-[#1a1a1a] font-medium hover:bg-gray-50 transition-all w-auto gap-0.5 focus:ring-0 focus:ring-offset-0 disabled:opacity-45 disabled:cursor-not-allowed">
                     <span>{propertyType}-{selectedSecondaryType}</span>
                   </SelectTrigger>
                   <SelectContent>
@@ -834,13 +903,14 @@ export default function ProjectDetail({
               </div>
 
               <div className="flex-shrink-0 relative">
-                <Select value={indicatorType} onValueChange={(value) => setIndicatorType(value as IndicatorType)}>
+                <Select value={businessCategory} onValueChange={(value) => setBusinessCategory(value as BusinessCategory)}>
                   <SelectTrigger className="h-8 px-2 bg-transparent border-0 text-[14px] text-[#1a1a1a] font-medium hover:bg-gray-50 transition-all w-auto gap-0.5 focus:ring-0 focus:ring-offset-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="协议">协议</SelectItem>
                     <SelectItem value="合同">合同</SelectItem>
+                    <SelectItem value="来访">来访</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -848,13 +918,22 @@ export default function ProjectDetail({
           </div>
 
           <div className="rounded-tl-[10px] rounded-tr-[20px] bg-[#e8f5f0] px-4 py-2.5">
+            {fullScopeNotice ? (
+              <div className="mb-2 rounded-[10px] bg-white/70 px-3 py-2 text-[11px] leading-[16px] text-[#4a5565]">
+                {fullScopeNotice}
+              </div>
+            ) : null}
             <div
               ref={layoutScrollRef}
               onScroll={updateSelectedLayoutByScroll}
               className="flex gap-[7px] overflow-x-auto pb-2"
             >
-              {filteredLayoutSummaries.map((option) => {
-                const isSelected = selectedLayout === option.label;
+              {displayedLayoutSummaries.map((option) => {
+                const isSelected = isFullScopeOnlyCategory ? true : selectedLayout === option.label;
+                const countUnit = businessCategory === '来访' ? '组' : '套';
+                const suffixText = businessCategory === '来访'
+                  ? '当前仅支持全盘'
+                  : `（剩${option.inventory.toLocaleString()}套）`;
 
                 return (
                   <button
@@ -866,7 +945,7 @@ export default function ProjectDetail({
                     onClick={() => handleLayoutFilterClick(option.label)}
                     className={`bg-white min-h-[76px] w-[112px] rounded-[10px] cursor-pointer transition-all shrink-0 relative text-left px-2 py-2 flex flex-col justify-end ${
                       isSelected ? 'border border-[#007440]' : 'border-2 border-transparent'
-                    }`}
+                    } ${isFullScopeOnlyCategory ? 'cursor-default' : ''}`}
                   >
                     <div className="absolute left-0 top-0 bg-[rgba(0,201,80,0.1)] h-[22px] rounded-tl-[10px] rounded-br-[10px] px-[5px] flex items-center max-w-[94%]">
                       <p className="text-[#4a5565] text-[12px] font-medium leading-[16px] truncate">{option.label}</p>
@@ -874,12 +953,14 @@ export default function ProjectDetail({
                     <div className="mt-[24px]">
                       <div className="flex items-baseline gap-1 whitespace-nowrap overflow-hidden text-[#0a0a0a]">
                         <span className="text-[15px] leading-[18px] font-semibold">{option.count.toLocaleString()}</span>
-                        <span className="text-[11px] leading-[16px] font-normal">套</span>
-                        <span className="text-[10px] leading-[14px] text-[#6a7282] truncate">（剩{option.inventory.toLocaleString()}套）</span>
+                        <span className="text-[11px] leading-[16px] font-normal">{countUnit}</span>
+                        <span className="text-[10px] leading-[14px] text-[#6a7282] truncate">{suffixText}</span>
                       </div>
-                      <p className="mt-0.5 text-[#6a7282] text-[10px] leading-[12px] whitespace-nowrap truncate">
-                        {option.amount.toLocaleString()}万
-                      </p>
+                      {businessCategory !== '来访' ? (
+                        <p className="mt-0.5 text-[#6a7282] text-[10px] leading-[12px] whitespace-nowrap truncate">
+                          {option.amount.toLocaleString()}万
+                        </p>
+                      ) : null}
                     </div>
                   </button>
                 );
@@ -908,11 +989,12 @@ export default function ProjectDetail({
               </button>
               <button
                 onClick={() => setMetricType('金额')}
+                disabled={businessCategory === '来访'}
                 className={`px-3 py-1 text-[12px] rounded transition-colors ${
                   metricType === '金额'
                     ? 'bg-[#007440] text-white'
                     : 'bg-gray-100 text-[#8c8c8c] hover:bg-gray-200'
-                }`}
+                } disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-[#c0c4cc]`}
               >
                 金额
               </button>
@@ -948,12 +1030,6 @@ export default function ProjectDetail({
                   <div className="size-2 rounded-full bg-[#007440]" />
                   <span className="text-[#8c8c8c] text-[12px]">实际</span>
                 </div>
-                {isAllLayoutSelected && metricType === '套数' && (
-                  <div className="flex items-center gap-2">
-                    <div className="size-2 rounded-full bg-[#3b82f6]" />
-                    <span className="text-[#8c8c8c] text-[12px]">来访组数</span>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="flex items-center gap-4">
@@ -961,15 +1037,16 @@ export default function ProjectDetail({
                   <div className="size-2 rounded-full bg-[#007440]" />
                   <span className="text-[#8c8c8c] text-[12px]">实际</span>
                 </div>
-                {isAllLayoutSelected && metricType === '套数' && (
-                  <div className="flex items-center gap-2">
-                    <div className="size-2 rounded-full bg-[#3b82f6]" />
-                    <span className="text-[#8c8c8c] text-[12px]">来访组数</span>
-                  </div>
-                )}
               </div>
             )}
-            <span className="text-[#8c8c8c] text-[11px]">单位：{isAllLayoutSelected && metricType === '套数' ? (metricType === '套数' ? '套/组' : '万/组') : (metricType === '套数' ? '套' : '万')}</span>
+            <span className="text-[#8c8c8c] text-[11px]">
+              单位：
+              {businessCategory === '来访'
+                ? '组'
+                : metricType === '套数'
+                  ? '套'
+                  : '万'}
+            </span>
           </div>
 
           {/* Chart */}
@@ -1047,11 +1124,6 @@ export default function ProjectDetail({
                               实际：{Number(actualData.value).toLocaleString()}{rawUnit}
                             </div>
                           )}
-                          {visitsData && isAllLayoutSelected && metricType === '套数' && (
-                            <div style={{ color: '#3b82f6', fontSize: '12px', marginTop: '4px', borderTop: '1px solid #f0f0f0', paddingTop: '4px' }}>
-                              来访组数：{Number(visitsData.value).toLocaleString()}组
-                            </div>
-                          )}
                           {showDifference && (
                             <div style={{
                               color: diffColor,
@@ -1092,21 +1164,6 @@ export default function ProjectDetail({
                   </Bar>
                 )}
                 {/* 来访组数柱子 - 只在套数且全部已售时显示 */}
-                {isAllLayoutSelected && metricType === '套数' && (
-                  <Bar
-                    dataKey="visits"
-                    fill={`url(#visitsBarGradient-${uniqueId})`}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={20}
-                  >
-                    <LabelList
-                      dataKey="visits"
-                      position="top"
-                      style={{ fill: '#8c8c8c', fontSize: '10px', fontWeight: 500 }}
-                      formatter={(value: number) => value?.toLocaleString() ?? ''}
-                    />
-                  </Bar>
-                )}
                 <Bar
                   dataKey="actual"
                   fill={`url(#actualBarGradient-${uniqueId})`}
@@ -1167,7 +1224,9 @@ export default function ProjectDetail({
         <div className="bg-white rounded-[12px] p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[#1a1a1a] text-[15px] font-semibold">{detailTitle}</h3>
-            <span className="text-[#8c8c8c] text-[12px]">单位：合同套数为套，其余为万</span>
+            <span className="text-[#8c8c8c] text-[12px]">
+              {businessCategory === '来访' ? '单位：组' : '单位：套数字段为套，其余为万'}
+            </span>
           </div>
 
           {/* Table */}
