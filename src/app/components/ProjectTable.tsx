@@ -46,9 +46,7 @@ export function ProjectTable({ filterLabel, indicatorType = '合同', period = '
     }
   };
 
-  const tableToolbarClass = stickyHeader
-    ? 'sticky top-[138px] z-30 bg-white'
-    : '';
+  const tableToolbarClass = stickyHeader ? 'sticky top-[138px] z-30 bg-white' : '';
 
   return (
     <div className="bg-white rounded-lg">
@@ -87,7 +85,7 @@ export function ProjectTable({ filterLabel, indicatorType = '合同', period = '
       {/* Table */}
       <div className="overflow-x-auto scrollbar-hide">
         <table className="w-full min-w-max">
-          <thead className={stickyHeader ? 'sticky top-[195px] z-40' : ''}>
+          <thead>
             <tr className="bg-[#fafafa]">
               <th className="bg-[#fafafa] px-4 py-3 text-left text-[#6a7282] text-[12px] font-medium min-w-[128px]">
                 项目名称
@@ -107,9 +105,9 @@ export function ProjectTable({ filterLabel, indicatorType = '合同', period = '
                   回款现金
                 </th>
               )}
-              {visibleFields.includes('回款贷款') && (
+              {visibleFields.includes('回款按揭') && (
                 <th className="bg-[#fafafa] px-4 py-3 text-center text-[#6a7282] text-[12px] font-medium min-w-[96px] whitespace-nowrap">
-                  回款贷款
+                  回款按揭
                 </th>
               )}
               {visibleFields.includes('回款合计') && (
@@ -141,7 +139,7 @@ export function ProjectTable({ filterLabel, indicatorType = '合同', period = '
                   {totals.cashPayment.toLocaleString()}
                 </td>
               )}
-              {visibleFields.includes('回款贷款') && (
+              {visibleFields.includes('回款按揭') && (
                 <td className="px-4 py-3 text-center text-[#0a0a0a] text-[14px] font-semibold">
                   {totals.loanPayment.toLocaleString()}
                 </td>
@@ -188,7 +186,7 @@ export function ProjectTable({ filterLabel, indicatorType = '合同', period = '
                     {project.cashPayment.toLocaleString()}
                   </td>
                 )}
-                {visibleFields.includes('回款贷款') && (
+                {visibleFields.includes('回款按揭') && (
                   <td className="px-4 py-3 text-center text-[#0a0a0a] text-[14px] font-semibold">
                     {project.loanPayment.toLocaleString()}
                   </td>

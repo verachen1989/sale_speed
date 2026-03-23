@@ -45,24 +45,6 @@ type TrendPoint = {
   target: number;
 };
 
-const realAnnualContractUnitTrend: TrendPoint[] = [
-  { date: '2025/10月', actual: 951, target: 2617 },
-  { date: '2025/11月', actual: 1058, target: 3483 },
-  { date: '2025/12月', actual: 1815, target: 6050 },
-  { date: '2026/01月', actual: 409, target: 1079 },
-  { date: '2026/02月', actual: 454, target: 1091 },
-  { date: '2026/03月', actual: 304, target: 1916 },
-];
-
-const realAnnualContractAmountTrend: TrendPoint[] = [
-  { date: '2025/10月', actual: 120517, target: 35682 },
-  { date: '2025/11月', actual: 118903, target: 44726 },
-  { date: '2025/12月', actual: 218567, target: 65745 },
-  { date: '2026/01月', actual: 38995, target: 13386 },
-  { date: '2026/02月', actual: 45434, target: 11352 },
-  { date: '2026/03月', actual: 28139, target: 23741 },
-];
-
 type FilterSummary = {
   label: string;
   count: number;
@@ -333,10 +315,9 @@ function getLandYearLabel(landDate: string) {
 }
 
 function getSalesStatus(rawStatus: string, landDate: string) {
-  if (rawStatus === '尾盘' || rawStatus === '售罄') return '尾盘';
-
   const year = Number.parseInt(landDate.slice(0, 4), 10);
-  if (year === new Date().getFullYear()) return '当年首开';
+  if (year >= 2025) return '当年首开';
+  if (rawStatus === '售罄') return '尾盘';
   return '续销';
 }
 
@@ -421,7 +402,7 @@ function buildProjectDetails(project: ProjectRecord, period: Period): MonthlyDet
   const avgPrice = project.contractUnits > 0 ? Number((project.contractAmount / project.contractUnits).toFixed(1)) : 0;
 
   return template.labels.map((label, index) => {
-    const ratio = template.ratios[index];
+    const ratio = template.ratios[index] ?? 0;
     return {
       month: label,
       agreementUnits: Math.round(project.agreementUnits * ratio),
@@ -516,12 +497,6 @@ export function getOverviewMetrics(period: Period, indicatorType: IndicatorType,
  * Filters cascade: propertyType → indicatorType → metricType → filterLabel
  */
 export function getTrendData(period: Period, indicatorType: IndicatorType, metricType: MetricType, filterLabel?: string, propertyType: PropertyType = '住宅') {
-  if (propertyType === '住宅' && period === '当年' && indicatorType === '合同' && !filterLabel) {
-    return metricType === '套数'
-      ? realAnnualContractUnitTrend
-      : realAnnualContractAmountTrend;
-  }
-
   const totals = getTotals(getVisibleProjects(period, indicatorType, filterLabel, propertyType));
   const selectedValue = metricType === '套数'
     ? (indicatorType === '协议' ? totals.agreementUnits : totals.contractUnits)
@@ -560,8 +535,8 @@ export function getTrendData(period: Period, indicatorType: IndicatorType, metri
 
   return template.labels.map((date, index) => ({
     date,
-    actual: Math.round(selectedValue * template.actualRatios[index]),
-    target: Math.round(selectedValue * template.targetRatios[index]),
+    actual: Math.round(selectedValue * (template.actualRatios[index] ?? 0)),
+    target: Math.round(selectedValue * (template.targetRatios[index] ?? 0)),
   }));
 }
 
@@ -612,7 +587,7 @@ export function getGroupTotals(period: Period) {
 }
 
 export function getDefaultVisibleFields(indicatorType: IndicatorType) {
-  return ['套数', '金额', '回款合计', '回款现金', '回款按揭'];
+  return ['套数', '金额'];
 }
 
 export function getProjectDetail(projectId: string, period: Period, propertyType: PropertyType = '住宅') {

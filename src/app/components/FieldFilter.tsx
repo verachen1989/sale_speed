@@ -17,9 +17,9 @@ export function FieldFilter({ onClose, onFieldsChange, selectedFields: initialSe
   const allFields = [
     '套数',
     '金额',
-    '回款现金',
-    '回款贷款',
     '回款合计',
+    '回款现金',
+    '回款按揭',
   ];
 
   const toggleField = (field: string) => {

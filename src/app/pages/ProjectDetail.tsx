@@ -10,6 +10,95 @@ import {
   SelectValue,
 } from '../components/ui/select';
 
+interface RealLayoutRow {
+  secondbusinesstypecode?: string;
+  secondbusinesstypename?: string;
+  housetype?: string;
+  staticsDate?: string;
+  zset?: number;
+  pushRoomQty?: number;
+  saleOrderQty?: number;
+  saleContractQty?: number;
+  wssetOrder?: number;
+  wssetContract?: number;
+}
+
+interface RealLayoutSummary {
+  label: string;
+  secondaryType: string;
+  count: number;
+  amount: number;
+  inventory: number;
+}
+
+interface RealVersionTrendRow {
+  labelName?: number;
+  contractAmtTargetMonth?: number;
+  contractAmtMonth?: number;
+  contractQtyTargetMonth?: number;
+  contractQtyMonth?: number;
+}
+
+interface RealSalesTrendRow {
+  labelName?: string;
+  kcQty?: number;
+  monthAvgQty?: number;
+}
+
+interface RealVisitOrderRow {
+  date?: string;
+  type?: string;
+  value?: number;
+}
+
+interface RealPhaseRow {
+  phaseCode?: string;
+  phaseName?: string;
+}
+
+const FALLBACK_LAYOUT_DEFINITIONS = [
+  { label: '中高层128A-3', secondaryType: '中高层', ratio: 0.052 },
+  { label: '中高层106b-4', secondaryType: '中高层', ratio: 0.049 },
+  { label: '中高层109B-5', secondaryType: '中高层', ratio: 0.061 },
+  { label: '中高层139A-10', secondaryType: '中高层', ratio: 0.073 },
+  { label: '中高层139a-11', secondaryType: '中高层', ratio: 0.067 },
+  { label: '中高层164A-6', secondaryType: '中高层', ratio: 0.081 },
+  { label: '中高层162A-7', secondaryType: '中高层', ratio: 0.075 },
+  { label: '中高层139B-12', secondaryType: '中高层', ratio: 0.069 },
+  { label: '中高层106a-2', secondaryType: '中高层', ratio: 0.047 },
+  { label: '中高层109A-1', secondaryType: '中高层', ratio: 0.057 },
+  { label: '中高层165A-9', secondaryType: '中高层', ratio: 0.084 },
+  { label: '地库标准车位', secondaryType: '地下车位', ratio: 0.138 },
+  { label: '地库子母车位', secondaryType: '地下车位', ratio: 0.112 },
+] as const;
+
+const normalizeSecondaryType = (value?: string) => {
+  if (!value) {
+    return '中高层';
+  }
+
+  if (value.includes('车位')) {
+    return '地下车位';
+  }
+
+  return '中高层';
+};
+
+const toNumber = (value: number | string | undefined) => {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
+const VERSION_CODE_MAP = {
+  '年度经营计划版': 4,
+  '首开定价会版': 5,
+  '全景会版': 2,
+  '经营策划会版': 1,
+  '交底会版': 0,
+} as const;
+
+const today = new Date();
+
 interface ProjectDetailProps {
   projectId: string;
   projectName?: string;
@@ -25,29 +114,20 @@ export default function ProjectDetail({
   propertyType: initialPropertyType = '住宅',
   onBack,
 }: ProjectDetailProps) {
+  const allPhaseOption = '全盘';
   const [period, setPeriod] = useState<Period>(initialPeriod);
-  const [phase, setPhase] = useState('全盘');
+  const [phase, setPhase] = useState(allPhaseOption);
   const [propertyType, setPropertyType] = useState<PropertyType>(initialPropertyType);
   const [indicatorType, setIndicatorType] = useState<IndicatorType>('合同');
   const [metricType, setMetricType] = useState<MetricType>('套数');
   const [selectedSecondaryType, setSelectedSecondaryType] = useState('全部');
   const [selectedVersion, setSelectedVersion] = useState<'年度经营计划版' | '首开定价会版' | '全景会版' | '经营策划会版' | '交底会版'>('年度经营计划版');
-  const layoutDefinitions = [
-    { label: '中高层128A-3', secondaryType: '中高层', ratio: 0.052 },
-    { label: '中高层106b-4', secondaryType: '中高层', ratio: 0.049 },
-    { label: '中高层109B-5', secondaryType: '中高层', ratio: 0.061 },
-    { label: '中高层139A-10', secondaryType: '中高层', ratio: 0.073 },
-    { label: '中高层139a-11', secondaryType: '中高层', ratio: 0.067 },
-    { label: '中高层164A-6', secondaryType: '中高层', ratio: 0.081 },
-    { label: '中高层162A-7', secondaryType: '中高层', ratio: 0.075 },
-    { label: '中高层139B-12', secondaryType: '中高层', ratio: 0.069 },
-    { label: '中高层106a-2', secondaryType: '中高层', ratio: 0.047 },
-    { label: '中高层109A-1', secondaryType: '中高层', ratio: 0.057 },
-    { label: '中高层165A-9', secondaryType: '中高层', ratio: 0.084 },
-    { label: '地库标准车位', secondaryType: '地下车位', ratio: 0.138 },
-    { label: '地库子母车位', secondaryType: '地下车位', ratio: 0.112 },
-  ] as const;
   const [selectedLayout, setSelectedLayout] = useState('全部已售');
+  const [realLayoutRows, setRealLayoutRows] = useState<RealLayoutRow[] | null>(null);
+  const [realVersionTrendRows, setRealVersionTrendRows] = useState<RealVersionTrendRow[] | null>(null);
+  const [realSalesTrendRows, setRealSalesTrendRows] = useState<RealSalesTrendRow[] | null>(null);
+  const [realVisitOrderRows, setRealVisitOrderRows] = useState<RealVisitOrderRow[] | null>(null);
+  const [realPhaseRows, setRealPhaseRows] = useState<RealPhaseRow[] | null>(null);
   const layoutScrollRef = useRef<HTMLDivElement | null>(null);
   const layoutCardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const secondaryTypeOptionsByPropertyType: Record<PropertyType, string[]> = {
@@ -63,6 +143,169 @@ export default function ProjectDetail({
     setPropertyType(initialPropertyType);
   }, [initialPropertyType]);
 
+  const selectedPhaseCode = phase === allPhaseOption
+    ? ''
+    : realPhaseRows?.find((item) => item.phaseName === phase)?.phaseCode ?? '';
+
+  const layoutStaticsType = period === '当月' ? 2 : 1;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchRealPhases = async () => {
+      try {
+        const response = await fetch(`/api/project-phases?projectCode=${encodeURIComponent(projectId)}`);
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const rows = Array.isArray(payload?.responseData) ? payload.responseData : [];
+
+        if (!cancelled) {
+          setRealPhaseRows(rows);
+        }
+      } catch {
+        if (!cancelled) {
+          setRealPhaseRows(null);
+        }
+      }
+    };
+
+    fetchRealPhases();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchRealLayoutRows = async () => {
+      try {
+        const response = await fetch(
+          `/api/project-layout-analysis?projectCode=${encodeURIComponent(projectId)}&stageCode=${encodeURIComponent(selectedPhaseCode)}&staticsType=${layoutStaticsType}`
+        );
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const rows = Array.isArray(payload?.responseData) ? payload.responseData : [];
+
+        if (!cancelled) {
+          setRealLayoutRows(rows);
+        }
+      } catch {
+        if (!cancelled) {
+          setRealLayoutRows(null);
+        }
+      }
+    };
+
+    fetchRealLayoutRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, selectedPhaseCode, layoutStaticsType]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchRealVisitOrderRows = async () => {
+      try {
+        const response = await fetch(`/api/project-visit-order-trend?projectCodes=${encodeURIComponent(projectId)}`);
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const rows = Array.isArray(payload?.responseData) ? payload.responseData : [];
+
+        if (!cancelled) {
+          setRealVisitOrderRows(rows);
+        }
+      } catch {
+        if (!cancelled) {
+          setRealVisitOrderRows(null);
+        }
+      }
+    };
+
+    fetchRealVisitOrderRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchRealVersionTrendRows = async () => {
+      try {
+        const staticsVersion = VERSION_CODE_MAP[selectedVersion];
+        const response = await fetch(
+          `/api/project-version-trend?projectCode=${encodeURIComponent(projectId)}&staticsVersion=${staticsVersion}`
+        );
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const rows = Array.isArray(payload?.responseData) ? payload.responseData : [];
+
+        if (!cancelled) {
+          setRealVersionTrendRows(rows);
+        }
+      } catch {
+        if (!cancelled) {
+          setRealVersionTrendRows(null);
+        }
+      }
+    };
+
+    fetchRealVersionTrendRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, selectedVersion]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchRealSalesTrendRows = async () => {
+      try {
+        const response = await fetch(
+          `/api/project-sales-trend?projectCode=${encodeURIComponent(projectId)}&dateType=1&stageCode=${encodeURIComponent(selectedPhaseCode)}`
+        );
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const rows = Array.isArray(payload?.responseData) ? payload.responseData : [];
+
+        if (!cancelled) {
+          setRealSalesTrendRows(rows);
+        }
+      } catch {
+        if (!cancelled) {
+          setRealSalesTrendRows(null);
+        }
+      }
+    };
+
+    fetchRealSalesTrendRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, selectedPhaseCode]);
+
   // Get project data from dashboardData
   const project = getProjectDetail(projectId, period, propertyType) ?? getProjectDetail(projectId, period, '住宅');
   
@@ -77,34 +320,139 @@ export default function ProjectDetail({
   const projectTitle = projectName || project.name;
   const projectUnits = indicatorType === '协议' ? project.agreementUnits : project.contractUnits;
   const projectAmount = indicatorType === '协议' ? project.agreementAmount : project.contractAmount;
+  const latestRealLayoutRows = !realLayoutRows || realLayoutRows.length === 0
+    ? []
+    : (() => {
+        const latestDate = realLayoutRows
+          .map((item) => item.staticsDate ?? '')
+          .filter(Boolean)
+          .sort()
+          .at(-1);
 
-  const secondaryTypeSummaries = [
-    { label: '全部', count: projectUnits, amount: projectAmount },
-    { label: '中高层', count: Math.round(projectUnits * 0.84), amount: Math.round(projectAmount * 0.82) },
-    { label: '地下车位', count: Math.round(projectUnits * 0.16), amount: Math.round(projectAmount * 0.18) },
-  ];
+        return latestDate ? realLayoutRows.filter((item) => item.staticsDate === latestDate) : [];
+      })();
+  const hasMeaningfulRealLayoutData = latestRealLayoutRows.some((item) => {
+    const soldCount = indicatorType === '协议' ? toNumber(item.saleOrderQty) : toNumber(item.saleContractQty);
+    const inventoryCount = indicatorType === '协议' ? toNumber(item.wssetOrder) : toNumber(item.wssetContract);
+    return soldCount > 0 || inventoryCount > 0;
+  });
+
+  const realSecondaryTypeSummaries = !hasMeaningfulRealLayoutData
+    ? []
+    : (() => {
+
+        const totals = new Map<string, { count: number; inventory: number }>();
+
+        latestRealLayoutRows.forEach((item) => {
+          const label = normalizeSecondaryType(item.secondbusinesstypename);
+          const isAggregateRow = item.housetype === '-' || item.housetype === '合计';
+          if (!isAggregateRow) {
+            return;
+          }
+
+          totals.set(label, {
+            count: indicatorType === '协议' ? toNumber(item.saleOrderQty) : toNumber(item.saleContractQty),
+            inventory: indicatorType === '协议' ? toNumber(item.wssetOrder) : toNumber(item.wssetContract),
+          });
+        });
+
+        const structured = [
+          { label: '中高层', count: totals.get('中高层')?.count ?? 0, inventory: totals.get('中高层')?.inventory ?? 0 },
+          { label: '地下车位', count: totals.get('地下车位')?.count ?? 0, inventory: totals.get('地下车位')?.inventory ?? 0 },
+        ];
+        const totalCount = structured.reduce((sum, item) => sum + item.count, 0);
+        const totalInventory = structured.reduce((sum, item) => sum + item.inventory, 0);
+
+        return [
+          { label: '全部', count: totalCount, amount: projectAmount, inventory: totalInventory },
+          ...structured.map((item) => ({
+            label: item.label,
+            count: item.count,
+            amount: totalCount > 0 ? Math.round(projectAmount * (item.count / totalCount)) : 0,
+            inventory: item.inventory,
+          })),
+        ];
+      })();
+
+  const secondaryTypeSummaries = realSecondaryTypeSummaries.length > 0
+    ? realSecondaryTypeSummaries
+    : [
+        { label: '全部', count: projectUnits, amount: projectAmount, inventory: Math.round(projectUnits * 0.23) },
+        { label: '中高层', count: Math.round(projectUnits * 0.84), amount: Math.round(projectAmount * 0.82), inventory: Math.round(projectUnits * 0.19) },
+        { label: '地下车位', count: Math.round(projectUnits * 0.16), amount: Math.round(projectAmount * 0.18), inventory: Math.round(projectUnits * 0.44) },
+      ];
   const secondaryTypeOptions = secondaryTypeOptionsByPropertyType[propertyType];
-  const visibleSecondaryTypeSummaries = secondaryTypeSummaries.filter((item) => secondaryTypeOptions.includes(item.label));
   const propertySecondaryValue = `${propertyType}|${selectedSecondaryType}`;
 
-  const layoutSummaries = [
-    { label: '全部已售', secondaryType: selectedSecondaryType, count: selectedSecondaryType === '全部' ? projectUnits : secondaryTypeSummaries.find((item) => item.label === selectedSecondaryType)?.count ?? projectUnits, amount: selectedSecondaryType === '全部' ? projectAmount : secondaryTypeSummaries.find((item) => item.label === selectedSecondaryType)?.amount ?? projectAmount },
-    ...layoutDefinitions.map((item) => ({
-      label: item.label,
-      secondaryType: item.secondaryType,
-      count: Math.max(1, Math.round(projectUnits * item.ratio)),
-      amount: Math.max(1, Math.round(projectAmount * (item.ratio + 0.004))),
-    })),
-  ].map((item) => ({
-    ...item,
-    inventory: Math.max(0, Math.round(item.count * 0.23)),
-  }));
+  const realLayoutSummaries: RealLayoutSummary[] = !hasMeaningfulRealLayoutData
+    ? []
+    : (() => {
+
+        const layoutRows = latestRealLayoutRows
+          .filter((item) => item.housetype && item.housetype !== '-' && item.housetype !== '合计')
+          .map((item) => ({
+            label: item.housetype as string,
+            secondaryType: normalizeSecondaryType(item.secondbusinesstypename),
+            count: indicatorType === '协议' ? toNumber(item.saleOrderQty) : toNumber(item.saleContractQty),
+            amount: 0,
+            inventory: indicatorType === '协议' ? toNumber(item.wssetOrder) : toNumber(item.wssetContract),
+          }))
+          .filter((item) => item.count > 0 || item.inventory > 0);
+
+        const selectedSummary = secondaryTypeSummaries.find((item) => item.label === selectedSecondaryType);
+        const allSummaryCount = selectedSummary?.count ?? projectUnits;
+        const allSummaryAmount = selectedSummary?.amount ?? projectAmount;
+
+        return [
+          {
+            label: '全部已售',
+            secondaryType: selectedSecondaryType,
+            count: allSummaryCount,
+            amount: allSummaryAmount,
+            inventory: selectedSummary?.inventory ?? Math.round(allSummaryCount * 0.23),
+          },
+          ...layoutRows.map((item) => ({
+            ...item,
+            amount: allSummaryCount > 0 ? Math.round(allSummaryAmount * (item.count / allSummaryCount)) : 0,
+          })),
+        ];
+      })();
+
+  const layoutSummaries = realLayoutSummaries.length > 0
+    ? realLayoutSummaries
+    : [
+        {
+          label: '全部已售',
+          secondaryType: selectedSecondaryType,
+          count: selectedSecondaryType === '全部' ? projectUnits : secondaryTypeSummaries.find((item) => item.label === selectedSecondaryType)?.count ?? projectUnits,
+          amount: selectedSecondaryType === '全部' ? projectAmount : secondaryTypeSummaries.find((item) => item.label === selectedSecondaryType)?.amount ?? projectAmount,
+          inventory: selectedSecondaryType === '全部'
+            ? Math.round(projectUnits * 0.23)
+            : secondaryTypeSummaries.find((item) => item.label === selectedSecondaryType)?.inventory ?? Math.round(projectUnits * 0.23),
+        },
+        ...FALLBACK_LAYOUT_DEFINITIONS.map((item) => ({
+          label: item.label,
+          secondaryType: item.secondaryType,
+          count: Math.max(1, Math.round(projectUnits * item.ratio)),
+          amount: Math.max(1, Math.round(projectAmount * (item.ratio + 0.004))),
+          inventory: Math.max(0, Math.round(projectUnits * item.ratio * 0.23)),
+        })),
+      ];
   const filteredLayoutSummaries = layoutSummaries.filter(
     (item) => item.label === '全部已售' || selectedSecondaryType === '全部' || item.secondaryType === selectedSecondaryType
   );
   const selectedSecondarySummary = secondaryTypeSummaries.find((item) => item.label === selectedSecondaryType);
-  const totalUnits = selectedSecondarySummary?.count ?? projectUnits;
-  const totalAmount = selectedSecondarySummary?.amount ?? projectAmount;
+  const selectedSecondaryInventory = selectedSecondarySummary?.inventory
+    ?? secondaryTypeSummaries.find((item) => item.label === '全部')?.inventory
+    ?? Math.round(projectUnits * 0.23);
+  const phaseOptions = realPhaseRows && realPhaseRows.length > 0
+    ? [allPhaseOption, ...realPhaseRows.map((item) => item.phaseName).filter((item): item is string => Boolean(item))]
+    : [allPhaseOption, '一期', '二期', '三期'];
+  const latestRealSalesTrend = !realSalesTrendRows || realSalesTrendRows.length === 0
+    ? null
+    : [...realSalesTrendRows]
+        .sort((a, b) => String(a.labelName ?? '').localeCompare(String(b.labelName ?? '')))
+        .at(-1) ?? null;
 
   // Generate title based on period
   const periodTitle = {
@@ -113,30 +461,20 @@ export default function ProjectDetail({
     当年: '近6个月流速趋势',
   };
 
-  // 从2026年3月开始，往前推6个月
-  // 结果：10月(2025)、11月(2025)、12月(2025)、1月(2026)、2月(2026)、3月(2026)
   const rollingMonthLabels = Array.from({ length: 6 }, (_, index) => {
-    const startYear = 2026;
-    const startMonth = 3; // 3月
-    const offset = 5 - index; // 5, 4, 3, 2, 1, 0
-    let month = startMonth - offset;
-    
-    // 处理跨年情况
-    while (month <= 0) {
-      month += 12;
-    }
-    
-    return `${month}月`;
+    const date = new Date(today.getFullYear(), today.getMonth() - (5 - index), 1);
+    return `${date.getMonth() + 1}月`;
   });
 
-  const baseTrendData = period === '当年' ? [
+  const mockAnnualTrendData = [
     { month: rollingMonthLabels[0], target: 60, actual: 62, visits: 280 },
     { month: rollingMonthLabels[1], target: 68, actual: 65, visits: 310 },
     { month: rollingMonthLabels[2], target: 72, actual: 78, visits: 350 },
     { month: rollingMonthLabels[3], target: 75, actual: 82, visits: 380 },
     { month: rollingMonthLabels[4], target: 78, actual: 72, visits: 340 },
     { month: rollingMonthLabels[5], target: 80, actual: 75, visits: 360 },
-  ] : period === '当月' ? [
+  ];
+  const baseTrendData = period === '当年' ? mockAnnualTrendData : period === '当月' ? [
     { month: '2/03-2/09', target: 140, actual: 135, visits: 45 },
     { month: '2/10-2/16', target: 150, actual: 155, visits: 52 },
     { month: '2/17-2/23', target: 160, actual: 165, visits: 55 },
@@ -152,20 +490,63 @@ export default function ProjectDetail({
     { month: '3/15', target: 32, actual: 35, visits: 15 },
     { month: '3/16', target: 31, actual: 30, visits: 13 },
   ];
+  const realDailyVisitsByDate = !realVisitOrderRows || realVisitOrderRows.length === 0
+    ? new Map<string, number>()
+    : (() => {
+        const visitMap = new Map<string, number>();
 
-  // 根据选择的会议版本调整目标值
-  const versionMultipliers: Record<typeof selectedVersion, number> = {
-    '年度经营计划版': 1.1,
-    '首开定价会版': 1.05,
-    '全景会版': 1.0,
-    '经营策划会版': 0.95,
-    '交底会版': 0.9,
-  };
+        realVisitOrderRows.forEach((item) => {
+          const date = item.date ?? '';
+          if (!date) {
+            return;
+          }
 
-  const versionAdjustedData = baseTrendData.map(item => ({
-    ...item,
-    target: Math.round(item.target * versionMultipliers[selectedVersion]),
-  }));
+          if (item.type === '来访') {
+            visitMap.set(date, toNumber(item.value));
+          }
+        });
+
+        return visitMap;
+      })();
+
+  const realAnnualTrendData = !realVersionTrendRows || realVersionTrendRows.length === 0
+    ? []
+    : realVersionTrendRows
+        .filter((item) => {
+          const label = toNumber(item.labelName);
+          if (!label) {
+            return false;
+          }
+
+          const year = Math.floor(label / 100);
+          const month = label % 100;
+          const itemDate = new Date(year, month - 1, 1);
+          const startDate = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+          const endDate = new Date(today.getFullYear(), today.getMonth(), 1);
+          return itemDate >= startDate && itemDate <= endDate;
+        })
+        .sort((a, b) => toNumber(a.labelName) - toNumber(b.labelName))
+        .map((item, index) => {
+          const label = String(item.labelName);
+          const month = Number.parseInt(label.slice(4, 6), 10);
+          return {
+            month: `${month}月`,
+            target: toNumber(item.contractQtyTargetMonth),
+            actual: toNumber(item.contractQtyMonth),
+            actualAmount: toNumber(item.contractAmtMonth),
+            targetAmount: toNumber(item.contractAmtTargetMonth),
+            visits: mockAnnualTrendData[index]?.visits ?? 0,
+          };
+        });
+
+  const versionAdjustedData = period === '当年' && indicatorType === '合同' && realAnnualTrendData.length > 0
+    ? realAnnualTrendData.map((item) => ({
+        month: item.month,
+        target: item.target,
+        actual: item.actual,
+        visits: item.visits,
+      }))
+    : baseTrendData;
 
   const isAllLayoutSelected = selectedLayout === '全部已售';
   const activeTrendRatio =
@@ -177,7 +558,10 @@ export default function ProjectDetail({
   
   const trendData = versionAdjustedData.map((item, index) => {
     if (isAllLayoutSelected && selectedSecondaryType === '全部') {
-      return item;
+      return {
+        ...item,
+        visits: period === '当日' && realDailyVisitsByDate.has(item.month) ? realDailyVisitsByDate.get(item.month) ?? item.visits : item.visits,
+      };
     }
 
     const factor = layoutMultiplier + ((index % 3) - 1) * 0.03;
@@ -185,90 +569,66 @@ export default function ProjectDetail({
       ...item,
       target: Math.round(item.target * (period === '当年' ? factor : Math.max(0.78, factor))),
       actual: Math.round(item.actual * factor),
-      // 来访组数不受户型筛选影响，保持原始值
-      visits: item.visits,
+      // 来访组数优先使用 6249 的真实值，户型筛选时保持项目级口径不缩放
+      visits: period === '当日' && realDailyVisitsByDate.has(item.month) ? realDailyVisitsByDate.get(item.month) ?? item.visits : item.visits,
     };
   });
 
   const estimatedPrices = trendData.map((_, index) => 315 + (index % 4) * 6);
-  const amountTrendData = trendData.map((item, index) => ({
+  const realAmountTrendData = period === '当年' && indicatorType === '合同' && realAnnualTrendData.length > 0
+    ? trendData.map((item, index) => ({
+        ...item,
+        target: Math.round((realAnnualTrendData[index]?.targetAmount ?? 0) * (item.target / Math.max(realAnnualTrendData[index]?.target ?? 1, 1))),
+        actual: Math.round((realAnnualTrendData[index]?.actualAmount ?? 0) * (item.actual / Math.max(realAnnualTrendData[index]?.actual ?? 1, 1))),
+      }))
+    : null;
+  const amountTrendData = realAmountTrendData ?? trendData.map((item, index) => ({
     ...item,
     target: Math.round(item.target * estimatedPrices[index]),
     actual: Math.round(item.actual * estimatedPrices[index]),
   }));
   const chartData = metricType === '金额' ? amountTrendData : trendData;
   const derivedAmounts = trendData.map((item, index) => Math.round(item.actual * estimatedPrices[index]));
-  const detailData: Array<{ indicator: string; values: Array<number | string> }> =
-    period === '当年'
-      ? [
-          {
-            indicator: metricType === '金额' ? '目标金额' : '目标',
-            values: chartData.map((item) => item.target.toLocaleString()),
-          },
-          {
-            indicator: metricType === '金额' ? `${indicatorType}金额` : (indicatorType === '协议' ? '协议实际' : '合同实际'),
-            values: chartData.map((item) => item.actual.toLocaleString()),
-          },
-          {
-            indicator: '达成率',
-            values: chartData.map((item) => `${Math.round((item.actual / Math.max(item.target, 1)) * 100)}%`),
-          },
-          {
-            indicator: metricType === '金额' ? '合同套数' : (indicatorType === '协议' ? '协议金额' : '合同金额'),
-            values: derivedAmounts.map((value) => value.toLocaleString()),
-          },
-          {
-            indicator: '回款合计',
-            values: derivedAmounts.map((value) => Math.round(value * 0.92).toLocaleString()),
-          },
-          {
-            indicator: '回款现金',
-            values: derivedAmounts.map((value) => Math.round(value * 0.46).toLocaleString()),
-          },
-          {
-            indicator: '回款按揭',
-            values: derivedAmounts.map((value) => Math.round(value * 0.46).toLocaleString()),
-          },
-        ]
-      : [
-          {
-            indicator: metricType === '金额' ? `${indicatorType}金额` : (indicatorType === '协议' ? '协议实际' : '合同实际'),
-            values: chartData.map((item) => item.actual.toLocaleString()),
-          },
-          {
-            indicator: metricType === '金额' ? '合同套数' : (indicatorType === '协议' ? '协议金额' : '合同金额'),
-            values: derivedAmounts.map((value) => value.toLocaleString()),
-          },
-          {
-            indicator: '回款合计',
-            values: derivedAmounts.map((value) => Math.round(value * 0.92).toLocaleString()),
-          },
-          {
-            indicator: '回款现金',
-            values: derivedAmounts.map((value) => Math.round(value * 0.46).toLocaleString()),
-          },
-          {
-            indicator: '回款按揭',
-            values: derivedAmounts.map((value) => Math.round(value * 0.46).toLocaleString()),
-          },
-        ];
+  const contractAmountSeries = amountTrendData.map((item) => item.actual);
+  const totalPaymentSeries = contractAmountSeries.map((value) => Math.round(value * 0.92));
+  const cashPaymentSeries = contractAmountSeries.map((value) => Math.round(value * 0.46));
+  const mortgagePaymentSeries = totalPaymentSeries.map((value, index) => Math.max(value - cashPaymentSeries[index], 0));
+  const detailData: Array<{ indicator: string; values: Array<number | string> }> = [
+    {
+      indicator: '合同套数',
+      values: trendData.map((item) => item.actual.toLocaleString()),
+    },
+    {
+      indicator: '合同金额',
+      values: contractAmountSeries.map((value) => value.toLocaleString()),
+    },
+    {
+      indicator: '回款合计',
+      values: totalPaymentSeries.map((value) => value.toLocaleString()),
+    },
+    {
+      indicator: '回款现金',
+      values: cashPaymentSeries.map((value) => value.toLocaleString()),
+    },
+    {
+      indicator: '回款按揭',
+      values: mortgagePaymentSeries.map((value) => value.toLocaleString()),
+    },
+  ];
 
   const parsePeriodLabel = (label: string, period: Period) => {
-    // 处理"当年"的月份格式（如"3月"）
     if (period === '当年' && label.includes('月')) {
       const month = Number.parseInt(label.replace('月', ''), 10);
-      // 默认年份为2026年，从3月开始
-      // 如果月份 >= 3，则是2026年；如果月份 < 3，则是2027年
-      const year = month >= 3 ? 2026 : 2027;
+      const currentMonth = today.getMonth() + 1;
+      const year = month <= currentMonth ? today.getFullYear() : today.getFullYear() - 1;
       return year * 100 + month;
     }
-    
-    // 处理"当月"和"当日"的日期范围格式（如"2/03-2/09"或"3/10"）
+
     const [startLabel] = label.split('-');
     if (startLabel.includes('/')) {
       const [month, day] = startLabel.split('/').map(Number);
-      // 假设是2026年
-      const year = 2026;
+      const currentMonth = today.getMonth() + 1;
+      const year = month <= currentMonth ? today.getFullYear() : today.getFullYear() - 1;
       return year * 10000 + month * 100 + day;
     }
     
@@ -291,7 +651,14 @@ export default function ProjectDetail({
 
   const averageTarget = Math.round(chartData.reduce((sum, d) => sum + d.target, 0) / chartData.length);
   const averageActual = Math.round(chartData.reduce((sum, d) => sum + d.actual, 0) / chartData.length);
-  const inventory = 64; // Mock inventory data
+  const realMonthAvgQty = toNumber(latestRealSalesTrend?.monthAvgQty);
+  const scaledMonthAvgQty = realMonthAvgQty > 0
+    ? Math.round(realMonthAvgQty * layoutMultiplier * 10) / 10
+    : averageActual;
+  const averageActualDisplay = metricType === '套数' ? scaledMonthAvgQty : averageActual;
+  const inventory = isAllLayoutSelected && selectedSecondaryType === '全部' && toNumber(latestRealSalesTrend?.kcQty) > 0
+    ? toNumber(latestRealSalesTrend?.kcQty)
+    : selectedSecondaryInventory;
   const trendTitle = `${periodTitle[period]}${!isAllLayoutSelected ? `-${selectedLayout}` : ''}`;
   const detailTitle = `${periodTitle[period]}-明细${!isAllLayoutSelected ? `-${selectedLayout}` : ''}`;
   const updateSelectedLayoutByScroll = () => {
@@ -429,10 +796,11 @@ export default function ProjectDetail({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="全盘">全盘</SelectItem>
-                    <SelectItem value="一期">一期</SelectItem>
-                    <SelectItem value="二期">二期</SelectItem>
-                    <SelectItem value="三期">三期</SelectItem>
+                    {phaseOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -775,10 +1143,10 @@ export default function ProjectDetail({
                   </div>
                 </div>
                 <div className="flex flex-col items-center px-3 text-center">
-                  <span className="text-[#8c8c8c] text-[12px] mb-1.5">实际月均</span>
+                  <span className="text-[#8c8c8c] text-[12px] mb-1.5">{metricType === '套数' ? '月平均流速' : '实际月均'}</span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-[#1a1a1a] text-[18px] font-semibold leading-none">
-                      {averageActual.toLocaleString()}
+                      {metricType === '套数' ? averageActualDisplay.toLocaleString() : averageActualDisplay.toLocaleString()}
                     </span>
                     <span className="text-[#8c8c8c] text-[12px]">{metricType === '套数' ? '套' : '万'}</span>
                   </div>
@@ -799,16 +1167,12 @@ export default function ProjectDetail({
         <div className="bg-white rounded-[12px] p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[#1a1a1a] text-[15px] font-semibold">{detailTitle}</h3>
-            <span className="text-[#8c8c8c] text-[12px]">
-              {period === '当年'
-                ? `单位：${metricType === '套数' ? '套' : '万'}`
-                : `单位：${metricType === '套数' ? '套' : '万'}`}
-            </span>
+            <span className="text-[#8c8c8c] text-[12px]">单位：合同套数为套，其余为万</span>
           </div>
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[640px]">
               <thead>
                 <tr className="border-b border-[#e5e7eb]">
                   <th className="sticky left-0 z-10 bg-white text-left py-3 px-2 text-[#007440] text-[13px] font-semibold min-w-[80px]">指标</th>
