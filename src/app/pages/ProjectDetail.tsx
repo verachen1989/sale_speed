@@ -716,7 +716,9 @@ export default function ProjectDetail({
     ? toNumber(latestRealSalesTrend?.kcQty)
     : selectedSecondaryInventory;
   const trendScopeLabel = isFullScopeOnlyCategory ? `全盘${businessCategory}` : !isAllLayoutSelected ? selectedLayout : '';
-  const trendTitle = `${periodTitle[period]}${trendScopeLabel ? `-${trendScopeLabel}` : ''}`;
+  const trendTitle = businessCategory === '来访'
+    ? `${periodTitle[period].replace('流速趋势', '来访组数')}`
+    : `${periodTitle[period]}${trendScopeLabel ? `-${trendScopeLabel}` : ''}`;
   const detailTitle = `${trendScopeLabel || '全盘'}明细`;
   const fullScopeNotice = businessCategory === '来访'
     ? '当前项目来访数据仅提供全盘口径，已自动禁用分期、业态/户型筛选。'
@@ -995,31 +997,34 @@ export default function ProjectDetail({
           </div>
 
           <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setMetricType('套数')}
-                className={`px-3 py-1 text-[12px] rounded transition-colors ${
-                  metricType === '套数'
-                    ? 'bg-[#007440] text-white'
-                    : 'bg-gray-100 text-[#8c8c8c] hover:bg-gray-200'
-                }`}
-              >
-                套数
-              </button>
-              <button
-                onClick={() => setMetricType('金额')}
-                disabled={businessCategory === '来访'}
-                className={`px-3 py-1 text-[12px] rounded transition-colors ${
-                  metricType === '金额'
-                    ? 'bg-[#007440] text-white'
-                    : 'bg-gray-100 text-[#8c8c8c] hover:bg-gray-200'
-                } disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-[#c0c4cc]`}
-              >
-                金额
-              </button>
-            </div>
+            {businessCategory !== '来访' ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMetricType('套数')}
+                  className={`px-3 py-1 text-[12px] rounded transition-colors ${
+                    metricType === '套数'
+                      ? 'bg-[#007440] text-white'
+                      : 'bg-gray-100 text-[#8c8c8c] hover:bg-gray-200'
+                  }`}
+                >
+                  套数
+                </button>
+                <button
+                  onClick={() => setMetricType('金额')}
+                  className={`px-3 py-1 text-[12px] rounded transition-colors ${
+                    metricType === '金额'
+                      ? 'bg-[#007440] text-white'
+                      : 'bg-gray-100 text-[#8c8c8c] hover:bg-gray-200'
+                  }`}
+                >
+                  金额
+                </button>
+              </div>
+            ) : (
+              <div />
+            )}
 
-            {period === '当年' ? (
+            {period === '当年' && businessCategory !== '来访' ? (
               <div className="flex items-center gap-2 text-[12px] shrink-0">
                 <span className="text-[#8c8c8c]">对比</span>
                 <Select value={selectedVersion} onValueChange={(value) => setSelectedVersion(value as any)}>
@@ -1039,7 +1044,7 @@ export default function ProjectDetail({
           </div>
 
           <div className="flex items-center justify-between gap-3 mb-3">
-            {period === '当年' ? (
+            {period === '当年' && businessCategory !== '来访' ? (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <div className="size-2 rounded-full bg-[#f59e0b]" />
@@ -1054,7 +1059,7 @@ export default function ProjectDetail({
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <div className="size-2 rounded-full bg-[#007440]" />
-                  <span className="text-[#8c8c8c] text-[12px]">实际</span>
+                  <span className="text-[#8c8c8c] text-[12px]">{businessCategory === '来访' ? '来访组数' : '实际'}</span>
                 </div>
               </div>
             )}
@@ -1119,7 +1124,7 @@ export default function ProjectDetail({
                       const targetData = payload.find((p: any) => p.dataKey === 'target');
                       const actualData = payload.find((p: any) => p.dataKey === 'actual');
                       const visitsData = payload.find((p: any) => p.dataKey === 'visits');
-                      const rawUnit = metricType === '套数' ? '套' : '万';
+                      const rawUnit = businessCategory === '来访' ? '组' : metricType === '套数' ? '套' : '万';
                       const showDifference = Boolean(targetData && actualData && period === '当年');
                       const difference = showDifference ? Number(actualData?.value ?? 0) - Number(targetData?.value ?? 0) : 0;
                       const diffColor = difference >= 0 ? '#00c950' : '#ff3b30';
@@ -1140,7 +1145,7 @@ export default function ProjectDetail({
                           )}
                           {actualData && (
                             <div style={{ color: '#666', fontSize: '12px', marginBottom: showDifference ? '4px' : '0' }}>
-                              实际：{Number(actualData.value).toLocaleString()}{rawUnit}
+                              {businessCategory === '来访' ? '来访组数' : '实际'}：{Number(actualData.value).toLocaleString()}{rawUnit}
                             </div>
                           )}
                           {showDifference && (
@@ -1162,7 +1167,7 @@ export default function ProjectDetail({
                     return null;
                   }}
                 />
-                {period === '当年' && (
+                {period === '当年' && businessCategory !== '来访' && (
                   <Bar
                     dataKey="target"
                     fill={`url(#targetBarGradient-${uniqueId})`}
@@ -1207,7 +1212,7 @@ export default function ProjectDetail({
 
           {/* Metrics */}
           <div className="border-t border-[#e5e7eb] pt-3 grid grid-cols-3 divide-x divide-[#e5e7eb]">
-            {period === '当年' && (
+            {period === '当年' && businessCategory !== '来访' && (
               <>
                 <div className="flex flex-col items-center px-3 text-center">
                   <span className="text-[#8c8c8c] text-[12px] mb-1.5">目标月均</span>
