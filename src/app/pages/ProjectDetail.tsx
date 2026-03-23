@@ -642,6 +642,10 @@ export default function ProjectDetail({
   const totalPaymentSeries = contractAmountSeries.map((value) => Math.round(value * 0.92));
   const cashPaymentSeries = contractAmountSeries.map((value) => Math.round(value * 0.46));
   const mortgagePaymentSeries = totalPaymentSeries.map((value, index) => Math.max(value - cashPaymentSeries[index], 0));
+  const averagePriceSeries = trendData.map((item, index) => {
+    const units = Math.max(item.actual, 1);
+    return Math.round((contractAmountSeries[index] / units) * 10) / 10;
+  });
   const detailData: Array<{ indicator: string; values: Array<number | string> }> = businessCategory === '来访'
     ? [
         {
@@ -657,6 +661,10 @@ export default function ProjectDetail({
           {
             indicator: `${indicatorType}金额`,
             values: contractAmountSeries.map((value) => value.toLocaleString()),
+          },
+          {
+            indicator: '成交均价',
+            values: averagePriceSeries.map((value) => value.toLocaleString()),
           },
           {
             indicator: '回款合计',
