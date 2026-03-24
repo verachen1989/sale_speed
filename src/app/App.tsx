@@ -977,24 +977,28 @@ export default function App() {
             <div className="composer-footer">
               <div className="toolbar">
                 <div className="agent-tag">小绿同学</div>
-                <button type="button" className="tool-btn" onClick={() => { if (question) void runScenario(question); }} disabled={isRunning || !question}>
-                  重播流程
-                </button>
-                <button
-                  type="button"
-                  className="tool-btn"
-                  onClick={() => {
-                    runIdRef.current += 1;
-                    clearThoughtTimer();
-                    resetResultState();
-                    setIsLanding(true);
-                    setQuestion('');
-                    setInput('');
-                    setIsRunning(false);
-                  }}
-                >
-                  清空过程
-                </button>
+                {!isLanding ? (
+                  <>
+                    <button type="button" className="tool-btn" onClick={() => { if (question) void runScenario(question); }} disabled={isRunning || !question}>
+                      重播流程
+                    </button>
+                    <button
+                      type="button"
+                      className="tool-btn"
+                      onClick={() => {
+                        runIdRef.current += 1;
+                        clearThoughtTimer();
+                        resetResultState();
+                        setIsLanding(true);
+                        setQuestion('');
+                        setInput('');
+                        setIsRunning(false);
+                      }}
+                    >
+                      清空过程
+                    </button>
+                  </>
+                ) : null}
               </div>
               <button type="button" className="send-btn" onClick={() => handleSubmit(input)} disabled={isRunning}>
                 <SendHorizontal size={16} />
