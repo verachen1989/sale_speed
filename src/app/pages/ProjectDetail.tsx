@@ -948,7 +948,7 @@ export default function ProjectDetail({
 
           <div className="rounded-tl-[10px] rounded-tr-[20px] bg-[#e8f5f0] px-4 py-2.5">
             {fullScopeNotice ? (
-              <div className="mb-2 rounded-[10px] bg-white/70 px-3 py-2 text-[11px] leading-[16px] text-[#4a5565]">
+              <div className="mb-2 rounded-[10px] bg-[rgba(255,255,255,0.7)] px-3 py-2 text-[11px] leading-[16px] text-[#4a5565]">
                 {fullScopeNotice}
               </div>
             ) : null}

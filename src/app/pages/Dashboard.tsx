@@ -103,7 +103,7 @@ export default function Dashboard({ onNavigateToProject }: DashboardProps) {
           <h1 className="truncate text-center text-[18px] font-semibold text-white sm:text-[20px]">绿城中国</h1>
           <div className="flex items-center justify-end gap-1.5 sm:gap-3">
             <button
-              className="flex items-center gap-1 rounded-full bg-white/12 px-2 py-1 text-white transition hover:bg-white/20"
+              className="flex items-center gap-1 rounded-full bg-[rgba(255,255,255,0.12)] px-2 py-1 text-white transition hover:bg-[rgba(255,255,255,0.2)]"
               onClick={() => setIsGuideOpen(true)}
             >
               <Sparkles className="size-4" />
@@ -161,36 +161,36 @@ export default function Dashboard({ onNavigateToProject }: DashboardProps) {
             <button
               type="button"
               onClick={closePoster}
-              className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-full bg-black/8 text-[#1f2937] transition hover:bg-black/12"
+              className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-full bg-[rgba(0,0,0,0.08)] text-[#1f2937] transition hover:bg-[rgba(0,0,0,0.12)]"
               aria-label="关闭海报"
             >
               <X className="size-4" />
             </button>
 
             <div className="relative overflow-hidden bg-[linear-gradient(135deg,#0d7a54_0%,#38a169_58%,#b9f5cf_100%)] px-5 pb-6 pt-7 text-white sm:px-6 sm:pb-7 sm:pt-8">
-              <div className="absolute -right-10 -top-8 h-32 w-32 rounded-full bg-white/14 blur-2xl" />
+              <div className="absolute -right-10 -top-8 h-32 w-32 rounded-full bg-[rgba(255,255,255,0.14)] blur-2xl" />
               <div className="absolute -left-8 bottom-6 h-24 w-24 rounded-full bg-[#d6ffe3]/20 blur-xl" />
 
               <div className="relative">
-                <div className="mb-3 inline-flex items-center rounded-full bg-white/16 px-3 py-1 text-[11px] font-medium tracking-[0.16em]">
+                <div className="mb-3 inline-flex items-center rounded-full bg-[rgba(255,255,255,0.16)] px-3 py-1 text-[11px] font-medium tracking-[0.16em]">
                   NEW FEATURE
                 </div>
                 <h2 className="max-w-[250px] text-[24px] font-semibold leading-[1.2] tracking-[-0.03em] sm:max-w-none sm:text-[28px]">
                   区域流速分析上线啦
                 </h2>
-                <p className="mt-3 max-w-[260px] text-[13px] leading-6 text-white/82 sm:text-[14px]">
+                <p className="mt-3 max-w-[260px] text-[13px] leading-6 text-[rgba(255,255,255,0.82)] sm:text-[14px]">
                   新版看板支持一屏看概览、趋势和项目明细。先看 1 分钟教程，再开始上手。
                 </p>
               </div>
 
-              <div className="relative mt-5 rounded-[20px] border border-white/18 bg-[rgba(255,255,255,0.12)] p-3.5 backdrop-blur-sm sm:mt-6 sm:rounded-[22px] sm:p-4">
+              <div className="relative mt-5 rounded-[20px] border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.12)] p-3.5 backdrop-blur-sm sm:mt-6 sm:rounded-[22px] sm:p-4">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[18px] bg-white/12 p-3">
-                    <div className="text-[11px] text-white/70">上手路径</div>
+                  <div className="rounded-[18px] bg-[rgba(255,255,255,0.12)] p-3">
+                    <div className="text-[11px] text-[rgba(255,255,255,0.7)]">上手路径</div>
                     <div className="mt-1 text-[14px] font-medium sm:text-[15px]">筛选 &gt; 趋势 &gt; 下钻</div>
                   </div>
-                  <div className="rounded-[18px] bg-white/12 p-3">
-                    <div className="text-[11px] text-white/70">覆盖内容</div>
+                  <div className="rounded-[18px] bg-[rgba(255,255,255,0.12)] p-3">
+                    <div className="text-[11px] text-[rgba(255,255,255,0.7)]">覆盖内容</div>
                     <div className="mt-1 text-[14px] font-medium sm:text-[15px]">区域总览与项目分析</div>
                   </div>
                 </div>

@@ -137,14 +137,14 @@ export function OnboardingGuide({ open, steps, onClose }: OnboardingGuideProps) 
           <button
             type="button"
             onClick={onClose}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[rgba(255,255,255,0.1)] text-white transition hover:bg-[rgba(255,255,255,0.2)]"
             aria-label="关闭引导"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <p className="overflow-y-auto pr-1 text-[13px] leading-6 text-white/80 sm:text-[14px]">{activeStep.description}</p>
+        <p className="overflow-y-auto pr-1 text-[13px] leading-6 text-[rgba(255,255,255,0.8)] sm:text-[14px]">{activeStep.description}</p>
 
         <div className="mt-4 flex flex-col gap-3 sm:mt-5">
           <div className="flex gap-2">
@@ -154,7 +154,7 @@ export function OnboardingGuide({ open, steps, onClose }: OnboardingGuideProps) 
                 type="button"
                 onClick={() => setCurrentStep(index)}
                 className={`h-2.5 rounded-full transition-all ${
-                  index === currentStep ? 'w-7 bg-[#7ef0b0]' : 'w-2.5 bg-white/30'
+                  index === currentStep ? 'w-7 bg-[#7ef0b0]' : 'w-2.5 bg-[rgba(255,255,255,0.3)]'
                 }`}
                 aria-label={`跳转到第 ${index + 1} 步`}
               />
@@ -165,7 +165,7 @@ export function OnboardingGuide({ open, steps, onClose }: OnboardingGuideProps) 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-white/15 px-3 py-1.5 text-[12px] text-white/75 transition hover:bg-white/10"
+              className="rounded-full border border-[rgba(255,255,255,0.15)] px-3 py-1.5 text-[12px] text-[rgba(255,255,255,0.75)] transition hover:bg-[rgba(255,255,255,0.1)]"
             >
               跳过
             </button>
@@ -173,7 +173,7 @@ export function OnboardingGuide({ open, steps, onClose }: OnboardingGuideProps) 
               <button
                 type="button"
                 onClick={() => setCurrentStep((step) => step - 1)}
-                className="rounded-full border border-white/15 px-3 py-1.5 text-[12px] text-white transition hover:bg-white/10"
+                className="rounded-full border border-[rgba(255,255,255,0.15)] px-3 py-1.5 text-[12px] text-white transition hover:bg-[rgba(255,255,255,0.1)]"
               >
                 上一步
               </button>
