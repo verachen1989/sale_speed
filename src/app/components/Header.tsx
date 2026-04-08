@@ -21,14 +21,14 @@ export function Header({
   const periods: Array<'当日' | '当月' | '当年'> = ['当日', '当月', '当年'];
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* Period Tabs */}
-      <div className="flex overflow-clip rounded-[4px] border border-[#c0d9d1]">
+      <div className="flex w-fit overflow-clip rounded-[4px] border border-[#c0d9d1]">
         {periods.map((p) => (
           <button
             key={p}
             onClick={() => onPeriodChange(p)}
-            className={`px-[13px] py-[8px] text-[14px] font-normal transition-colors ${
+            className={`px-3 py-[8px] text-[13px] font-normal transition-colors sm:px-[13px] sm:text-[14px] ${
               period === p
                 ? 'bg-[#007440] text-white'
                 : 'bg-white text-[#007440] hover:bg-[#f0f7f4]'
@@ -40,7 +40,7 @@ export function Header({
       </div>
 
       {/* Filter Dropdowns */}
-      <div className="flex gap-4">
+      <div className="flex items-center gap-4 self-end sm:self-auto">
         <DropdownFilter
           value={propertyType}
           onChange={onPropertyTypeChange}
@@ -69,7 +69,7 @@ function DropdownFilter({ value, onChange, options }: DropdownFilterProps) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-[#007440] text-[16px] font-normal hover:opacity-80"
+        className="flex items-center gap-1.5 text-[15px] font-normal text-[#007440] hover:opacity-80 sm:gap-2 sm:text-[16px]"
       >
         {value}
         <ChevronDown className="size-[14px]" />
