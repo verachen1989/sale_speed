@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { X, Search } from 'lucide-react';
 import { getVisibleProjects, getTotals, type Period, type IndicatorType, type PropertyType } from '../mock/dashboardData';
 
@@ -20,22 +20,25 @@ export function ProjectSearchDrawer({
   onNavigateToProject,
 }: ProjectSearchDrawerProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredProjects, setFilteredProjects] = useState<ReturnType<typeof getVisibleProjects>>([]);
-
-  const allProjects = getVisibleProjects(period, indicatorType, undefined, propertyType);
+  const allProjects = useMemo(
+    () => getVisibleProjects(period, indicatorType, undefined, propertyType),
+    [period, indicatorType, propertyType]
+  );
 
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredProjects(allProjects);
-    } else {
-      const query = searchQuery.toLowerCase();
-      setFilteredProjects(
-        allProjects.filter((project) =>
-          project.name.toLowerCase().includes(query)
-        )
-      );
+    if (!isOpen) {
+      setSearchQuery('');
     }
-  }, [searchQuery, allProjects]);
+  }, [isOpen]);
+
+  const filteredProjects = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return allProjects;
+    }
+
+    return allProjects.filter((project) => project.name.toLowerCase().includes(query));
+  }, [allProjects, searchQuery]);
 
   const totals = getTotals(filteredProjects);
 
