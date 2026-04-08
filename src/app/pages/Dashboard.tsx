@@ -28,25 +28,15 @@ export default function Dashboard({ onNavigateToProject }: DashboardProps) {
   const tableRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const hasSeenGuide = window.localStorage.getItem('dashboard-onboarding-seen');
-    if (!hasSeenGuide) {
-      setIsPosterOpen(true);
-    }
+    setIsPosterOpen(true);
   }, []);
 
   const closeGuide = () => {
     setIsGuideOpen(false);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('dashboard-onboarding-seen', 'true');
-    }
   };
 
   const closePoster = () => {
     setIsPosterOpen(false);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('dashboard-onboarding-seen', 'true');
-    }
   };
 
   const handleStartGuide = () => {
@@ -58,12 +48,12 @@ export default function Dashboard({ onNavigateToProject }: DashboardProps) {
     {
       id: 'filters',
       title: '先看顶部筛选',
-      description: '这里控制周期、业态和业务口径。切换任一项，概览卡、趋势图和项目明细会一起联动刷新。',
+      description: '这里控制周期、业态和指标口径',
       target: headerRef.current,
     },
     {
       id: 'overview',
-      title: '用概览卡快速收口',
+      title: '概览结构下穿',
       description: '先看核心销售指标，再点“项目类型筛选”做状态、拿地年份或重点城市的快速聚焦。',
       target: overviewRef.current,
     },
@@ -175,8 +165,8 @@ export default function Dashboard({ onNavigateToProject }: DashboardProps) {
                 <div className="mb-3 inline-flex items-center rounded-full bg-[rgba(255,255,255,0.16)] px-3 py-1 text-[11px] font-medium tracking-[0.16em]">
                   NEW FEATURE
                 </div>
-                <h2 className="max-w-[250px] text-[24px] font-semibold leading-[1.2] tracking-[-0.03em] sm:max-w-none sm:text-[28px]">
-                  区域流速分析上线啦
+                <h2 className="max-w-none whitespace-nowrap text-[20px] font-semibold leading-[1.2] tracking-[-0.03em] sm:text-[28px]">
+                  集团/区域流速分析上线啦
                 </h2>
                 <p className="mt-3 max-w-[260px] text-[13px] leading-6 text-[rgba(255,255,255,0.82)] sm:text-[14px]">
                   新版看板支持一屏看概览、趋势和项目明细。先看 1 分钟教程，再开始上手。
@@ -191,7 +181,7 @@ export default function Dashboard({ onNavigateToProject }: DashboardProps) {
                   </div>
                   <div className="rounded-[18px] bg-[rgba(255,255,255,0.12)] p-3">
                     <div className="text-[11px] text-[rgba(255,255,255,0.7)]">覆盖内容</div>
-                    <div className="mt-1 text-[14px] font-medium sm:text-[15px]">区域总览与项目分析</div>
+                    <div className="mt-1 text-[14px] font-medium sm:text-[15px]">总览及项目明细</div>
                   </div>
                 </div>
               </div>
