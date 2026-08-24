@@ -54,11 +54,18 @@ test("server-renders the dense map workbench without exposing priority labels", 
   assert.match(html, /data-metric-count="8"/);
   assert.match(html, /data-metric-id="investment-equity"/);
   assert.match(html, /data-priority="supporting"/);
-  assert.match(visibleHtml, /问数中国境内有效项目快照 2026\.08\.24/);
+  assert.match(html, /data-project-cloud-count="488"/);
+  assert.match(html, /data-city-anchor-count="55"/);
+  assert.match(html, /PROJECT SCALE CLOUD/);
+  assert.match(html, /488 个境内有效项目/);
+  assert.match(html, /is-feature/);
+  assert.match(html, /is-progress/);
+  assert.match(html, /is-ledger/);
+  assert.match(visibleHtml, /2026\.08\.24 · 项目规模点簇/);
   assert.match(visibleHtml, /点击城市定位/);
-  assert.match(visibleHtml, /年度经营指标/);
+  assert.match(html, /投资拿地年度指标/);
   assert.match(html, /https:\/\/dashboard\.example\/og\.png/);
-  assert.doesNotMatch(visibleHtml, /补充指标|次级展示|原稿灰底/);
+  assert.doesNotMatch(visibleHtml, /补充指标|次级展示|原稿灰底|本章|07 CHAPTERS|人民币/);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/);
 });
 
@@ -113,8 +120,34 @@ test("dense workbench sections cover every metric exactly once and preserve conc
   assert.equal(new Set(denseMetricIds).size, 56);
   assert.deepEqual(denseMetricIds, annualMetricIds);
   assert.doesNotMatch(denseSource, /补充指标|次级展示|原稿灰底/);
-  await access(new URL("../app/map-integrated-overview.tsx", import.meta.url));
+  const integratedSource = await readFile(new URL("../app/map-integrated-overview.tsx", import.meta.url), "utf8");
+  assert.match(integratedSource, /fusion-combined-panel/);
+  assert.doesNotMatch(integratedSource, /className="fusion-stage-panel"|className="fusion-metric-panel"|本章指标/);
   await access(new URL("../app/map-integrated-overview.css", import.meta.url));
+});
+
+test("map renders a source-backed city project-count cloud without claiming exact addresses", async () => {
+  const mapSource = await readFile(new URL("../app/tech-map.tsx", import.meta.url), "utf8");
+  assert.match(mapSource, /projectIndex < city\.count/);
+  assert.match(mapSource, /role: "city-project-count-cloud"/);
+  assert.match(mapSource, /preciseLocations: false/);
+  assert.match(mapSource, /data-project-cloud-count/);
+  assert.match(mapSource, /点簇表示城市项目数量，不代表项目精确地址/);
+});
+
+test("project cockpit separates headline facts from structural facts", async () => {
+  const cockpitSource = await readFile(new URL("../app/grand-page.tsx", import.meta.url), "utf8");
+  assert.match(cockpitSource, /grand-primary-facts/);
+  assert.match(cockpitSource, /grand-supporting-facts/);
+  assert.match(cockpitSource, /supportingLabel="面积规模"/);
+  assert.match(cockpitSource, /supportingLabel="权益结构"/);
+  assert.match(cockpitSource, /label: "项目总数"[^\n]+tier: "primary"/);
+  assert.match(cockpitSource, /label: "在建"[^\n]+tier: "primary"/);
+  assert.match(cockpitSource, /label: "待开发"[^\n]+tier: "primary"/);
+  assert.match(cockpitSource, /label: "土储总建面"[^\n]+tier: "supporting"/);
+  assert.match(cockpitSource, /label: "年度新拓项目"[^\n]+tier: "primary"/);
+  assert.match(cockpitSource, /label: "投资额"[^\n]+tier: "primary"/);
+  assert.match(cockpitSource, /label: "权益投资额"[^\n]+tier: "supporting"/);
 });
 
 test("ships a project-local social preview asset", async () => {

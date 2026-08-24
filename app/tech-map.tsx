@@ -8,7 +8,11 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
-import { WENSHU_CITY_SUMMARIES } from "./wenshu-projects-snapshot";
+import {
+  WENSHU_CITY_SUMMARIES,
+  WENSHU_COVERED_CITY_COUNT,
+  WENSHU_DOMESTIC_PROJECT_COUNT,
+} from "./wenshu-projects-snapshot";
 
 type Position = [number, number];
 type Polygon = Position[][];
@@ -74,6 +78,7 @@ type CityVisual = {
   beamMaterial: THREE.MeshBasicMaterial;
   glowMaterial: THREE.SpriteMaterial;
   ringMaterial: THREE.MeshBasicMaterial;
+  cloudMaterial: THREE.PointsMaterial;
   labelElement: HTMLDivElement;
 };
 
@@ -452,6 +457,9 @@ export default function TechMap({
         visual.glowMaterial.opacity = (citySelected ? .72 : isHub ? .58 : .38) * scopeWeight;
         visual.ringMaterial.color.copy(activeNeon);
         visual.ringMaterial.userData.scopeWeight = scopeWeight;
+        visual.cloudMaterial.color.copy(activeNeon);
+        visual.cloudMaterial.opacity = (citySelected ? .88 : isHub ? .68 : isMinor ? .46 : .56) * scopeWeight;
+        visual.cloudMaterial.size = citySelected ? .13 : isHub ? .11 : .09;
         visual.labelElement.classList.toggle("is-selected", citySelected);
       });
       networkVisuals.forEach((visual) => {
@@ -501,8 +509,8 @@ export default function TechMap({
       }
       const rect = renderer.domElement.getBoundingClientRect();
       tooltip.textContent = city
-        ? `${city.city.name} · ${city.city.count}个项目 · 点击穿透`
-        : `${cleanRegionName(region!.name)} · 点击联动行政区数据`;
+        ? `${city.city.name} · ${city.city.count}个项目 · 点击${interactionMode === "locate" ? "定位" : "穿透"}`
+        : `${cleanRegionName(region!.name)} · 点击${interactionMode === "locate" ? "定位行政区" : "联动行政区数据"}`;
       tooltip.style.left = event.clientX - rect.left + 14 + "px";
       tooltip.style.top = event.clientY - rect.top - 8 + "px";
       tooltip.style.opacity = "1";
@@ -681,6 +689,41 @@ export default function TechMap({
           const radius = .06 + Math.sqrt(city.count) * .01;
           const height = .2 + Math.sqrt(city.count) * .065;
           const cityNeon = city.major ? NEON_CITY_CYAN : NEON_CITY_VIOLET;
+          const cloudRandom = seededRandom(20250000 + city.cityAdcode);
+          const projectCloudRadius = .16 + Math.sqrt(city.count) * .045;
+          const projectCloudPositions: number[] = [];
+          const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+          for (let projectIndex = 0; projectIndex < city.count; projectIndex += 1) {
+            const progress = Math.sqrt((projectIndex + .5) / city.count);
+            const angle = projectIndex * goldenAngle + cloudRandom() * .26;
+            const distance = projectCloudRadius * progress * (.88 + cloudRandom() * .22);
+            projectCloudPositions.push(
+              projected.x + Math.cos(angle) * distance,
+              projected.y + Math.sin(angle) * distance,
+              MAP_DEPTH + .02 + cloudRandom() * .045,
+            );
+          }
+          const cloudGeometry = new THREE.BufferGeometry();
+          cloudGeometry.setAttribute("position", new THREE.Float32BufferAttribute(projectCloudPositions, 3));
+          const cloudMaterial = new THREE.PointsMaterial({
+            color: city.hub ? NEON_CITY_GOLD : cityNeon,
+            size: city.hub ? .11 : .09,
+            map: glowTexture,
+            transparent: true,
+            opacity: city.hub ? .68 : city.major ? .56 : .46,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            alphaTest: .035,
+          });
+          const projectCloud = new THREE.Points(cloudGeometry, cloudMaterial);
+          projectCloud.userData = {
+            role: "city-project-count-cloud",
+            cityAdcode: city.cityAdcode,
+            projectCount: city.count,
+            preciseLocations: false,
+          };
+          mapRoot.add(projectCloud);
+
           const coreMaterial = new THREE.MeshBasicMaterial({
             color: city.hub ? NEON_CITY_GOLD : cityNeon,
             transparent: true,
@@ -799,12 +842,13 @@ export default function TechMap({
               count: city.count,
             },
             hitTarget,
-            objects: [core, beam, glow, ring, labelObject, hitTarget],
+            objects: [projectCloud, core, beam, glow, ring, labelObject, hitTarget],
             labelObject,
             coreMaterial,
             beamMaterial,
             glowMaterial,
             ringMaterial,
+            cloudMaterial,
             labelElement: label,
           });
         });
@@ -1057,14 +1101,16 @@ export default function TechMap({
     <div
       className="tech-map"
       aria-label={`${scopeName}三维经营地图，可按行政区和城市${interactionMode === "locate" ? "定位" : "穿透"}`}
+      data-city-anchor-count={WENSHU_COVERED_CITY_COUNT}
+      data-project-cloud-count={WENSHU_DOMESTIC_PROJECT_COUNT}
     >
       <div ref={mountRef} className="tech-map-webgl" />
       <div ref={tooltipRef} className="tech-map-tooltip" />
       <div className="tech-map-scan" aria-hidden="true" />
       <div className="tech-map-status"><i /> THREE.JS · REALTIME</div>
       <div className="tech-map-controls">拖拽旋转 · 滚轮缩放 · 点击行政区 · 点击城市{interactionMode === "locate" ? "定位" : "穿透项目"}</div>
-      <div className="tech-map-legend"><span><i />经营城市</span><span><i />行政区联动</span></div>
-      <div className="tech-map-note">Three.js 立体模型 · GeoJSON 边界 · Bloom 光效</div>
+      <div className="tech-map-legend"><span><i />项目数量点簇</span><span><i />城市定位锚点</span></div>
+      <div className="tech-map-note">点簇表示城市项目数量，不代表项目精确地址</div>
     </div>
   );
 }

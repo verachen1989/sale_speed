@@ -55,6 +55,13 @@ type ScopeMetrics = RegionMetrics & {
   sellingProjects: number;
 };
 
+type TieredFact = {
+  label: string;
+  value: string;
+  unit: string;
+  tier: "primary" | "supporting";
+};
+
 const NATIONAL_SCOPE: DashboardScope = {
   id: "national",
   name: "全国",
@@ -117,6 +124,34 @@ function formatNumber(value: number, digits = 1) {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   });
+}
+
+function TieredMetricFacts({
+  facts,
+  supportingLabel,
+}: {
+  facts: TieredFact[];
+  supportingLabel: string;
+}) {
+  const primaryFacts = facts.filter((fact) => fact.tier === "primary");
+  const supportingFacts = facts.filter((fact) => fact.tier === "supporting");
+
+  const renderFact = (fact: TieredFact) => (
+    <article key={fact.label} data-tier={fact.tier}>
+      <span>{fact.label}</span>
+      <div><strong>{fact.value}</strong><em>{fact.unit}</em></div>
+    </article>
+  );
+
+  return (
+    <div className="grand-tiered-facts">
+      <div className="grand-primary-facts">{primaryFacts.map(renderFact)}</div>
+      <div className="grand-supporting-facts">
+        <p>{supportingLabel}</p>
+        {supportingFacts.map(renderFact)}
+      </div>
+    </div>
+  );
 }
 
 function formatSignedPercentage(value: number) {
@@ -298,26 +333,26 @@ export default function GrandDashboard() {
   const administrativeConstructionArea = roundOne(scopedProjectRows
     .filter((project) => project.developmentStatus === "在建")
     .reduce((total, project) => total + project.totalBuildingAreaWan, 0));
-  const scaleFacts = usesOrganizationScale ? [
-    { label: "项目总数", value: String(scaleOrganization.totalProjects), unit: "个" },
-    { label: "待开发", value: String(scaleOrganization.pendingProjects), unit: "个" },
-    { label: "在建", value: String(scaleOrganization.constructionProjects), unit: "个" },
-    { label: "土储总建面", value: formatNumber(scaleOrganization.soilArea), unit: "万㎡" },
-    { label: "在建总建面", value: formatNumber(scaleOrganization.constructionArea), unit: "万㎡" },
+  const scaleFacts: TieredFact[] = usesOrganizationScale ? [
+    { label: "项目总数", value: String(scaleOrganization.totalProjects), unit: "个", tier: "primary" },
+    { label: "在建", value: String(scaleOrganization.constructionProjects), unit: "个", tier: "primary" },
+    { label: "待开发", value: String(scaleOrganization.pendingProjects), unit: "个", tier: "primary" },
+    { label: "土储总建面", value: formatNumber(scaleOrganization.soilArea), unit: "万㎡", tier: "supporting" },
+    { label: "在建总建面", value: formatNumber(scaleOrganization.constructionArea), unit: "万㎡", tier: "supporting" },
   ] : [
-    { label: "项目总数", value: String(scopedProjectRows.length), unit: "个" },
-    { label: "待开发", value: String(scopedProjectRows.filter((project) => project.developmentStatus === "待开发").length), unit: "个" },
-    { label: "在建", value: String(scopedProjectRows.filter((project) => project.developmentStatus === "在建").length), unit: "个" },
-    { label: "项目总建面", value: formatNumber(administrativeTotalArea), unit: "万㎡" },
-    { label: "在建总建面", value: formatNumber(administrativeConstructionArea), unit: "万㎡" },
+    { label: "项目总数", value: String(scopedProjectRows.length), unit: "个", tier: "primary" },
+    { label: "在建", value: String(scopedProjectRows.filter((project) => project.developmentStatus === "在建").length), unit: "个", tier: "primary" },
+    { label: "待开发", value: String(scopedProjectRows.filter((project) => project.developmentStatus === "待开发").length), unit: "个", tier: "primary" },
+    { label: "项目总建面", value: formatNumber(administrativeTotalArea), unit: "万㎡", tier: "supporting" },
+    { label: "在建总建面", value: formatNumber(administrativeConstructionArea), unit: "万㎡", tier: "supporting" },
   ];
   const investmentOrganization = queryMode === "organization" ? activeOrganization : ROOT_ORGANIZATION;
-  const investmentFacts = [
-    { label: "年度新拓项目", value: String(investmentOrganization.newProjects), unit: "个" },
-    { label: "新拓货值", value: formatNumber(investmentOrganization.newValue, 2), unit: "亿元" },
-    { label: "权益货值", value: investmentOrganization.equityValue === null ? "—" : formatNumber(investmentOrganization.equityValue, 2), unit: "亿元" },
-    { label: "投资额", value: formatNumber(investmentOrganization.investment, 2), unit: "亿元" },
-    { label: "权益投资额", value: investmentOrganization.equityInvestment === null ? "—" : formatNumber(investmentOrganization.equityInvestment, 2), unit: "亿元" },
+  const investmentFacts: TieredFact[] = [
+    { label: "年度新拓项目", value: String(investmentOrganization.newProjects), unit: "个", tier: "primary" },
+    { label: "新拓货值", value: formatNumber(investmentOrganization.newValue, 2), unit: "亿元", tier: "primary" },
+    { label: "投资额", value: formatNumber(investmentOrganization.investment, 2), unit: "亿元", tier: "primary" },
+    { label: "权益货值", value: investmentOrganization.equityValue === null ? "—" : formatNumber(investmentOrganization.equityValue, 2), unit: "亿元", tier: "supporting" },
+    { label: "权益投资额", value: investmentOrganization.equityInvestment === null ? "—" : formatNumber(investmentOrganization.equityInvestment, 2), unit: "亿元", tier: "supporting" },
   ];
 
   const selectScope = useCallback((scope: DashboardScope) => {
@@ -455,14 +490,7 @@ export default function GrandDashboard() {
               <div><p>OPERATING SCALE</p><h2 id="scale-title">经营规模</h2></div>
               <em>项目开发状态 · {usesOrganizationScale ? "集团台账口径" : "行政区有效项目口径"}</em>
             </header>
-            <div className="grand-metric-group-grid grand-five-metrics">
-              {scaleFacts.map((fact) => (
-                <article key={fact.label}>
-                  <span>{fact.label}</span>
-                  <div><strong>{fact.value}</strong><em>{fact.unit}</em></div>
-                </article>
-              ))}
-            </div>
+            <TieredMetricFacts facts={scaleFacts} supportingLabel="面积规模" />
           </section>
 
           <section className="grand-metric-group is-investment" aria-labelledby="investment-title">
@@ -475,14 +503,7 @@ export default function GrandDashboard() {
                   ? "全国台账口径 · 实际获取"
                   : "全国台账口径 · 不随行政区联动")}</em>
             </header>
-            <div className="grand-metric-group-grid grand-five-metrics">
-              {investmentFacts.map((fact) => (
-                <article key={fact.label}>
-                  <span>{fact.label}</span>
-                  <div><strong>{fact.value}</strong><em>{fact.unit}</em></div>
-                </article>
-              ))}
-            </div>
+            <TieredMetricFacts facts={investmentFacts} supportingLabel="权益结构" />
           </section>
 
           <section className="grand-metric-group is-sales" aria-labelledby="sales-title">

@@ -22,6 +22,24 @@ export type AnnualMetricGroup = {
   metrics: AnnualMetric[];
 };
 
+/**
+ * Keep source wording intact while removing presentation-only qualifiers that
+ * repeat information already carried by the value or unit.
+ */
+export function annualMetricDisplay(metric: Pick<AnnualMetric, "value" | "note">) {
+  const note = metric.note
+    ?.split("·")
+    .map((part) => part.trim())
+    .filter((part) => part && !["约", "人民币", "平均", "超"].includes(part))
+    .map((part) => part.replace("账面值约", "账面值").replace("中介费约", "中介费"))
+    .join(" · ");
+
+  return {
+    value: metric.note?.trim() === "超" ? `${metric.value}+` : metric.value,
+    note: note || undefined,
+  };
+}
+
 export const ANNUAL_HERO_METRICS = [
   { id: "sales", groupId: "sales", label: "总合同销售金额", value: "2,519", unit: "亿元", note: "约 · 人民币 · 行业第 2" },
   { id: "new-value", groupId: "investment", label: "新增货值", value: "1,355", unit: "亿元", note: "约 · 人民币 · 行业第 4" },

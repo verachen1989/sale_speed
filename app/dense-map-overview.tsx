@@ -1,14 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { AnnualMetric, AnnualMetricGroup } from "./annual-metrics";
 import {
   ANNUAL_HERO_METRICS,
   ANNUAL_METRIC_GROUPS,
-  ANNUAL_METRIC_TOTALS,
+  annualMetricDisplay,
 } from "./annual-metrics";
 import TechMap, { type CitySelection, type ProvinceSelection } from "./tech-map";
-import { WENSHU_PROJECT_SNAPSHOT_DATE } from "./wenshu-projects-snapshot";
+import {
+  WENSHU_COVERED_CITY_COUNT,
+  WENSHU_DOMESTIC_PROJECT_COUNT,
+  WENSHU_PROJECT_SNAPSHOT_DATE,
+} from "./wenshu-projects-snapshot";
 
 const AUTO_ROTATE_MS = 16_000;
 
@@ -55,17 +59,45 @@ const DENSE_METRIC_SECTIONS: Record<AnnualMetricGroup["id"], DenseMetricSection[
   ],
 };
 
-function DenseMetric({ metric }: { metric: AnnualMetric }) {
+function DenseMetric({
+  metric,
+  index,
+  timeline = false,
+}: {
+  metric: AnnualMetric;
+  index: number;
+  timeline?: boolean;
+}) {
+  const display = annualMetricDisplay(metric);
+  const numericValue = Number(metric.value.replaceAll(",", ""));
+  const progress = metric.unit === "%" && Number.isFinite(numericValue)
+    ? Math.max(0, Math.min(100, numericValue))
+    : null;
+  const visualClass = metric.kind === "text"
+    ? "is-statement"
+    : timeline
+      ? "is-timeline-node"
+      : progress !== null
+        ? "is-progress"
+        : metric.priority === "supporting"
+          ? "is-ledger"
+          : index === 0
+            ? "is-feature"
+            : "is-stat";
+
   return (
     <article
-      className={`${metric.priority === "supporting" ? "is-quiet" : "is-strong"} ${metric.kind === "text" ? "is-text" : ""}`}
+      className={`${metric.priority === "supporting" ? "is-quiet" : "is-strong"} ${visualClass}`}
       data-metric-id={metric.id}
       data-priority={metric.priority}
-      title={[metric.label, metric.note].filter(Boolean).join(" · ")}
+      style={progress === null ? undefined : { "--metric-progress": `${progress}%` } as CSSProperties}
+      title={[metric.label, display.note].filter(Boolean).join(" · ")}
     >
-      <span>{metric.label}</span>
-      <div><strong>{metric.value}</strong>{metric.unit ? <em>{metric.unit}</em> : null}</div>
-      {metric.note ? <small>{metric.note}</small> : null}
+      {timeline ? <i className="dense-map-timeline-index">{index + 1}</i> : null}
+      <span className="dense-map-metric-label">{metric.label}</span>
+      <div className="dense-map-metric-value"><strong>{display.value}</strong>{metric.unit ? <em>{metric.unit}</em> : null}</div>
+      {progress !== null ? <span className="dense-map-metric-progress" aria-hidden="true"><i /></span> : null}
+      {display.note ? <small>{display.note}</small> : null}
     </article>
   );
 }
@@ -167,36 +199,38 @@ export default function DenseMapOverview({
       </header>
 
       <section className="dense-map-body">
-        <nav className="dense-map-chapters" aria-label="经营板块">
-          <header><p>BUSINESS</p><h2>经营板块</h2><span>07 CHAPTERS</span></header>
-          <div>
-            {ANNUAL_METRIC_GROUPS.map((group) => (
-              <button
-                type="button"
-                key={group.id}
-                className={group.id === activeGroup.id ? "is-active" : ""}
-                aria-pressed={group.id === activeGroup.id}
-                onClick={() => selectGroup(group.id)}
-              >
-                <i>{group.index}</i>
-                <span><b>{group.name}</b><small>{group.endpoint}</small></span>
-                <em>{group.metrics.length}</em>
-              </button>
-            ))}
-          </div>
-          <footer><strong>{ANNUAL_METRIC_TOTALS.total}</strong><span>年度经营指标</span></footer>
-        </nav>
-
         <aside
           className={`dense-map-workbench is-${activeGroup.id}`}
           data-group-id={activeGroup.id}
           data-metric-count={activeGroup.metrics.length}
         >
           <header className="dense-map-stage-header">
-            <div><span>{activeGroup.index}</span><p>ANNUAL PERFORMANCE</p></div>
+            <div className="dense-map-stage-kicker">
+              <p>ANNUAL PERFORMANCE</p>
+              <nav className="dense-map-stage-pager" aria-label="经营章节快速切换">
+                {ANNUAL_METRIC_GROUPS.map((group) => (
+                  <button
+                    type="button"
+                    key={group.id}
+                    className={group.id === activeGroup.id ? "is-active" : ""}
+                    aria-label={`${group.index} ${group.name}`}
+                    aria-pressed={group.id === activeGroup.id}
+                    title={group.name}
+                    onClick={() => selectGroup(group.id)}
+                  >{group.index}</button>
+                ))}
+              </nav>
+              <button
+                type="button"
+                className={`dense-map-rotate ${autoRotate ? "is-active" : ""}`}
+                aria-label={autoRotate ? "暂停展播" : "启动展播"}
+                aria-pressed={autoRotate}
+                title={autoRotate ? "暂停展播" : "启动展播"}
+                onClick={() => setAutoRotate((value) => !value)}
+              ><i /></button>
+            </div>
             <h2>{activeGroup.name}</h2>
             <strong>{activeGroup.summary}</strong>
-            <footer><span>{activeGroup.period}</span><b>本章 {activeGroup.metrics.length} 项</b></footer>
           </header>
 
           <div className="dense-map-metric-ledger" aria-label={`${activeGroup.name}年度指标`}>
@@ -204,24 +238,15 @@ export default function DenseMapOverview({
               const metrics = section.ids
                 .map((id) => activeGroup.metrics.find((metric) => metric.id === id))
                 .filter((metric): metric is AnnualMetric => Boolean(metric));
+              const timeline = activeGroup.id === "construction" && section.label === "开发节奏";
               return (
-                <section key={section.label} className={`dense-map-metric-section items-${metrics.length}`}>
-                  <header><h3>{section.label}</h3><span>{metrics.length}</span></header>
-                  <div>{metrics.map((metric) => <DenseMetric key={metric.id} metric={metric} />)}</div>
+                <section key={section.label} className={`dense-map-metric-section items-${metrics.length} ${timeline ? "is-timeline" : ""}`}>
+                  <header><h3>{section.label}</h3></header>
+                  <div>{metrics.map((metric, index) => <DenseMetric key={metric.id} metric={metric} index={index} timeline={timeline} />)}</div>
                 </section>
               );
             })}
           </div>
-
-          <footer className="dense-map-workbench-footer">
-            <div><button type="button" aria-label="上一章节" onClick={() => moveGroup(-1)}>←</button><span>{activeGroup.index} / 07</span><button type="button" aria-label="下一章节" onClick={() => moveGroup(1)}>→</button></div>
-            <button
-              type="button"
-              className={autoRotate ? "is-active" : ""}
-              aria-pressed={autoRotate}
-              onClick={() => setAutoRotate((value) => !value)}
-            ><i />{autoRotate ? "展播模式" : "启动展播"}</button>
-          </footer>
         </aside>
 
         <section className="dense-map-stage" aria-label="全国经营布局">
@@ -238,25 +263,27 @@ export default function DenseMapOverview({
           </div>
 
           <section className="dense-map-hero-rail" aria-label="年度关键值">
-            {ANNUAL_HERO_METRICS.map((metric, index) => (
-              <button type="button" key={metric.id} onClick={() => selectGroup(metric.groupId)}>
-                <i>0{index + 1}</i><span>{metric.label}</span>
-                <div><strong>{metric.value}</strong><em>{metric.unit}</em></div>
-                <small>{metric.note}</small>
-              </button>
-            ))}
+            {ANNUAL_HERO_METRICS.map((metric, index) => {
+              const display = annualMetricDisplay(metric);
+              return (
+                <button type="button" key={metric.id} onClick={() => selectGroup(metric.groupId)}>
+                  <i>0{index + 1}</i><span>{metric.label}</span>
+                  <div><strong>{display.value}</strong><em>{metric.unit}</em></div>
+                  {display.note ? <small>{display.note}</small> : null}
+                </button>
+              );
+            })}
           </section>
 
-          <div className="dense-map-title"><p>GEOGRAPHIC PRESENCE</p><h2>全国经营布局</h2><span>地图定位 · 年度指标保持集团口径</span></div>
+          <div className="dense-map-title"><p>PROJECT SCALE CLOUD</p><h2>全国项目布局</h2><span>{WENSHU_COVERED_CITY_COUNT} 城聚合 · 年度指标保持集团口径</span></div>
 
           <div className="dense-map-scope">
             <i />
-            <div><span>当前地图范围</span><b>{mapScopeName}</b><small>{activeCity ? `${activeCity.count} 个中国境内有效项目` : activeProvince ? "已定位行政区 · 可继续选择城市" : "点击行政区或城市节点进行空间定位"}</small></div>
+            <div><span>当前地图范围</span><b>{mapScopeName}</b><small>{activeCity ? `${activeCity.count} 个中国境内有效项目` : activeProvince ? "已定位行政区 · 项目点簇按城市聚合" : `${WENSHU_DOMESTIC_PROJECT_COUNT} 个境内有效项目 · ${WENSHU_COVERED_CITY_COUNT} 个城市锚点`}</small></div>
             {activeProvince ? <button type="button" onClick={() => { setActiveCity(null); setActiveProvince(null); setAutoRotate(false); }}>返回全国</button> : null}
           </div>
 
-          <div className="dense-map-source">问数中国境内有效项目快照 {WENSHU_PROJECT_SNAPSHOT_DATE}</div>
-          <div className="dense-map-stage-status"><span>{activeGroup.index}</span><b>{activeGroup.name}</b><small>当前经营章节</small></div>
+          <div className="dense-map-source">{WENSHU_PROJECT_SNAPSHOT_DATE} · 项目规模点簇按城市锚点聚合，非精确地址</div>
         </section>
       </section>
     </main>

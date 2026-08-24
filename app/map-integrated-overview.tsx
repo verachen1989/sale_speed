@@ -6,22 +6,35 @@ import {
   ANNUAL_HERO_METRICS,
   ANNUAL_METRIC_GROUPS,
   ANNUAL_METRIC_TOTALS,
+  annualMetricDisplay,
 } from "./annual-metrics";
 import TechMap, { type CitySelection, type ProvinceSelection } from "./tech-map";
-import { WENSHU_PROJECT_SNAPSHOT_DATE } from "./wenshu-projects-snapshot";
+import {
+  WENSHU_COVERED_CITY_COUNT,
+  WENSHU_DOMESTIC_PROJECT_COUNT,
+  WENSHU_PROJECT_SNAPSHOT_DATE,
+} from "./wenshu-projects-snapshot";
 
 const AUTO_ROTATE_MS = 15_000;
 
 function MetricTile({ metric }: { metric: AnnualMetric }) {
+  const display = annualMetricDisplay(metric);
+  const numericValue = Number(metric.value.replaceAll(",", ""));
+  const progress = metric.unit === "%" && Number.isFinite(numericValue)
+    ? Math.max(0, Math.min(100, numericValue))
+    : null;
+
   return (
     <article
-      className={metric.kind === "text" ? "is-text" : ""}
+      className={`${metric.kind === "text" ? "is-text" : ""} ${progress === null ? "" : "is-progress"}`}
       data-metric-id={metric.id}
       data-priority={metric.priority}
+      style={progress === null ? undefined : { "--metric-progress": `${progress}%` } as CSSProperties}
     >
       <span>{metric.label}</span>
-      <div><strong>{metric.value}</strong>{metric.unit ? <em>{metric.unit}</em> : null}</div>
-      {metric.note ? <small>{metric.note}</small> : null}
+      <div><strong>{display.value}</strong>{metric.unit ? <em>{metric.unit}</em> : null}</div>
+      {progress !== null ? <i className="fusion-metric-progress" aria-hidden="true"><u /></i> : null}
+      {display.note ? <small>{display.note}</small> : null}
     </article>
   );
 }
@@ -211,34 +224,18 @@ export default function MapIntegratedOverview({
       </header>
 
       <section className="fusion-hero-strip" aria-label="年度核心经营指标">
-        {ANNUAL_HERO_METRICS.map((metric, index) => (
-          <button type="button" key={metric.id} onClick={() => selectGroup(metric.groupId)}>
-            <span>0{index + 1}</span>
-            <p>{metric.label}</p>
-            <div><strong>{metric.value}</strong><em>{metric.unit}</em></div>
-            <small>{metric.note}</small>
-          </button>
-        ))}
+        {ANNUAL_HERO_METRICS.map((metric, index) => {
+          const display = annualMetricDisplay(metric);
+          return (
+            <button type="button" key={metric.id} onClick={() => selectGroup(metric.groupId)}>
+              <span>0{index + 1}</span>
+              <p>{metric.label}</p>
+              <div><strong>{display.value}</strong><em>{metric.unit}</em></div>
+              {display.note ? <small>{display.note}</small> : null}
+            </button>
+          );
+        })}
       </section>
-
-      <nav className="fusion-lifecycle" aria-label="全经营链路">
-        {ANNUAL_METRIC_GROUPS.map((group) => (
-          <button
-            type="button"
-            key={group.id}
-            className={group.id === activeGroup.id ? "is-active" : ""}
-            aria-pressed={group.id === activeGroup.id}
-            onClick={() => selectGroup(group.id)}
-          >
-            <i>{group.index}</i><span><b>{group.name}</b><small>{group.endpoint}</small></span>
-          </button>
-        ))}
-        <span
-          key={`${activeGroup.id}-${autoRotate ? "running" : "paused"}`}
-          className={`fusion-cycle-progress ${autoRotate ? "is-running" : ""}`}
-          aria-hidden="true"
-        />
-      </nav>
 
       <section
         className="fusion-workspace"
@@ -260,59 +257,74 @@ export default function MapIntegratedOverview({
           />
         </div>
 
-        <aside className="fusion-stage-panel">
-          <span className="fusion-stage-index">{activeGroup.index}</span>
-          <p>{activeGroup.eyebrow}</p>
-          <h2 id="fusion-stage-title">{activeGroup.name}</h2>
-          <strong>{activeGroup.summary}</strong>
-          <StageSignal group={activeGroup} />
-          <div className="fusion-stage-count">
-            <span>本章指标</span><b>{activeGroup.metrics.length}</b><em>项</em>
-            <small>{primaryMetrics.length} 项重点维度 · {supportingMetrics.length} 项结构维度</small>
+        <aside className="fusion-combined-panel">
+          <section className="fusion-combined-overview">
+            <div className="fusion-combined-heading">
+              <div><span className="fusion-stage-index">{activeGroup.index}</span><p>{activeGroup.eyebrow}</p></div>
+              <h2 id="fusion-stage-title">{activeGroup.name}</h2>
+              <strong>{activeGroup.summary}</strong>
+            </div>
+            <StageSignal group={activeGroup} />
+          </section>
+
+          <div className="fusion-combined-meta">
+            <div className="fusion-scope-lock">
+              <i />
+              <div><b>2025 集团年度口径</b><span>{WENSHU_DOMESTIC_PROJECT_COUNT} 个境内有效项目 / {WENSHU_COVERED_CITY_COUNT} 个城市锚点</span></div>
+            </div>
+            <div className="fusion-stage-controls">
+              <button type="button" aria-label="上一章节" onClick={() => moveGroup(-1)}>←</button>
+              <nav aria-label="经营章节快速切换">
+                {ANNUAL_METRIC_GROUPS.map((group) => (
+                  <button
+                    type="button"
+                    key={group.id}
+                    className={group.id === activeGroup.id ? "is-active" : ""}
+                    aria-label={`${group.index} ${group.name}`}
+                    aria-pressed={group.id === activeGroup.id}
+                    title={group.name}
+                    onClick={() => selectGroup(group.id)}
+                  >{group.index}</button>
+                ))}
+              </nav>
+              <button type="button" aria-label="下一章节" onClick={() => moveGroup(1)}>→</button>
+              <button
+                type="button"
+                className={autoRotate ? "is-active" : ""}
+                aria-pressed={autoRotate}
+                onClick={() => setAutoRotate((value) => !value)}
+              >{autoRotate ? "自动轮播" : "继续轮播"}</button>
+            </div>
           </div>
-          <div className="fusion-scope-lock">
-            <i />
-            <div><b>指标 · 2025 集团年度口径</b><span>地图 · {WENSHU_PROJECT_SNAPSHOT_DATE} 中国境内有效项目点位，仅作空间定位</span></div>
-          </div>
-          <div className="fusion-stage-controls">
-            <button type="button" aria-label="上一章节" onClick={() => moveGroup(-1)}>←</button>
-            <span>{activeGroup.index} / 07</span>
-            <button type="button" aria-label="下一章节" onClick={() => moveGroup(1)}>→</button>
-            <button
-              type="button"
-              className={autoRotate ? "is-active" : ""}
-              aria-pressed={autoRotate}
-              onClick={() => setAutoRotate((value) => !value)}
-            >{autoRotate ? "自动轮播" : "继续轮播"}</button>
+
+          <div className="fusion-combined-metrics">
+            <section className="fusion-primary-metrics">
+              <header><div><p>ANNUAL PERFORMANCE</p><h3>年度表现</h3></div></header>
+              <div>{primaryMetrics.map((metric) => <MetricTile key={metric.id} metric={metric} />)}</div>
+            </section>
+            {supportingMetrics.length > 0 ? (
+              <section className="fusion-supporting-metrics">
+                <header><div><p>BUSINESS STRUCTURE</p><h3>结构与效率</h3></div></header>
+                <div>{supportingMetrics.map((metric) => <MetricTile key={metric.id} metric={metric} />)}</div>
+              </section>
+            ) : null}
           </div>
         </aside>
 
         <div className="fusion-map-caption">
-          <p>PROJECT DISTRIBUTION · 3D MAP</p>
+          <p>PROJECT SCALE CLOUD · 3D MAP</p>
           <h3>{mapScopeName}</h3>
-          <span>{activeCity ? `${activeCity.count} 个项目` : activeProvince ? "已定位行政区 · 可继续点击城市" : "点击行政区或城市节点查看空间分布"}</span>
-          <small>问数中国境内有效项目快照 {WENSHU_PROJECT_SNAPSHOT_DATE} · 年度指标仍为集团口径</small>
+          <span>{activeCity ? `${activeCity.count} 个境内有效项目` : activeProvince ? "已定位行政区 · 项目点簇按城市聚合" : `${WENSHU_DOMESTIC_PROJECT_COUNT} 个境内有效项目 · ${WENSHU_COVERED_CITY_COUNT} 个城市锚点`}</span>
+          <small>{WENSHU_PROJECT_SNAPSHOT_DATE} · 点簇表达项目数量，不代表精确地址</small>
           {activeProvince ? <button type="button" onClick={() => { setActiveCity(null); setActiveProvince(null); setAutoRotate(false); }}>返回全国</button> : null}
         </div>
 
-        <aside className="fusion-metric-panel">
-          <section className="fusion-primary-metrics">
-            <header><div><p>ANNUAL PERFORMANCE</p><h3>年度表现</h3></div><span>{primaryMetrics.length} 项 · {activeGroup.period}</span></header>
-            <div>{primaryMetrics.map((metric) => <MetricTile key={metric.id} metric={metric} />)}</div>
-          </section>
-          {supportingMetrics.length > 0 ? (
-            <section className="fusion-supporting-metrics">
-              <header><div><p>BUSINESS STRUCTURE</p><h3>结构与效率</h3></div><span>{supportingMetrics.length} 项 · 经营观察</span></header>
-              <div>{supportingMetrics.map((metric) => <MetricTile key={metric.id} metric={metric} />)}</div>
-            </section>
-          ) : null}
-        </aside>
       </section>
 
       <footer className="fusion-footer">
-        <span>经营概览 · 地图融合展示 · 共 {ANNUAL_METRIC_TOTALS.total} 项指标</span>
+        <span>经营概览 · 地图融合展示</span>
         <span>7 大经营板块 · {ANNUAL_METRIC_TOTALS.total} 项年度经营指标</span>
-        <span>指标来自初步意向稿 · 正式上屏前需统一核验数据源与口径</span>
+        <span>正式上屏前统一核验数据源与口径</span>
       </footer>
     </main>
   );
