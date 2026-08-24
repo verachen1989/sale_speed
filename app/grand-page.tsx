@@ -465,7 +465,7 @@ export default function GrandDashboard() {
           <section className="grand-metric-group is-investment" aria-labelledby="investment-title">
             <header className="grand-group-heading">
               <span>02</span>
-              <div><p>INVESTMENT DEVELOPMENT</p><h2 id="investment-title">今年投资发展</h2></div>
+              <div><p>INVESTMENT DEVELOPMENT</p><h2 id="investment-title">投资发展</h2></div>
               <em>{queryMode === "organization"
                 ? `${activeOrganization.name}口径 · 实际获取`
                 : (activeScope.level === "national" && activeCity === null
@@ -530,7 +530,7 @@ export default function GrandDashboard() {
             <span>04</span>
             <div>
               <p>PROJECT DISTRIBUTION</p>
-              <h2>全国项目布局</h2>
+              <h2>项目布局</h2>
             </div>
             <em><i aria-hidden="true" />3D 交互地图</em>
           </header>
