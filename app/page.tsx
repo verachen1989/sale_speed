@@ -1,9 +1,10 @@
 import type { CSSProperties } from "react";
+export { default } from "./grand-page";
 
 const overviewMetrics = [
   { label: "累计销售额", value: "218.6", unit: "亿元", growth: "+12.4%", color: "cyan" },
   { label: "营业收入", value: "164.8", unit: "亿元", growth: "+8.7%", color: "blue" },
-  { label: "净利润", value: "26.7", unit: "亿元", growth: "+5.2%", color: "gold" },
+  { label: "可售货值", value: "412.5", unit: "亿元", growth: "+7.1%", color: "gold" },
   { label: "在建面积", value: "886", unit: "万㎡", growth: "+9.6%", color: "green" },
 ];
 
@@ -42,7 +43,7 @@ function PanelTitle({ index, title, note }: { index: string; title: string; note
   );
 }
 
-export default function Home() {
+export function LegacyHome() {
   return (
     <main className="dashboard">
       <div className="ambient-grid" aria-hidden="true" />
@@ -171,7 +172,7 @@ export default function Home() {
               </div>
             </div>
             <div className="finance-kpis">
-              <div><span>净利润</span><b>26.7<em>亿元</em></b><i>同比 +5.2%</i></div>
+              <div><span>资金余额</span><b>318.4<em>亿元</em></b><i>同比 +7.6%</i></div>
               <div><span>总资产</span><b>1,280.6<em>亿元</em></b><i>同比 +6.8%</i></div>
             </div>
             <div className="finance-footer"><span>经营性现金流</span><b>42.6亿元</b><em>同比 +15.3%</em></div>

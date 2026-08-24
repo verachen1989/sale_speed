@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./grand.css";
+import "./vision-cockpit.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "区域经营实力全景",
-  description: "面向外部展示的区域经营大屏，呈现投资、销售、财务与工程规模及增长趋势。",
+  title: "绿城中国经营驾驶舱",
+  description: "绿城中国经营驾驶舱，按全国、区域、行政区、城市和项目展示经营规模与增长。",
 };
 
 export default function RootLayout({
