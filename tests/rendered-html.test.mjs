@@ -132,22 +132,102 @@ test("map renders a source-backed city project-count cloud without claiming exac
   assert.match(mapSource, /role: "city-project-count-cloud"/);
   assert.match(mapSource, /preciseLocations: false/);
   assert.match(mapSource, /data-project-cloud-count/);
+  assert.match(mapSource, /data-city-label-mode="all-with-collision-avoidance"/);
+  assert.match(mapSource, /visual\.labelObject\.visible = citySelected \|\| inScope/);
+  assert.match(mapSource, /is-national-view/);
+  assert.match(mapSource, /labelOcclusionSelector/);
+  assert.match(mapSource, /document\.querySelector<HTMLElement>\(labelOcclusionSelector\)/);
+  assert.match(mapSource, /data-label-occlusion/);
+  assert.match(mapSource, /style\.pointerEvents = overlaps \? "none" : "auto"/);
+  assert.match(mapSource, /const nextViewOffsetX = resolveViewOffset\(width, height\)/);
+  assert.match(mapSource, /setAttribute\("aria-pressed", citySelected \? "true" : "false"\)/);
+  assert.match(mapSource, /camera\.fov = THREE\.MathUtils\.clamp\(adaptiveFov, 30, 52\)/);
   assert.match(mapSource, /点簇表示城市项目数量，不代表项目精确地址/);
 });
 
-test("project cockpit separates headline facts from structural facts", async () => {
+test("project cockpit embeds structural facts inside their headline metric groups", async () => {
   const cockpitSource = await readFile(new URL("../app/grand-page.tsx", import.meta.url), "utf8");
-  assert.match(cockpitSource, /grand-primary-facts/);
-  assert.match(cockpitSource, /grand-supporting-facts/);
-  assert.match(cockpitSource, /supportingLabel="面积规模"/);
-  assert.match(cockpitSource, /supportingLabel="权益结构"/);
-  assert.match(cockpitSource, /label: "项目总数"[^\n]+tier: "primary"/);
-  assert.match(cockpitSource, /label: "在建"[^\n]+tier: "primary"/);
-  assert.match(cockpitSource, /label: "待开发"[^\n]+tier: "primary"/);
-  assert.match(cockpitSource, /label: "土储总建面"[^\n]+tier: "supporting"/);
-  assert.match(cockpitSource, /label: "年度新拓项目"[^\n]+tier: "primary"/);
-  assert.match(cockpitSource, /label: "投资额"[^\n]+tier: "primary"/);
-  assert.match(cockpitSource, /label: "权益投资额"[^\n]+tier: "supporting"/);
+  assert.match(cockpitSource, /grand-composite-facts/);
+  assert.doesNotMatch(cockpitSource, /grand-primary-facts|grand-supporting-facts|supportingLabel=/);
+  assert.match(cockpitSource, /data-composition="embedded-supporting"/);
+  assert.equal((cockpitSource.match(/data-primary-count="3"/g) ?? []).length, 2);
+  assert.equal((cockpitSource.match(/data-supporting-count="3"/g) ?? []).length, 1);
+  assert.equal((cockpitSource.match(/data-supporting-count="2"/g) ?? []).length, 1);
+  assert.match(cockpitSource, /id: "total-projects"[\s\S]*?supporting: \{[\s\S]*?id: "total-land-area"/);
+  assert.match(cockpitSource, /id: "construction-projects"[\s\S]*?supporting: \{[\s\S]*?id: "construction-area"/);
+  assert.match(cockpitSource, /id: "pending-projects"[\s\S]*?supporting: \{[\s\S]*?id: "pending-area"/);
+  assert.match(cockpitSource, /id: "new-projects"[\s\S]*?label: "年度新拓项目"/);
+  assert.match(cockpitSource, /id: "new-value"[\s\S]*?supporting: \{[\s\S]*?id: "equity-value"/);
+  assert.match(cockpitSource, /id: "investment"[\s\S]*?supporting: \{[\s\S]*?id: "equity-investment"/);
+  assert.match(cockpitSource, /data-parent-metric-id=\{fact\.id\}/);
+  assert.match(cockpitSource, /grand-city-directory/);
+  assert.match(cockpitSource, /grand-city-index-trigger/);
+  assert.match(cockpitSource, /grand-city-index-panel/);
+  assert.match(cockpitSource, /nationwideCityOptions\.map/);
+  assert.match(cockpitSource, /城市导航/);
+  assert.doesNotMatch(cockpitSource, /<input\b/);
+  assert.match(cockpitSource, /data-city-adcode=\{city\.cityAdcode\}/);
+  assert.match(cockpitSource, /activeProvinceCities\.map/);
+  assert.match(cockpitSource, /const usesActualInvestment = queryMode === "organization"/);
+  assert.match(cockpitSource, /data-data-status=\{usesActualInvestment \? "actual" : "unavailable"\}/);
+  assert.match(cockpitSource, /境内有效 \$\{scopedProjectRows\.length\} 个参与定位/);
+  assert.doesNotMatch(cockpitSource, /项目开发状态|全国台账口径|问数实际签约口径|PROJECT DISTRIBUTION|项目布局|3D 交互地图|vision-map-header/);
+
+  const cockpitCss = await readFile(new URL("../app/vision-cockpit.css", import.meta.url), "utf8");
+  assert.match(cockpitCss, /\.grand-project-table-head \{\s*display: none;/);
+  assert.match(cockpitCss, /\.grand-project-list > article \{\s*grid-template-columns: minmax\(0, 1fr\) auto;/);
+  assert.match(cockpitCss, /max-aspect-ratio: 4\/3/);
+
+  const snapshotSource = await readFile(new URL("../app/wenshu-snapshot.ts", import.meta.url), "utf8");
+  assert.match(snapshotSource, /pendingArea: number/);
+  assert.match(snapshotSource, /pendingProjects: 20, pendingArea: 606\.5/);
+
+  const projectSource = await readFile(new URL("../app/wenshu-projects-snapshot.ts", import.meta.url), "utf8");
+  assert.match(projectSource, /"cityAdcode": 330300,[\s\S]{0,180}"provinceAdcode": 330000,[\s\S]{0,180}"name": "温州",[\s\S]{0,180}"count": 7/);
+});
+
+test("city anchors reconcile exactly to the domestic project snapshot", async () => {
+  const source = await readFile(new URL("../app/wenshu-projects-snapshot.ts", import.meta.url), "utf8");
+  const parseExportedArray = (name, nextName) => {
+    const declarationStart = source.indexOf(`export const ${name}`);
+    const nextDeclaration = source.indexOf(`export const ${nextName}`, declarationStart + 1);
+    assert.notEqual(declarationStart, -1, `${name} declaration must exist`);
+    assert.notEqual(nextDeclaration, -1, `${nextName} declaration must exist`);
+    const arrayStart = source.indexOf("= [", declarationStart) + 2;
+    const arrayEnd = source.lastIndexOf("];", nextDeclaration);
+    assert.ok(arrayStart > declarationStart, `${name} array start must exist`);
+    assert.ok(arrayEnd > arrayStart, `${name} array end must exist`);
+    return JSON.parse(source.slice(arrayStart, arrayEnd + 1));
+  };
+
+  const projects = parseExportedArray("WENSHU_PROJECTS", "WENSHU_CITY_SUMMARIES");
+  const cities = parseExportedArray("WENSHU_CITY_SUMMARIES", "WENSHU_VALUE_BY_ORG");
+  assert.equal(projects.length, 488);
+  assert.equal(cities.length, 55);
+  assert.equal(new Set(projects.map((project) => project.id)).size, 488);
+  assert.equal(new Set(cities.map((city) => city.cityAdcode)).size, 55);
+  assert.equal(cities.reduce((total, city) => total + city.count, 0), 488);
+
+  const projectCountByCity = new Map();
+  for (const project of projects) {
+    projectCountByCity.set(project.cityAdcode, (projectCountByCity.get(project.cityAdcode) ?? 0) + 1);
+  }
+  assert.equal(projectCountByCity.size, 55);
+  for (const city of cities) {
+    assert.equal(projectCountByCity.get(city.cityAdcode), city.count, `${city.name} project count must reconcile`);
+  }
+
+  const wenzhouProjects = projects.filter((project) => project.cityAdcode === 330300);
+  assert.equal(wenzhouProjects.length, 7);
+  assert.equal(Math.round(wenzhouProjects.reduce((total, project) => total + project.totalBuildingAreaWan, 0) * 10) / 10, 150.6);
+  assert.equal(wenzhouProjects.filter((project) => project.developmentStatus === "在建").length, 1);
+  assert.equal(Math.round(wenzhouProjects
+    .filter((project) => project.developmentStatus === "在建")
+    .reduce((total, project) => total + project.totalBuildingAreaWan, 0) * 10) / 10, 38.6);
+  assert.equal(wenzhouProjects.filter((project) => project.developmentStatus === "待开发").length, 1);
+  assert.equal(Math.round(wenzhouProjects
+    .filter((project) => project.developmentStatus === "待开发")
+    .reduce((total, project) => total + project.totalBuildingAreaWan, 0) * 10) / 10, 5.2);
 });
 
 test("ships a project-local social preview asset", async () => {
