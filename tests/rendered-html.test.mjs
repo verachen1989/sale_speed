@@ -30,19 +30,31 @@ async function render() {
   );
 }
 
-test("server-renders the annual exhibition dashboard", async () => {
+test("server-renders the map-integrated exhibition dashboard", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
+  const visibleHtml = html.replaceAll("<!-- -->", "");
   assert.match(html, /<title>绿城中国经营概览<\/title>/);
-  assert.match(html, /年度全景/);
-  assert.match(html, /实时地图/);
+  assert.match(html, /MAP INTEGRATED VIEW/);
+  assert.match(html, /经营全景/);
+  assert.match(html, /项目驾驶舱/);
+  assert.match(html, /三维经营地图/);
   assert.match(html, /总合同销售金额/);
   assert.match(html, /2,519/);
   assert.match(html, /新拓项目转化率/);
-  assert.match(html, /结构与效率/);
+  assert.match(html, /次级展示/);
+  assert.match(html, /data-group-id="investment"/);
+  assert.match(html, /data-metric-count="8"/);
+  assert.match(html, /data-primary-count="4"/);
+  assert.match(html, /data-supporting-count="4"/);
+  assert.match(html, /data-metric-id="investment-equity"/);
+  assert.match(html, /data-priority="supporting"/);
+  assert.match(visibleHtml, /2026\.08\.24 中国境内有效项目点位，仅作空间定位/);
+  assert.match(visibleHtml, /点击城市定位/);
+  assert.match(visibleHtml, /共 56 项指标/);
   assert.match(html, /https:\/\/dashboard\.example\/og\.png/);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/);
 });

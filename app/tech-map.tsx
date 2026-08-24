@@ -48,6 +48,7 @@ type TechMapProps = {
   activeCityAdcode: number | null;
   scopeName: string;
   viewOffsetX?: number;
+  interactionMode?: "drilldown" | "locate";
   onProvinceSelect: (province: ProvinceSelection) => void;
   onCitySelect: (city: CitySelection) => void;
 };
@@ -224,6 +225,7 @@ export default function TechMap({
   activeCityAdcode,
   scopeName,
   viewOffsetX = 0,
+  interactionMode = "drilldown",
   onProvinceSelect,
   onCitySelect,
 }: TechMapProps) {
@@ -743,7 +745,12 @@ export default function TechMap({
           label.innerHTML = "<b>" + city.name + "</b><span><strong>" + city.count + "</strong> 个项目</span>";
           label.setAttribute("role", "button");
           label.setAttribute("tabindex", "0");
-          label.setAttribute("aria-label", `${city.name}，${city.count}个项目，点击查看项目列表`);
+          label.setAttribute(
+            "aria-label",
+            interactionMode === "locate"
+              ? `${city.name}，${city.count}个项目，点击定位城市`
+              : `${city.name}，${city.count}个项目，点击查看项目列表`,
+          );
           label.style.pointerEvents = "auto";
           const activateCity = (event: Event) => {
             event.preventDefault();
@@ -1044,15 +1051,18 @@ export default function TechMap({
       renderer.forceContextLoss();
       mount.replaceChildren();
     };
-  }, [viewOffsetX]);
+  }, [interactionMode, viewOffsetX]);
 
   return (
-    <div className="tech-map" aria-label={`${scopeName}三维经营地图，可按行政区和城市穿透`}>
+    <div
+      className="tech-map"
+      aria-label={`${scopeName}三维经营地图，可按行政区和城市${interactionMode === "locate" ? "定位" : "穿透"}`}
+    >
       <div ref={mountRef} className="tech-map-webgl" />
       <div ref={tooltipRef} className="tech-map-tooltip" />
       <div className="tech-map-scan" aria-hidden="true" />
       <div className="tech-map-status"><i /> THREE.JS · REALTIME</div>
-      <div className="tech-map-controls">拖拽旋转 · 滚轮缩放 · 点击行政区 · 点击城市穿透项目</div>
+      <div className="tech-map-controls">拖拽旋转 · 滚轮缩放 · 点击行政区 · 点击城市{interactionMode === "locate" ? "定位" : "穿透项目"}</div>
       <div className="tech-map-legend"><span><i />经营城市</span><span><i />行政区联动</span></div>
       <div className="tech-map-note">Three.js 立体模型 · GeoJSON 边界 · Bloom 光效</div>
     </div>

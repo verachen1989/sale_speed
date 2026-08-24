@@ -5,6 +5,7 @@ import "./globals.css";
 import "./grand.css";
 import "./vision-cockpit.css";
 import "./annual-overview.css";
+import "./map-integrated-overview.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const imageUrl = `${protocol}://${host}/og.png`;
   const title = "绿城中国经营概览";
-  const description = "面向展馆展示的年度经营全景，分层呈现投资、建设、交付、销售、持有经营、特色业务与土地储备指标。";
+  const description = "面向展馆展示的地图融合经营全景，分层呈现投资、建设、交付、销售、持有经营、特色业务与土地储备指标。";
 
   return {
     title,
@@ -31,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       type: "website",
-      images: [{ url: imageUrl, width: 1730, height: 909, alt: "绿城中国经营概览年度经营全景" }],
+      images: [{ url: imageUrl, width: 1730, height: 909, alt: "绿城中国地图融合经营概览" }],
     },
     twitter: {
       card: "summary_large_image",
