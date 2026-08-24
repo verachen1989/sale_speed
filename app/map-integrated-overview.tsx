@@ -104,7 +104,13 @@ function StageSignal({ group }: { group: AnnualMetricGroup }) {
   );
 }
 
-export default function MapIntegratedOverview({ onSwitchToProjects }: { onSwitchToProjects: () => void }) {
+export default function MapIntegratedOverview({
+  onSwitchToDense,
+  onSwitchToProjects,
+}: {
+  onSwitchToDense?: () => void;
+  onSwitchToProjects: () => void;
+}) {
   const [activeGroupId, setActiveGroupId] = useState<AnnualMetricGroup["id"]>("investment");
   const [activeProvince, setActiveProvince] = useState<ProvinceSelection | null>(null);
   const [activeCity, setActiveCity] = useState<CitySelection | null>(null);
@@ -196,7 +202,8 @@ export default function MapIntegratedOverview({ onSwitchToProjects }: { onSwitch
         </div>
         <div className="fusion-header-actions">
           <div className="fusion-view-switch" role="group" aria-label="大屏视图切换">
-            <button type="button" className="is-active" aria-pressed="true">经营全景</button>
+            {onSwitchToDense ? <button type="button" aria-pressed="false" onClick={onSwitchToDense}>密集地图</button> : null}
+            <button type="button" className="is-active" aria-pressed="true">融合地图</button>
             <button type="button" aria-pressed="false" onClick={onSwitchToProjects}>项目驾驶舱</button>
           </div>
           <div className="fusion-period"><i /><span>2025 年度展示口径</span></div>
@@ -261,7 +268,7 @@ export default function MapIntegratedOverview({ onSwitchToProjects }: { onSwitch
           <StageSignal group={activeGroup} />
           <div className="fusion-stage-count">
             <span>本章指标</span><b>{activeGroup.metrics.length}</b><em>项</em>
-            <small>{primaryMetrics.length} 项核心 · {supportingMetrics.length} 项补充</small>
+            <small>{primaryMetrics.length} 项重点维度 · {supportingMetrics.length} 项结构维度</small>
           </div>
           <div className="fusion-scope-lock">
             <i />
@@ -290,12 +297,12 @@ export default function MapIntegratedOverview({ onSwitchToProjects }: { onSwitch
 
         <aside className="fusion-metric-panel">
           <section className="fusion-primary-metrics">
-            <header><div><p>CORE METRICS</p><h3>核心展示指标</h3></div><span>{primaryMetrics.length} 项 · {activeGroup.period}</span></header>
+            <header><div><p>ANNUAL PERFORMANCE</p><h3>年度表现</h3></div><span>{primaryMetrics.length} 项 · {activeGroup.period}</span></header>
             <div>{primaryMetrics.map((metric) => <MetricTile key={metric.id} metric={metric} />)}</div>
           </section>
           {supportingMetrics.length > 0 ? (
             <section className="fusion-supporting-metrics">
-              <header><div><p>SUPPORTING METRICS</p><h3>补充指标</h3></div><span>{supportingMetrics.length} 项 · 次级展示</span></header>
+              <header><div><p>BUSINESS STRUCTURE</p><h3>结构与效率</h3></div><span>{supportingMetrics.length} 项 · 经营观察</span></header>
               <div>{supportingMetrics.map((metric) => <MetricTile key={metric.id} metric={metric} />)}</div>
             </section>
           ) : null}
@@ -304,7 +311,7 @@ export default function MapIntegratedOverview({ onSwitchToProjects }: { onSwitch
 
       <footer className="fusion-footer">
         <span>经营概览 · 地图融合展示 · 共 {ANNUAL_METRIC_TOTALS.total} 项指标</span>
-        <span>{ANNUAL_METRIC_TOTALS.primary} 项核心 · {ANNUAL_METRIC_TOTALS.supporting} 项补充</span>
+        <span>7 大经营板块 · {ANNUAL_METRIC_TOTALS.total} 项年度经营指标</span>
         <span>指标来自初步意向稿 · 正式上屏前需统一核验数据源与口径</span>
       </footer>
     </main>

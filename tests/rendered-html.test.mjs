@@ -30,32 +30,35 @@ async function render() {
   );
 }
 
-test("server-renders the map-integrated exhibition dashboard", async () => {
+test("server-renders the dense map workbench without exposing priority labels", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
   const visibleHtml = html.replaceAll("<!-- -->", "");
-  assert.match(html, /<title>绿城中国经营概览<\/title>/);
-  assert.match(html, /MAP INTEGRATED VIEW/);
-  assert.match(html, /经营全景/);
+  assert.match(html, /<title>绿城中国经营工作台<\/title>/);
+  assert.match(html, /DENSE MAP WORKBENCH/);
+  assert.match(html, /绿城中国经营工作台/);
+  assert.match(html, /密集地图/);
+  assert.match(html, /融合地图/);
   assert.match(html, /项目驾驶舱/);
   assert.match(html, /三维经营地图/);
   assert.match(html, /总合同销售金额/);
   assert.match(html, /2,519/);
   assert.match(html, /新拓项目转化率/);
-  assert.match(html, /次级展示/);
+  assert.match(html, /新增规模/);
+  assert.match(html, /投资质量/);
+  assert.match(html, /城市结构/);
   assert.match(html, /data-group-id="investment"/);
   assert.match(html, /data-metric-count="8"/);
-  assert.match(html, /data-primary-count="4"/);
-  assert.match(html, /data-supporting-count="4"/);
   assert.match(html, /data-metric-id="investment-equity"/);
   assert.match(html, /data-priority="supporting"/);
-  assert.match(visibleHtml, /2026\.08\.24 中国境内有效项目点位，仅作空间定位/);
+  assert.match(visibleHtml, /问数中国境内有效项目快照 2026\.08\.24/);
   assert.match(visibleHtml, /点击城市定位/);
-  assert.match(visibleHtml, /共 56 项指标/);
+  assert.match(visibleHtml, /年度经营指标/);
   assert.match(html, /https:\/\/dashboard\.example\/og\.png/);
+  assert.doesNotMatch(visibleHtml, /补充指标|次级展示|原稿灰底/);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/);
 });
 
@@ -85,6 +88,33 @@ test("metric configuration preserves the source priority split", async () => {
   ]) {
     assert.match(groupSource, new RegExp(requiredLabel));
   }
+});
+
+test("dense workbench sections cover every metric exactly once and preserve concept A", async () => {
+  const annualSource = await readFile(new URL("../app/annual-metrics.ts", import.meta.url), "utf8");
+  const denseSource = await readFile(new URL("../app/dense-map-overview.tsx", import.meta.url), "utf8");
+  const annualGroupSource = annualSource.slice(
+    annualSource.indexOf("export const ANNUAL_METRIC_GROUPS"),
+    annualSource.indexOf("export const ANNUAL_METRIC_TOTALS"),
+  );
+  const annualMetricIds = [...annualGroupSource.matchAll(/\bid:\s*"([a-z0-9-]+)"/g)]
+    .map((match) => match[1])
+    .filter((id) => id.includes("-"))
+    .sort();
+  const sectionSource = denseSource.slice(
+    denseSource.indexOf("const DENSE_METRIC_SECTIONS"),
+    denseSource.indexOf("function DenseMetric"),
+  );
+  const denseMetricIds = [...sectionSource.matchAll(/"((?:investment|construction|delivery|sales|holding|special|reserve)-[a-z0-9-]+)"/g)]
+    .map((match) => match[1])
+    .sort();
+
+  assert.equal(denseMetricIds.length, 56);
+  assert.equal(new Set(denseMetricIds).size, 56);
+  assert.deepEqual(denseMetricIds, annualMetricIds);
+  assert.doesNotMatch(denseSource, /补充指标|次级展示|原稿灰底/);
+  await access(new URL("../app/map-integrated-overview.tsx", import.meta.url));
+  await access(new URL("../app/map-integrated-overview.css", import.meta.url));
 });
 
 test("ships a project-local social preview asset", async () => {
