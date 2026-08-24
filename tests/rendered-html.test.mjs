@@ -1,20 +1,22 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
-const developmentPreviewMeta =
-  /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
-const templateRoot = new URL("../", import.meta.url);
-const previewRoot = new URL("../app/_sites-preview/", import.meta.url);
+const projectRoot = new URL("../", import.meta.url);
 
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${Math.random()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", {
-      headers: { accept: "text/html" },
+    new Request("https://dashboard.example/", {
+      headers: {
+        accept: "text/html",
+        host: "dashboard.example",
+        "x-forwarded-host": "dashboard.example",
+        "x-forwarded-proto": "https",
+      },
     }),
     {
       ASSETS: {
@@ -28,64 +30,56 @@ async function render() {
   );
 }
 
-test("server-renders the starter loading skeleton", async () => {
+test("server-renders the annual exhibition dashboard", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, developmentPreviewMeta);
-  assert.match(html, /<title>Your site is taking shape<\/title>/i);
-  assert.match(html, /Building your site/);
-  assert.match(html, /Your site is taking shape/);
-  assert.match(
-    html,
-    /Your first version will appear here automatically when it’s ready\./,
-  );
-  assert.doesNotMatch(html, /Codex/);
-  assert.match(html, /react-loading-skeleton/);
-  assert.match(html, /role="status"/);
+  assert.match(html, /<title>绿城中国经营概览<\/title>/);
+  assert.match(html, /年度全景/);
+  assert.match(html, /实时地图/);
+  assert.match(html, /总合同销售金额/);
+  assert.match(html, /2,519/);
+  assert.match(html, /新拓项目转化率/);
+  assert.match(html, /结构与效率/);
+  assert.match(html, /https:\/\/dashboard\.example\/og\.png/);
+  assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/);
 });
 
-test("keeps the loading skeleton scoped and disposable", async () => {
-  const [preview, css, page, layout, packageJson, files] = await Promise.all([
-    readFile(new URL("SkeletonPreview.tsx", previewRoot), "utf8"),
-    readFile(new URL("preview.css", previewRoot), "utf8"),
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot),
-  ]);
-
-  assert.deepEqual(files.sort(), ["SkeletonPreview.tsx", "preview.css"]);
-  assert.match(preview, /from "react-loading-skeleton"/);
-  assert.match(preview, /baseColor="#eceae7"/);
-  assert.match(preview, /highlightColor="#f9f8f6"/);
-  assert.match(preview, /duration=\{2\.8\}/);
-  assert.match(preview, /sites-skeleton-search-placeholder/);
-  assert.match(packageJson, /"react-loading-skeleton": "3\.5\.0"/);
-
-  const shellIndex = preview.indexOf('className="sites-skeleton-shell"');
-  const statusIndex = preview.indexOf('className="sites-skeleton-status"');
-  assert.ok(shellIndex >= 0 && statusIndex > shellIndex);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(css, /inset:\s*0/);
-  assert.match(css, /opacity:\s*0\.52/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.doesNotMatch(css, /#020617|canvas|pets|progress/i);
-  assert.doesNotMatch(
-    preview,
-    /loading-spinner|status-mark|status-progress|canvas|cookie|random/i,
+test("metric configuration preserves the source priority split", async () => {
+  const source = await readFile(new URL("../app/annual-metrics.ts", import.meta.url), "utf8");
+  const groupSource = source.slice(
+    source.indexOf("export const ANNUAL_METRIC_GROUPS"),
+    source.indexOf("export const ANNUAL_METRIC_TOTALS"),
   );
+  const primaryCount = (groupSource.match(/priority:\s*"primary"/g) ?? []).length;
+  const supportingCount = (groupSource.match(/priority:\s*"supporting"/g) ?? []).length;
+  const ids = [...groupSource.matchAll(/\bid:\s*"([a-z0-9-]+)"/g)].map((match) => match[1]);
 
-  assert.match(page, /export const metadata:\s*Metadata/);
-  assert.match(page, /"codex-preview": "development"/);
-  assert.match(page, /<SkeletonPreview \/>/);
-  assert.match(layout, /title:\s*"Starter Project"/);
-  assert.doesNotMatch(layout, /codex-preview|_sites-preview|themeColor|\bViewport\b/);
-  assert.doesNotMatch(css, /(^|\s)(html|body)\s*\{/m);
+  assert.equal(primaryCount, 38);
+  assert.equal(supportingCount, 18);
+  assert.equal(primaryCount + supportingCount, 56);
+  assert.equal((groupSource.match(/\beyebrow:/g) ?? []).length, 7);
+  assert.equal(ids.length, 63, "seven group ids plus 56 metric ids are expected");
+  assert.equal(new Set(ids).size, ids.length, "group and metric ids must be unique");
 
-  await assert.rejects(
-    access(new URL("public/_sites-preview", templateRoot)),
-  );
+  for (const requiredLabel of [
+    "新拓项目转化率",
+    "装配式建筑应用占比（在建）",
+    "年度回款率",
+    "数字化营销费率",
+    "抵押投资物业",
+  ]) {
+    assert.match(groupSource, new RegExp(requiredLabel));
+  }
+});
+
+test("ships a project-local social preview asset", async () => {
+  await access(new URL("../public/og.png", import.meta.url));
+  const layout = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  assert.match(layout, /x-forwarded-host/);
+  assert.match(layout, /summary_large_image/);
+  assert.match(layout, /\/og\.png/);
+  await access(projectRoot);
 });

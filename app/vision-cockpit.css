@@ -13,15 +13,21 @@
   --vision-copy: #f3f7fc;
   --vision-muted: #8fa1b8;
   background:
-    radial-gradient(circle at 70% 36%, rgba(19, 83, 157, .24), transparent 31%),
-    radial-gradient(circle at 17% 84%, rgba(44, 170, 197, .08), transparent 27%),
-    linear-gradient(138deg, #07162b 0%, #06101f 45%, #030914 100%);
+    radial-gradient(circle at 70% 36%, rgba(28, 112, 210, .26), transparent 36%),
+    radial-gradient(circle at 17% 84%, rgba(44, 170, 197, .09), transparent 31%),
+    linear-gradient(
+      180deg,
+      rgba(3, 11, 25, .04) 0%,
+      rgba(3, 10, 22, .02) 52%,
+      rgba(1, 5, 16, .08) 100%
+    ),
+    url("/dashboard-bg-cityscape.png") center bottom / cover fixed no-repeat;
 }
 
 .vision-cockpit::before {
   background:
-    radial-gradient(circle at 72% 47%, rgba(31, 105, 183, .14), transparent 37%),
-    linear-gradient(90deg, rgba(3, 9, 20, .9), rgba(6, 16, 31, .3) 42%, rgba(3, 9, 20, .16));
+    radial-gradient(circle at 72% 47%, rgba(38, 126, 224, .16), transparent 42%),
+    linear-gradient(90deg, rgba(3, 9, 20, .28), rgba(6, 16, 31, .06) 42%, transparent);
 }
 
 .vision-cockpit::after {
@@ -58,10 +64,11 @@
 }
 
 .vision-cockpit .grand-unified-header .grand-heading h1 {
-  color: var(--vision-copy);
+  color: rgba(235, 242, 250, .9);
   background: none;
+  font-weight: 400;
   filter: none;
-  text-shadow: 0 12px 34px rgba(10, 57, 113, .38);
+  text-shadow: 0 7px 22px rgba(10, 57, 113, .2);
 }
 
 .vision-cockpit .grand-data-date {
@@ -124,26 +131,29 @@
 
 .vision-cockpit .grand-cockpit-map-layer::before {
   background:
-    radial-gradient(ellipse at 71% 46%, rgba(29, 98, 178, .18), transparent 36%),
-    radial-gradient(ellipse at 62% 72%, rgba(34, 153, 187, .08), transparent 28%);
+    radial-gradient(ellipse at 71% 46%, rgba(35, 122, 218, .23), transparent 38%),
+    radial-gradient(ellipse at 62% 72%, rgba(34, 153, 187, .12), transparent 30%);
 }
 
-.vision-cockpit .grand-cockpit-map-layer::after,
+.vision-cockpit .grand-cockpit-map-layer::after {
+  background: none;
+}
+
 .vision-cockpit .grand-cockpit-map-layer .tech-map-webgl::after {
   background:
-    linear-gradient(90deg, rgba(4, 12, 26, .9) 0%, rgba(5, 16, 33, .52) 28%, rgba(5, 16, 33, .08) 49%, transparent 65%),
-    linear-gradient(180deg, rgba(5, 16, 33, .3), transparent 20%, rgba(3, 9, 20, .2));
+    linear-gradient(90deg, rgba(4, 12, 26, .22) 0%, rgba(5, 16, 33, .06) 28%, transparent 49%),
+    linear-gradient(180deg, rgba(5, 16, 33, .04), transparent 18%, rgba(3, 9, 20, .02));
 }
 
 .vision-cockpit .grand-cockpit-map-layer .tech-map-webgl canvas {
-  opacity: .94;
+  opacity: 1;
   filter:
-    saturate(.88)
-    brightness(.92)
-    contrast(1.06)
-    hue-rotate(-4deg)
-    drop-shadow(0 0 24px rgba(47, 116, 192, .24))
-    drop-shadow(0 26px 48px rgba(0, 0, 9, .55));
+    saturate(1.04)
+    brightness(1.09)
+    contrast(1.02)
+    hue-rotate(-2deg)
+    drop-shadow(0 0 24px rgba(47, 116, 192, .25))
+    drop-shadow(0 16px 32px rgba(0, 0, 9, .18));
 }
 
 .vision-cockpit .grand-overlay-layout {
@@ -153,15 +163,18 @@
 
 .vision-cockpit .grand-command-panel {
   grid-template-rows: auto auto minmax(220px, 1fr);
-  gap: 12px;
+  gap: 0;
   padding: 0;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  overflow: hidden;
+  border: 1px solid rgba(110, 180, 235, .14);
+  border-right-color: rgba(110, 180, 235, .06);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 4% 0%, rgba(54, 139, 232, .13), transparent 28%),
+    linear-gradient(90deg, rgba(7, 30, 68, .48) 0%, rgba(6, 24, 54, .3) 70%, rgba(4, 19, 44, .1) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045), 0 18px 42px rgba(0, 2, 14, .14);
+  backdrop-filter: saturate(110%);
+  -webkit-backdrop-filter: saturate(110%);
 }
 
 .vision-cockpit .grand-command-panel::before {
@@ -173,16 +186,12 @@
   isolation: isolate;
   padding: 15px 16px 16px;
   overflow: hidden;
-  border: 1px solid var(--vision-line);
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at 6% 0%, rgba(37, 100, 176, .15), transparent 32%),
-    linear-gradient(145deg, rgba(12, 34, 68, .81), rgba(5, 17, 36, .7));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .055),
-    0 22px 48px rgba(0, 0, 10, .24);
-  backdrop-filter: blur(22px) saturate(112%);
-  -webkit-backdrop-filter: blur(22px) saturate(112%);
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(90deg, rgba(28, 91, 164, .16), rgba(7, 30, 64, .07) 74%, transparent);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .vision-cockpit .grand-metric-group::after {
@@ -194,12 +203,12 @@
   width: 190px;
   height: 190px;
   border-radius: 50%;
-  background: rgba(32, 102, 181, .09);
+  background: rgba(49, 128, 215, .06);
   filter: blur(24px);
 }
 
 .vision-cockpit .grand-metric-group + .grand-metric-group {
-  border-top: 1px solid var(--vision-line);
+  border-top: 1px solid rgba(110, 180, 235, .12);
 }
 
 .vision-cockpit .grand-group-heading {
@@ -230,7 +239,7 @@
 .vision-cockpit .grand-group-heading > div h2 {
   color: #dbe6f2;
   font-size: clamp(18px, .92vw, 22px);
-  font-weight: 450;
+  font-weight: 400;
   line-height: 1.18;
   letter-spacing: .1em;
 }
@@ -251,18 +260,23 @@
   min-height: 78px;
   padding: 10px 13px;
   overflow: hidden;
-  border: 1px solid rgba(104, 153, 211, .1);
-  border-radius: 15px;
+  border: 0;
+  border-radius: 0;
   background:
-    radial-gradient(circle at 92% 12%, rgba(43, 112, 191, .13), transparent 38%),
-    linear-gradient(137deg, rgba(18, 47, 91, .5), rgba(7, 21, 43, .44));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+    radial-gradient(circle at 92% 12%, rgba(61, 148, 236, .11), transparent 40%),
+    linear-gradient(137deg, rgba(18, 64, 118, .3), rgba(7, 27, 57, .16));
+  box-shadow: none;
 }
 
 .vision-cockpit .grand-metric-group-grid > article:nth-child(2),
 .vision-cockpit .grand-metric-group-grid > article:nth-child(3),
 .vision-cockpit .grand-metric-group-grid > article:nth-child(5) {
-  border-left: 1px solid rgba(104, 153, 211, .1);
+  border-left: 1px solid rgba(110, 180, 235, .12);
+}
+
+.vision-cockpit .grand-metric-group-grid > article:nth-child(4),
+.vision-cockpit .grand-metric-group-grid > article:nth-child(5) {
+  border-top: 1px solid rgba(110, 180, 235, .1);
 }
 
 .vision-cockpit .grand-metric-group-grid > article::before {
@@ -295,13 +309,14 @@
 }
 
 .vision-cockpit .grand-sales-kpi {
-  justify-content: center;
-  padding: 13px 15px;
-  border: 1px solid rgba(104, 153, 211, .1);
-  border-radius: 16px;
+  justify-content: flex-start;
+  padding: 18px 15px 13px;
+  border: 0;
+  border-right: 1px solid rgba(110, 180, 235, .12);
+  border-radius: 0;
   background:
-    radial-gradient(circle at 100% 0, rgba(43, 112, 191, .15), transparent 45%),
-    linear-gradient(142deg, rgba(18, 47, 91, .5), rgba(7, 21, 43, .42));
+    radial-gradient(circle at 100% 0, rgba(61, 148, 236, .11), transparent 45%),
+    linear-gradient(142deg, rgba(15, 55, 108, .34), rgba(5, 22, 49, .22));
 }
 
 .vision-cockpit .grand-sales-kpi > span {
@@ -319,19 +334,19 @@
 }
 
 .vision-cockpit .grand-sales-kpi > i.is-negative {
-  color: #f08b83;
+  color: #ff9c93;
 }
 
 .vision-cockpit .grand-sales-kpi > small {
-  color: #777e99;
+  color: #99aac0;
 }
 
 .vision-cockpit .grand-story-chart {
   min-height: 175px;
   padding: 8px 10px 2px;
-  border: 1px solid rgba(104, 153, 211, .09);
-  border-radius: 16px;
-  background: linear-gradient(145deg, rgba(13, 37, 73, .4), rgba(5, 16, 33, .28));
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(145deg, rgba(15, 49, 94, .31), rgba(4, 19, 42, .2));
 }
 
 .vision-cockpit .grand-story-chart::before {
@@ -347,26 +362,26 @@
 }
 
 .vision-cockpit .grand-story-chart b {
-  color: #c7cbe0;
+  color: #e3ebf5;
 }
 
 .vision-cockpit .grand-story-chart i {
-  background: linear-gradient(180deg, var(--vision-blue-bright) 0%, var(--vision-blue) 54%, rgba(10, 36, 83, .34) 100%);
+  background: linear-gradient(180deg, #7bc9ff 0%, #4387df 54%, rgba(10, 36, 83, .34) 100%);
   box-shadow: 0 0 16px rgba(47, 116, 192, .22);
 }
 
 .vision-cockpit .grand-story-chart > div:nth-last-child(-n + 2) i {
-  background: linear-gradient(180deg, #66d7e7 0%, #4f9fdc 57%, rgba(48, 90, 151, .28) 100%);
+  background: linear-gradient(180deg, #7be4ee 0%, #55b3e3 57%, rgba(48, 90, 151, .28) 100%);
   box-shadow: 0 0 16px rgba(82, 190, 222, .18);
 }
 
 .vision-cockpit .grand-story-chart > div:last-child i {
-  background: linear-gradient(180deg, #f3c47e 0%, #db8b56 58%, rgba(141, 72, 50, .28) 100%);
+  background: linear-gradient(180deg, #ffd08a 0%, #e99a5e 58%, rgba(141, 72, 50, .28) 100%);
   box-shadow: 0 0 17px rgba(240, 185, 109, .2);
 }
 
 .vision-cockpit .grand-story-chart span {
-  color: #777f9b;
+  color: #a7b6ca;
 }
 
 .vision-cockpit .grand-story-empty {
@@ -521,10 +536,10 @@
 
 .vision-cockpit .grand-cockpit-map-layer .three-city-label {
   color: #f3f7fc;
-  border-color: rgba(104, 153, 211, .15);
+  border-color: rgba(117, 190, 240, .24);
   border-radius: 11px;
-  background: linear-gradient(138deg, rgba(14, 41, 81, .9), rgba(5, 16, 34, .85));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 12px 28px rgba(0, 0, 10, .36);
+  background: linear-gradient(138deg, rgba(17, 61, 118, .92), rgba(7, 27, 61, .88));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .075), 0 0 18px rgba(54, 145, 224, .14), 0 12px 28px rgba(0, 0, 10, .28);
   backdrop-filter: blur(13px) saturate(110%);
 }
 
@@ -541,6 +556,11 @@
 .vision-cockpit .grand-cockpit-map-layer .three-city-label.is-selected::before {
   background: var(--vision-mint);
   box-shadow: 0 0 13px rgba(100, 215, 180, .72);
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label.is-hub.is-selected::before {
+  background: var(--vision-amber);
+  box-shadow: 0 0 14px rgba(240, 185, 109, .76);
 }
 
 .vision-cockpit .grand-cockpit-map-layer .tech-map-tooltip {

@@ -17,6 +17,7 @@ import {
   WENSHU_PROJECTS,
   type WenshuProjectSnapshot,
 } from "./wenshu-projects-snapshot";
+import { WENSHU_PROJECT_ATTRIBUTES } from "./wenshu-project-attributes";
 
 type QueryMode = "administrative" | "organization";
 
@@ -248,10 +249,6 @@ function projectsForCity(city: CitySelection): WenshuProjectSnapshot[] {
     .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
 }
 
-function projectDateLabel(value: string | null) {
-  return value ? value.slice(0, 7).replace("-", ".") : "—";
-}
-
 export default function GrandDashboard() {
   const [queryMode, setQueryMode] = useState<QueryMode>("administrative");
   const [activeScope, setActiveScope] = useState<DashboardScope>(NATIONAL_SCOPE);
@@ -288,6 +285,12 @@ export default function GrandDashboard() {
       ? WENSHU_PROJECTS
       : WENSHU_PROJECTS.filter((project) => activeScope.adcodes.includes(project.provinceAdcode));
   }, [activeCity, activeOrganization.adcodes, activeScope, queryMode]);
+  const showProjectDrilldown = queryMode === "administrative" && activeScope.level === "province";
+  const drilldownProjects = useMemo(() => {
+    if (!showProjectDrilldown) return [];
+    return [...(activeCity ? cityProjects : scopedProjectRows)]
+      .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+  }, [activeCity, cityProjects, scopedProjectRows, showProjectDrilldown]);
   const usesOrganizationScale = queryMode === "organization"
     || (activeScope.level === "national" && activeCity === null);
   const scaleOrganization = queryMode === "organization" ? activeOrganization : ROOT_ORGANIZATION;
@@ -378,7 +381,7 @@ export default function GrandDashboard() {
           activeAdcodes={activeMapAdcodes}
           activeCityAdcode={activeCity?.cityAdcode ?? null}
           scopeName={displayScopeName}
-          viewOffsetX={-9}
+          viewOffsetX={0}
           onProvinceSelect={handleProvinceSelect}
           onCitySelect={handleCitySelect}
         />
@@ -534,25 +537,40 @@ export default function GrandDashboard() {
             </div>
             <em><i aria-hidden="true" />3D 交互地图</em>
           </header>
-          {activeCity ? (
-            <section className="grand-project-drilldown" aria-label={`${activeCity.name}全部项目`}>
+          {showProjectDrilldown ? (
+            <section className="grand-project-drilldown" aria-label={`${activeCity?.name ?? activeScope.name}项目列表`}>
               <header>
                 <div>
-                  <p>全国 <i /> {activeScope.name} <i /> {activeCity.name}</p>
-                  <h3>{activeCity.name}全部项目</h3>
-                  <span>共 {cityProjects.length} 个项目 · 点击地图其他城市可切换</span>
+                  <p>全国 <i /> {activeScope.name}{activeCity && <><i /> {activeCity.name}</>}</p>
+                  <h3>{activeCity?.name ?? activeScope.name}项目列表</h3>
+                  <span>共 {drilldownProjects.length} 个项目 · {activeCity ? "点击其他城市可切换" : "点击城市节点可继续下钻"}</span>
                 </div>
-                <button type="button" onClick={() => setActiveCity(null)}>返回省级</button>
+                <button
+                  type="button"
+                  onClick={() => activeCity ? setActiveCity(null) : selectScope(NATIONAL_SCOPE)}
+                >{activeCity ? "返回省级" : "返回全国"}</button>
               </header>
+              <div className="grand-project-table-head" aria-hidden="true">
+                <span>项目名称</span>
+                <span>业态</span>
+                <span>绿城方权益股比</span>
+                <span>总建面</span>
+                <span>销售状态</span>
+              </div>
               <div className="grand-project-list" role="list">
-                {cityProjects.map((project) => (
-                  <article key={project.id} role="listitem">
-                    <div><b>{project.name}</b><span>{project.developmentStatus}</span></div>
-                    <em className={`is-status-${project.saleStatus}`}>{project.saleStatus}</em>
-                    <span>总建面 <b>{project.totalBuildingAreaWan > 0 ? formatNumber(project.totalBuildingAreaWan, 2) : "—"}</b> 万㎡</span>
-                    <span>拿地 <b>{projectDateLabel(project.projectGainTime)}</b></span>
-                  </article>
-                ))}
+                {drilldownProjects.map((project) => {
+                  const attribute = WENSHU_PROJECT_ATTRIBUTES[project.id];
+                  const equityRatio = attribute?.greentownEquityRatio;
+                  return (
+                    <article key={project.id} role="listitem">
+                      <div><b>{project.name}</b><span>{project.cityName} · {project.developmentStatus}</span></div>
+                      <span>{attribute?.propertyTypes ?? "—"}</span>
+                      <span className="grand-project-number"><b>{equityRatio == null ? "—" : `${formatNumber(equityRatio, Number.isInteger(equityRatio) ? 0 : 1)}%`}</b></span>
+                      <span className="grand-project-number"><b>{project.totalBuildingAreaWan > 0 ? formatNumber(project.totalBuildingAreaWan, 2) : "—"}</b>{project.totalBuildingAreaWan > 0 ? " 万㎡" : ""}</span>
+                      <em className={`is-status-${project.saleStatus}`}>{project.saleStatus}</em>
+                    </article>
+                  );
+                })}
               </div>
             </section>
           ) : (

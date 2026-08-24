@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-export { default } from "./grand-page";
+export { default } from "./dashboard-shell";
 
 const overviewMetrics = [
   { label: "累计销售额", value: "218.6", unit: "亿元", growth: "+12.4%", color: "cyan" },

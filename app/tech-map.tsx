@@ -89,18 +89,18 @@ const CENTER_LAT = 35.5;
 const LONGITUDE_SCALE = Math.cos((35 * Math.PI) / 180);
 const MAP_SCALE = 1.03;
 const MAP_DEPTH = .012;
-const MAP_GRADIENT_INDIGO = new THREE.Color(0x162a5a);
-const MAP_GRADIENT_VIOLET = new THREE.Color(0x29366f);
-const MAP_GRADIENT_CYAN = new THREE.Color(0x12465f);
-const MAP_GRADIENT_MINT = new THREE.Color(0x2a6b68);
-const MAP_GRADIENT_BAND = new THREE.Color(0x4b78a4);
-const MAP_PARTICLE_LIGHT = new THREE.Color(0x6fc6d0);
-const NEON_BOUNDARY_GLOW = new THREE.Color().setRGB(.12, .82, 1.35);
+const MAP_GRADIENT_INDIGO = new THREE.Color(0x1c3a73);
+const MAP_GRADIENT_VIOLET = new THREE.Color(0x354b8f);
+const MAP_GRADIENT_CYAN = new THREE.Color(0x17677e);
+const MAP_GRADIENT_MINT = new THREE.Color(0x358987);
+const MAP_GRADIENT_BAND = new THREE.Color(0x6b9bc7);
+const MAP_PARTICLE_LIGHT = new THREE.Color(0x8ceaf2);
+const NEON_BOUNDARY_GLOW = new THREE.Color().setRGB(.18, 1.02, 1.62);
 const NEON_BOUNDARY_SELECTED = new THREE.Color().setRGB(.42, 1.65, 1.12);
-const NEON_CITY_CYAN = new THREE.Color().setRGB(.12, 1.05, 1.48);
-const NEON_CITY_VIOLET = new THREE.Color().setRGB(.48, .4, 1.4);
+const NEON_CITY_CYAN = new THREE.Color().setRGB(.18, 1.3, 1.72);
+const NEON_CITY_VIOLET = new THREE.Color().setRGB(.62, .72, 1.72);
 const NEON_CITY_MINT = new THREE.Color().setRGB(.38, 1.52, 1.04);
-const NEON_CITY_GOLD = new THREE.Color().setRGB(1.35, .78, .16);
+const NEON_CITY_GOLD = new THREE.Color().setRGB(1.42, .88, .22);
 const NEON_ARC_CYAN = new THREE.Color().setRGB(.1, 1.05, 1.5);
 const NEON_ARC_GOLD = new THREE.Color().setRGB(1.28, .7, .12);
 
@@ -130,7 +130,7 @@ function getMapGradientColor(x: number, y: number, target = new THREE.Color()) {
   const bandDistance = (y + x * .3 - 1) / 7.5;
   const directionalBand = Math.exp(-(bandDistance * bandDistance));
   target.lerp(MAP_GRADIENT_BAND, directionalBand * .16);
-  return target.multiplyScalar(.92 + eastward * .04 + directionalBand * .16);
+  return target.multiplyScalar(.98 + eastward * .05 + directionalBand * .17);
 }
 
 const cities = WENSHU_CITY_SUMMARIES;
@@ -274,10 +274,12 @@ export default function TechMap({
     scene.fog = new THREE.FogExp2(0x020713, .0055);
 
     const camera = new THREE.PerspectiveCamera(30, 1, .1, 320);
+    camera.up.set(0, 0, -1);
     const effectiveViewOffsetX = mount.clientWidth < 1180 ? 0 : viewOffsetX;
-    const cameraStart = new THREE.Vector3(effectiveViewOffsetX, 90, 76);
-    const cameraEnd = new THREE.Vector3(effectiveViewOffsetX, 60, 44);
+    const cameraStart = new THREE.Vector3(effectiveViewOffsetX, 98, 0);
+    const cameraEnd = new THREE.Vector3(effectiveViewOffsetX, 76, 0);
     camera.position.copy(reducedMotion ? cameraEnd : cameraStart);
+    camera.lookAt(effectiveViewOffsetX, 0, 0);
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -295,7 +297,7 @@ export default function TechMap({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = .88;
+    renderer.toneMappingExposure = .98;
     renderer.setClearColor(0x000000, 0);
     renderer.domElement.setAttribute("aria-label", "可交互的三维中国经营版图");
     renderer.domElement.style.touchAction = "none";
@@ -318,15 +320,16 @@ export default function TechMap({
     controls.enabled = reducedMotion;
     controls.enableDamping = true;
     controls.dampingFactor = .065;
-    controls.enableRotate = true;
+    controls.enableRotate = false;
     controls.enablePan = false;
     controls.minDistance = 20;
     controls.maxDistance = 110;
-    controls.minPolarAngle = .48;
-    controls.maxPolarAngle = .82;
-    controls.minAzimuthAngle = -.22;
-    controls.maxAzimuthAngle = .22;
+    controls.minPolarAngle = Math.PI / 2;
+    controls.maxPolarAngle = Math.PI / 2;
+    controls.minAzimuthAngle = 0;
+    controls.maxAzimuthAngle = 0;
     controls.target.set(effectiveViewOffsetX, 0, 0);
+    controls.update();
 
     scene.add(new THREE.HemisphereLight(0x75cfe2, 0x030713, .9));
     const keyLight = new THREE.DirectionalLight(0xc9eff4, 1.1);
@@ -407,7 +410,7 @@ export default function TechMap({
         const distance = THREE.MathUtils.clamp(Math.max(size.x, size.z) * 2.65, 23, 56);
         const nationalDistance = cameraEnd.distanceTo(new THREE.Vector3(effectiveViewOffsetX, 0, 0));
         toTarget.x += effectiveViewOffsetX * distance / nationalDistance;
-        const direction = new THREE.Vector3(0, .8, .6).normalize();
+        const direction = new THREE.Vector3(0, 1, 0);
         toCamera.copy(toTarget).add(direction.multiplyScalar(distance));
         controls.minDistance = 18;
       } else {
@@ -435,7 +438,7 @@ export default function TechMap({
         const isHub = visual.city.name === "杭州";
         const isMinor = visual.labelElement.classList.contains("is-minor");
         const baseNeon = isMinor ? NEON_CITY_VIOLET : NEON_CITY_CYAN;
-        const activeNeon = citySelected ? NEON_CITY_MINT : isHub ? NEON_CITY_GOLD : baseNeon;
+        const activeNeon = isHub ? NEON_CITY_GOLD : citySelected ? NEON_CITY_MINT : baseNeon;
         const scopeWeight = citySelected || inScope ? 1 : .24;
         visual.objects.forEach((object) => { object.visible = true; });
         visual.labelObject.visible = citySelected || (inScope && (isNational ? !isMinor : true));
@@ -551,8 +554,8 @@ export default function TechMap({
 
           const topMaterial = new THREE.MeshPhysicalMaterial({
             color: 0xeaf0ff,
-            emissive: 0x06183a,
-            emissiveIntensity: .42,
+            emissive: 0x0a2852,
+            emissiveIntensity: .48,
             vertexColors: true,
             metalness: .02,
             roughness: .82,
@@ -607,9 +610,9 @@ export default function TechMap({
           const boundaryGeometry = new THREE.BufferGeometry();
           boundaryGeometry.setAttribute("position", new THREE.Float32BufferAttribute(boundaryPositions, 3));
           const boundaryMaterial = new THREE.LineBasicMaterial({
-            color: 0x4da9c1,
+            color: 0x66cadf,
             transparent: true,
-            opacity: .62,
+            opacity: .7,
             blending: THREE.NormalBlending,
             depthWrite: false,
           });
@@ -696,7 +699,7 @@ export default function TechMap({
           const beamMaterial = new THREE.MeshBasicMaterial({
             color: city.hub ? NEON_CITY_GOLD : cityNeon,
             transparent: true,
-            opacity: city.hub ? .68 : city.count > 10 ? .62 : .48,
+            opacity: city.hub ? .72 : city.count > 10 ? .68 : .56,
             blending: THREE.AdditiveBlending,
             side: THREE.DoubleSide,
             depthWrite: false,
@@ -709,7 +712,7 @@ export default function TechMap({
             map: glowTexture,
             color: city.hub ? NEON_CITY_GOLD : cityNeon,
             transparent: true,
-            opacity: city.hub ? .58 : .38,
+            opacity: city.hub ? .62 : .46,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
           });
@@ -738,6 +741,25 @@ export default function TechMap({
             city.major ? "" : "is-minor",
           ].filter(Boolean).join(" ");
           label.innerHTML = "<b>" + city.name + "</b><span><strong>" + city.count + "</strong> 个项目</span>";
+          label.setAttribute("role", "button");
+          label.setAttribute("tabindex", "0");
+          label.setAttribute("aria-label", `${city.name}，${city.count}个项目，点击查看项目列表`);
+          label.style.pointerEvents = "auto";
+          const activateCity = (event: Event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            cityCallbackRef.current({
+              cityAdcode: city.cityAdcode,
+              provinceAdcode: city.provinceAdcode,
+              provinceName: city.provinceName,
+              name: city.name,
+              count: city.count,
+            });
+          };
+          label.addEventListener("click", activateCity);
+          label.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") activateCity(event);
+          });
           const labelOffset = CITY_LABEL_OFFSETS[city.name];
           if (labelOffset) {
             label.dataset.offsetX = String(labelOffset[0]);
@@ -859,10 +881,10 @@ export default function TechMap({
 
     const introStart = performance.now();
     const baseColor = new THREE.Color(0xeaf0ff);
-    const baseEmissive = new THREE.Color(0x06183a);
-    const selectedColor = new THREE.Color(0xb9f0dd);
-    const selectedEmissive = new THREE.Color(0x0b665f);
-    const baseBoundary = new THREE.Color(0x4da9c1);
+    const baseEmissive = new THREE.Color(0x0a2852);
+    const selectedColor = new THREE.Color(0x8fd8cc);
+    const selectedEmissive = new THREE.Color(0x07524f);
+    const baseBoundary = new THREE.Color(0x66cadf);
     const selectedBoundary = new THREE.Color(0x9af1d8);
     const baseBoundaryGlow = NEON_BOUNDARY_GLOW.clone();
     const selectedBoundaryGlow = NEON_BOUNDARY_SELECTED.clone();
@@ -905,6 +927,7 @@ export default function TechMap({
         ));
         visual.labelElement.style.opacity = overlaps ? "0" : "1";
         visual.labelElement.setAttribute("aria-hidden", overlaps ? "true" : "false");
+        visual.labelElement.tabIndex = overlaps ? -1 : 0;
         if (!overlaps && rect.width > 0 && rect.height > 0) occupied.push(rect);
       });
     };
@@ -944,14 +967,14 @@ export default function TechMap({
         const blend = region.selected ? .115 : .075;
         region.topMaterial.color.lerp(region.selected ? selectedColor : baseColor, blend);
         region.topMaterial.emissive.lerp(region.selected ? selectedEmissive : baseEmissive, blend);
-        const targetIntensity = region.selected ? .68 : .42;
+        const targetIntensity = region.selected ? .6 : .48;
         region.topMaterial.emissiveIntensity += (targetIntensity - region.topMaterial.emissiveIntensity) * .08;
         region.topMaterial.opacity += ((region.selected ? .98 : .95) - region.topMaterial.opacity) * .08;
         region.sideMaterial.emissiveIntensity += (0 - region.sideMaterial.emissiveIntensity) * .08;
         region.boundaryMaterial.color.lerp(region.selected ? selectedBoundary : baseBoundary, blend);
-        region.boundaryMaterial.opacity += ((region.selected ? .92 : .62) - region.boundaryMaterial.opacity) * .08;
+        region.boundaryMaterial.opacity += ((region.selected ? .94 : .7) - region.boundaryMaterial.opacity) * .08;
         region.boundaryGlowMaterial.color.lerp(region.selected ? selectedBoundaryGlow : baseBoundaryGlow, blend);
-        region.boundaryGlowMaterial.opacity += ((region.selected ? .3 : .12) - region.boundaryGlowMaterial.opacity) * .08;
+        region.boundaryGlowMaterial.opacity += ((region.selected ? .22 : .12) - region.boundaryGlowMaterial.opacity) * .08;
         region.group.position.z += (0 - region.group.position.z) * .085;
       });
 
@@ -960,7 +983,7 @@ export default function TechMap({
         const scale = 1 + cycle * .65;
         const scopeWeight = item.mesh.material.userData.scopeWeight ?? 1;
         item.mesh.scale.set(scale, scale, scale);
-        item.mesh.material.opacity = (1 - cycle) * (index === 0 ? .4 : .26) * scopeWeight;
+        item.mesh.material.opacity = (1 - cycle) * (index === 0 ? .44 : .32) * scopeWeight;
       });
 
       travellingLights.forEach((item) => {
@@ -972,7 +995,7 @@ export default function TechMap({
 
       spaceMaterial.opacity = .018 + Math.sin(elapsed * .55) * .006;
       if (mapParticles) {
-        mapParticles.material.opacity = .3 + Math.sin(elapsed * 1.2) * .035;
+        mapParticles.material.opacity = .36 + Math.sin(elapsed * 1.2) * .04;
         mapParticles.rotation.z = Math.sin(elapsed * .13) * .001;
       }
       platformMaterial.opacity = .006 + Math.sin(elapsed * .7) * .002;

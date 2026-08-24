@@ -2805,8 +2805,14 @@
   background: rgba(1, 3, 12, .84);
   box-shadow: 0 8px 22px rgba(0, 0, 7, .42), inset 0 1px 0 rgba(255, 255, 255, .04);
   backdrop-filter: blur(7px);
+  cursor: pointer;
   transform: translateY(-7px);
   transition: opacity .16s ease;
+}
+
+.grand-cockpit-map-layer .three-city-label:focus-visible {
+  outline: 1px solid rgba(121, 213, 245, .85);
+  outline-offset: 3px;
 }
 
 .grand-cockpit-map-layer .three-city-label::before {
@@ -2891,6 +2897,14 @@
   .grand-map-dashboard .grand-floating-toolbar .grand-map-toolbar-controls,
   .grand-map-dashboard .grand-floating-toolbar .grand-query-mode {
     justify-self: start;
+  }
+}
+
+@media (min-width: 1181px) {
+  .grand-map-dashboard .grand-map-ui > .grand-project-drilldown {
+    top: clamp(150px, 16vh, 240px);
+    right: 18px;
+    bottom: auto;
   }
 }
 
@@ -3175,19 +3189,34 @@
 
 /* Elegant Greentown typography: preserve scale and alignment, soften visual weight. */
 .grand-map-dashboard {
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+  --font-cn: "PingFang SC", -apple-system, BlinkMacSystemFont, "Hiragino Sans GB",
     "Microsoft YaHei UI", sans-serif;
+  --font-num: "DIN Alternate", "DINPro", "DIN", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-cn);
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
 }
 
 .grand-unified-header .grand-heading h1 {
-  font-weight: 520;
+  color: rgba(240, 247, 255, .92);
+  font-size: clamp(29px, 1.85vw, 36px);
+  font-weight: 400;
+  letter-spacing: .12em;
+  text-shadow: 0 6px 20px rgba(62, 50, 156, .18);
+}
+
+.grand-unified-header .vision-heading-kicker {
+  font-weight: 400;
+  letter-spacing: .28em;
+  opacity: .68;
 }
 
 .grand-data-date b {
+  font-family: var(--font-num);
   font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .grand-group-heading > span,
@@ -3197,8 +3226,14 @@
 }
 
 .grand-group-heading > div h2 {
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: .09em;
+}
+
+.grand-group-heading > span {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .grand-metric-group-grid > article > span,
@@ -3208,15 +3243,19 @@
 }
 
 .grand-metric-group-grid > article strong {
-  font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: var(--font-num);
   font-weight: 400;
   letter-spacing: -.012em;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .grand-sales-kpi strong {
-  font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: var(--font-num);
   font-weight: 400;
   letter-spacing: -.015em;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .grand-metric-group-grid > article em,
@@ -3232,11 +3271,15 @@
 }
 
 .grand-story-chart b {
+  font-family: var(--font-num);
   font-weight: 500;
   letter-spacing: .01em;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .grand-story-chart span {
+  font-family: var(--font-num);
   font-weight: 400;
   letter-spacing: .02em;
 }
@@ -3268,10 +3311,126 @@
 }
 
 .grand-cockpit-map-layer .three-city-label span strong {
+  font-family: var(--font-num);
   font-weight: 520;
   letter-spacing: 0;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .grand-cockpit-map-layer .tech-map-tooltip {
   font-weight: 400;
+}
+
+/* Region drilldown: readable five-column project register. */
+.grand-map-dashboard .grand-map-ui > .grand-project-drilldown {
+  display: flex;
+  flex-direction: column;
+  width: min(980px, 100%);
+  max-height: min(46vh, 460px);
+  border-radius: 18px;
+}
+
+.grand-map-dashboard .grand-project-drilldown > header {
+  padding: 16px 20px 13px;
+}
+
+.grand-map-dashboard .grand-project-drilldown > header p {
+  font-size: clamp(10px, .56vw, 12px);
+  font-weight: 400;
+}
+
+.grand-map-dashboard .grand-project-drilldown > header h3 {
+  font-size: clamp(19px, 1.04vw, 23px);
+  font-weight: 400;
+  letter-spacing: .07em;
+}
+
+.grand-map-dashboard .grand-project-drilldown > header span {
+  font-family: var(--font-num);
+  font-size: clamp(11px, .6vw, 13px);
+  font-weight: 400;
+}
+
+.grand-map-dashboard .grand-project-drilldown > header button {
+  font-size: clamp(11px, .6vw, 13px);
+  font-weight: 400;
+}
+
+.grand-project-table-head,
+.grand-project-list > article {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.65fr) minmax(130px, .9fr) 128px 132px 88px;
+  align-items: center;
+  gap: 12px;
+}
+
+.grand-project-table-head {
+  padding: 9px 20px;
+  color: #7893a5;
+  font-size: clamp(11px, .58vw, 13px);
+  font-weight: 400;
+  letter-spacing: .035em;
+  border-bottom: 1px solid rgba(157, 193, 237, .07);
+  background: rgba(3, 8, 22, .26);
+}
+
+.grand-map-dashboard .grand-map-ui > .grand-project-drilldown .grand-project-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
+.grand-project-list > article {
+  min-height: 54px;
+  padding: 9px 20px;
+  color: #a8bac5;
+  font-size: clamp(11px, .62vw, 14px);
+}
+
+.grand-project-list > article > div b {
+  font-size: clamp(13px, .7vw, 16px);
+  font-weight: 400;
+  letter-spacing: .02em;
+}
+
+.grand-project-list > article > div span {
+  font-size: clamp(10px, .54vw, 12px);
+  font-weight: 400;
+}
+
+.grand-project-list > article > span {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grand-project-list > article > em {
+  justify-self: start;
+  font-size: clamp(10px, .54vw, 12px);
+  font-weight: 400;
+}
+
+.grand-project-list .grand-project-number,
+.grand-project-list .grand-project-number b {
+  font-family: var(--font-num);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+@media (max-width: 1480px) {
+  .grand-project-table-head,
+  .grand-project-list > article {
+    grid-template-columns: minmax(150px, 1.5fr) minmax(76px, .8fr) 88px 92px 64px;
+    gap: 8px;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .grand-map-dashboard .grand-map-ui > .grand-project-drilldown {
+    max-height: min(52vh, 420px);
+  }
 }
