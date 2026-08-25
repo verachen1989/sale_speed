@@ -16,6 +16,15 @@ import {
 } from "./wenshu-projects-snapshot";
 
 const AUTO_ROTATE_MS = 15_000;
+const STAGE_SIGNAL_METRIC_IDS: Record<AnnualMetricGroup["id"], readonly string[]> = {
+  investment: ["investment-equity", "investment-new-value"],
+  construction: ["construction-demo", "construction-launch", "construction-delivery"],
+  delivery: ["delivery-satisfaction", "delivery-area", "delivery-households"],
+  sales: ["sales-total-amount", "sales-self-amount", "sales-management-amount"],
+  holding: ["holding-hotel", "holding-rent"],
+  special: ["special-events", "special-members", "special-decoration"],
+  reserve: ["reserve-projects", "reserve-tier12", "reserve-yangtze"],
+};
 
 function MetricTile({ metric }: { metric: AnnualMetric }) {
   const display = annualMetricDisplay(metric);
@@ -44,11 +53,17 @@ function StageSignal({ group }: { group: AnnualMetricGroup }) {
 
   if (group.id === "investment") {
     return (
-      <div className="fusion-stage-signal is-ring">
-        <div className="fusion-mini-ring" style={{ "--signal-progress": "69%" } as CSSProperties}>
-          <strong>{metric("investment-equity")?.value}</strong><em>%</em>
+      <div className="fusion-stage-signal is-highlight">
+        <div className="fusion-highlight-value" data-metric-id="investment-equity">
+          <span>平均权益比例</span>
+          <div><strong>{metric("investment-equity")?.value}</strong><em>%</em></div>
+          <i aria-hidden="true"><u style={{ width: "69%" }} /></i>
         </div>
-        <div><span>平均权益比例</span><b>新增货值 {metric("investment-new-value")?.value} 亿元</b><small>行业第 4</small></div>
+        <div className="fusion-highlight-related" data-metric-id="investment-new-value">
+          <span>新增货值</span>
+          <div><b>{metric("investment-new-value")?.value}</b><em>亿元</em></div>
+          <small>行业第 4</small>
+        </div>
       </div>
     );
   }
@@ -61,7 +76,7 @@ function StageSignal({ group }: { group: AnnualMetricGroup }) {
           ["construction-launch", "首开"],
           ["construction-delivery", "交付"],
         ].map(([id, label], index) => (
-          <div key={id}><i>{index + 1}</i><b>{metric(id)?.value}</b><em>月</em><span>{label}</span></div>
+          <div key={id} data-metric-id={id}><i>{index + 1}</i><b>{metric(id)?.value}</b><em>月</em><span>{label}</span></div>
         ))}
       </div>
     );
@@ -69,11 +84,17 @@ function StageSignal({ group }: { group: AnnualMetricGroup }) {
 
   if (group.id === "delivery") {
     return (
-      <div className="fusion-stage-signal is-ring">
-        <div className="fusion-mini-ring" style={{ "--signal-progress": "94%" } as CSSProperties}>
-          <strong>{metric("delivery-satisfaction")?.value}</strong><em>分</em>
+      <div className="fusion-stage-signal is-highlight">
+        <div className="fusion-highlight-value" data-metric-id="delivery-satisfaction">
+          <span>整体交付满意度</span>
+          <div><strong>{metric("delivery-satisfaction")?.value}</strong><em>分</em></div>
+          <i aria-hidden="true"><u style={{ width: "94%" }} /></i>
         </div>
-        <div><span>整体交付满意度</span><b>交付 {metric("delivery-area")?.value} 万㎡</b><small>{metric("delivery-households")?.value} 万户</small></div>
+        <div className="fusion-highlight-related" data-metric-id="delivery-area">
+          <span>年度交付</span>
+          <div><b>{metric("delivery-area")?.value}</b><em>万㎡</em></div>
+          <small data-metric-id="delivery-households">交付户数 {metric("delivery-households")?.value} 万户</small>
+        </div>
       </div>
     );
   }
@@ -81,9 +102,9 @@ function StageSignal({ group }: { group: AnnualMetricGroup }) {
   if (group.id === "sales") {
     return (
       <div className="fusion-stage-signal is-sales">
-        <div><span>总合同销售金额</span><strong>{metric("sales-total-amount")?.value}</strong><em>亿元</em><small>行业第 2</small></div>
+        <div data-metric-id="sales-total-amount"><span>总合同销售金额</span><strong>{metric("sales-total-amount")?.value}</strong><em>亿元</em><small>行业第 2</small></div>
         <p><i style={{ width: "60.9%" }} /><em style={{ width: "39.1%" }} /></p>
-        <footer><span>自投 1,534</span><span>代建 985</span></footer>
+        <footer><span data-metric-id="sales-self-amount">自投 {metric("sales-self-amount")?.value} 亿元</span><span data-metric-id="sales-management-amount">代建 {metric("sales-management-amount")?.value} 亿元</span></footer>
       </div>
     );
   }
@@ -91,8 +112,8 @@ function StageSignal({ group }: { group: AnnualMetricGroup }) {
   if (group.id === "holding") {
     return (
       <div className="fusion-stage-signal is-bars">
-        <div><span>酒店运营</span><i><u style={{ width: "100%" }} /></i><b>{metric("holding-hotel")?.value}</b></div>
-        <div><span>物业租金</span><i><u style={{ width: "30%" }} /></i><b>{metric("holding-rent")?.value}</b></div>
+        <div data-metric-id="holding-hotel"><span>酒店运营</span><i><u style={{ width: "100%" }} /></i><b>{metric("holding-hotel")?.value}</b></div>
+        <div data-metric-id="holding-rent"><span>物业租金</span><i><u style={{ width: "30%" }} /></i><b>{metric("holding-rent")?.value}</b></div>
         <small>经营收入 · 亿元</small>
       </div>
     );
@@ -101,27 +122,25 @@ function StageSignal({ group }: { group: AnnualMetricGroup }) {
   if (group.id === "special") {
     return (
       <div className="fusion-stage-signal is-triad">
-        <div><span>IP 活动</span><b>{metric("special-events")?.value}+</b><em>场</em></div>
-        <div><span>桂玥会</span><b>{metric("special-members")?.value}</b><em>万</em></div>
-        <div><span>家装定制</span><b>{metric("special-decoration")?.value}+</b><em>亿元</em></div>
+        <div data-metric-id="special-events"><span>IP 活动</span><b>{metric("special-events")?.value}+</b><em>场</em></div>
+        <div data-metric-id="special-members"><span>桂玥会</span><b>{metric("special-members")?.value}</b><em>万</em></div>
+        <div data-metric-id="special-decoration"><span>家装定制</span><b>{metric("special-decoration")?.value}</b><em>亿元</em></div>
       </div>
     );
   }
 
   return (
     <div className="fusion-stage-signal is-reserve">
-      <div><span>土储项目</span><strong>{metric("reserve-projects")?.value}</strong><em>个</em></div>
-      <p><span>一二线货值</span><i><u style={{ width: "80%" }} /></i><b>{metric("reserve-tier12")?.value}%</b></p>
-      <p><span>长三角货值</span><i><u style={{ width: "64%" }} /></i><b>{metric("reserve-yangtze")?.value}%</b></p>
+      <div data-metric-id="reserve-projects"><span>土储项目</span><strong>{metric("reserve-projects")?.value}</strong><em>个</em></div>
+      <p data-metric-id="reserve-tier12"><span>一二线货值</span><i><u style={{ width: "80%" }} /></i><b>{metric("reserve-tier12")?.value}%</b></p>
+      <p data-metric-id="reserve-yangtze"><span>长三角货值</span><i><u style={{ width: "64%" }} /></i><b>{metric("reserve-yangtze")?.value}%</b></p>
     </div>
   );
 }
 
 export default function MapIntegratedOverview({
-  onSwitchToDense,
   onSwitchToProjects,
 }: {
-  onSwitchToDense?: () => void;
   onSwitchToProjects: () => void;
 }) {
   const [activeGroupId, setActiveGroupId] = useState<AnnualMetricGroup["id"]>("investment");
@@ -137,6 +156,8 @@ export default function MapIntegratedOverview({
     () => activeGroup.metrics.filter((metric) => metric.priority === "supporting"),
     [activeGroup],
   );
+  const stageMetricIds = STAGE_SIGNAL_METRIC_IDS[activeGroup.id];
+  const cardMetrics = activeGroup.metrics.filter((metric) => !stageMetricIds.includes(metric.id));
   const activeMapAdcodes = useMemo(() => activeProvince ? [activeProvince.adcode] : [], [activeProvince]);
   const mapScopeName = activeCity?.name ?? activeProvince?.name ?? "全国";
 
@@ -215,7 +236,6 @@ export default function MapIntegratedOverview({
         </div>
         <div className="fusion-header-actions">
           <div className="fusion-view-switch" role="group" aria-label="大屏视图切换">
-            {onSwitchToDense ? <button type="button" aria-pressed="false" onClick={onSwitchToDense}>密集地图</button> : null}
             <button type="button" className="is-active" aria-pressed="true">融合地图</button>
             <button type="button" aria-pressed="false" onClick={onSwitchToProjects}>项目驾驶舱</button>
           </div>
@@ -250,7 +270,7 @@ export default function MapIntegratedOverview({
             activeAdcodes={activeMapAdcodes}
             activeCityAdcode={activeCity?.cityAdcode ?? null}
             scopeName={mapScopeName}
-            viewOffsetX={4}
+            viewOffsetX={7}
             interactionMode="locate"
             onProvinceSelect={handleProvinceSelect}
             onCitySelect={handleCitySelect}
@@ -258,15 +278,6 @@ export default function MapIntegratedOverview({
         </div>
 
         <aside className="fusion-combined-panel">
-          <section className="fusion-combined-overview">
-            <div className="fusion-combined-heading">
-              <div><span className="fusion-stage-index">{activeGroup.index}</span><p>{activeGroup.eyebrow}</p></div>
-              <h2 id="fusion-stage-title">{activeGroup.name}</h2>
-              <strong>{activeGroup.summary}</strong>
-            </div>
-            <StageSignal group={activeGroup} />
-          </section>
-
           <div className="fusion-combined-meta">
             <div className="fusion-scope-lock">
               <i />
@@ -297,17 +308,25 @@ export default function MapIntegratedOverview({
             </div>
           </div>
 
-          <div className="fusion-combined-metrics">
-            <section className="fusion-primary-metrics">
+          <section className="fusion-combined-overview">
+            <div className="fusion-combined-heading">
+              <div><span className="fusion-stage-index">{activeGroup.index}</span><p>{activeGroup.eyebrow}</p></div>
+              <h2 id="fusion-stage-title">{activeGroup.name}</h2>
+              <strong>{activeGroup.summary}</strong>
+            </div>
+            <StageSignal group={activeGroup} />
+          </section>
+
+          <div
+            className="fusion-combined-metrics"
+            data-rendered-metric-count={activeGroup.metrics.length}
+            data-feature-metric-count={stageMetricIds.length}
+            data-card-metric-count={cardMetrics.length}
+          >
+            <section className="fusion-unified-metrics">
               <header><div><p>ANNUAL PERFORMANCE</p><h3>年度表现</h3></div></header>
-              <div>{primaryMetrics.map((metric) => <MetricTile key={metric.id} metric={metric} />)}</div>
+              <div>{cardMetrics.map((metric) => <MetricTile key={metric.id} metric={metric} />)}</div>
             </section>
-            {supportingMetrics.length > 0 ? (
-              <section className="fusion-supporting-metrics">
-                <header><div><p>BUSINESS STRUCTURE</p><h3>结构与效率</h3></div></header>
-                <div>{supportingMetrics.map((metric) => <MetricTile key={metric.id} metric={metric} />)}</div>
-              </section>
-            ) : null}
           </div>
         </aside>
 

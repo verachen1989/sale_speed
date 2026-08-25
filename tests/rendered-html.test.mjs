@@ -30,7 +30,7 @@ async function render() {
   );
 }
 
-test("server-renders the dense map workbench without exposing priority labels", async () => {
+test("server-renders the integrated map as the default exhibition view", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
@@ -38,34 +38,43 @@ test("server-renders the dense map workbench without exposing priority labels", 
   const html = await response.text();
   const visibleHtml = html.replaceAll("<!-- -->", "");
   assert.match(html, /<title>绿城中国经营工作台<\/title>/);
-  assert.match(html, /DENSE MAP WORKBENCH/);
-  assert.match(html, /绿城中国经营工作台/);
-  assert.match(html, /密集地图/);
+  assert.match(html, /MAP INTEGRATED VIEW/);
+  assert.match(html, /绿城中国经营概览/);
   assert.match(html, /融合地图/);
   assert.match(html, /项目驾驶舱/);
-  assert.match(html, /三维经营地图/);
   assert.match(html, /总合同销售金额/);
   assert.match(html, /2,519/);
   assert.match(html, /新拓项目转化率/);
-  assert.match(html, /新增规模/);
-  assert.match(html, /投资质量/);
-  assert.match(html, /城市结构/);
   assert.match(html, /data-group-id="investment"/);
   assert.match(html, /data-metric-count="8"/);
-  assert.match(html, /data-metric-id="investment-equity"/);
+  assert.match(html, /data-primary-count="4"/);
+  assert.match(html, /data-supporting-count="4"/);
+  assert.match(html, /data-rendered-metric-count="8"/);
+  assert.match(html, /data-feature-metric-count="2"/);
+  assert.match(html, /data-card-metric-count="6"/);
+  for (const metricId of [
+    "investment-projects",
+    "investment-saleable-area",
+    "investment-new-value",
+    "investment-equity",
+    "investment-conversion",
+    "investment-tier12",
+    "investment-yangtze",
+    "investment-lower-tier",
+  ]) {
+    assert.equal((html.match(new RegExp(`data-metric-id="${metricId}"`, "g")) ?? []).length, 1, `${metricId} should render exactly once`);
+  }
   assert.match(html, /data-priority="supporting"/);
   assert.match(html, /data-project-cloud-count="488"/);
   assert.match(html, /data-city-anchor-count="55"/);
   assert.match(html, /PROJECT SCALE CLOUD/);
   assert.match(html, /488 个境内有效项目/);
-  assert.match(html, /is-feature/);
+  assert.match(html, /fusion-stage-signal is-highlight/);
   assert.match(html, /is-progress/);
-  assert.match(html, /is-ledger/);
-  assert.match(visibleHtml, /2026\.08\.24 · 项目规模点簇/);
-  assert.match(visibleHtml, /点击城市定位/);
-  assert.match(html, /投资拿地年度指标/);
+  assert.match(visibleHtml, /2025 集团年度口径/);
+  assert.match(visibleHtml, /7 大经营板块 · 56 项年度经营指标/);
   assert.match(html, /https:\/\/dashboard\.example\/og\.png/);
-  assert.doesNotMatch(visibleHtml, /补充指标|次级展示|原稿灰底|本章|07 CHAPTERS|人民币/);
+  assert.doesNotMatch(visibleHtml, /密集地图|DENSE MAP WORKBENCH|BUSINESS STRUCTURE|结构与效率|补充指标|次级展示|原稿灰底|本章|07 CHAPTERS|人民币/);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/);
 });
 
@@ -97,9 +106,8 @@ test("metric configuration preserves the source priority split", async () => {
   }
 });
 
-test("dense workbench sections cover every metric exactly once and preserve concept A", async () => {
+test("integrated map mixes feature visuals with one metric matrix and ships no dense-map runtime", async () => {
   const annualSource = await readFile(new URL("../app/annual-metrics.ts", import.meta.url), "utf8");
-  const denseSource = await readFile(new URL("../app/dense-map-overview.tsx", import.meta.url), "utf8");
   const annualGroupSource = annualSource.slice(
     annualSource.indexOf("export const ANNUAL_METRIC_GROUPS"),
     annualSource.indexOf("export const ANNUAL_METRIC_TOTALS"),
@@ -108,21 +116,47 @@ test("dense workbench sections cover every metric exactly once and preserve conc
     .map((match) => match[1])
     .filter((id) => id.includes("-"))
     .sort();
-  const sectionSource = denseSource.slice(
-    denseSource.indexOf("const DENSE_METRIC_SECTIONS"),
-    denseSource.indexOf("function DenseMetric"),
-  );
-  const denseMetricIds = [...sectionSource.matchAll(/"((?:investment|construction|delivery|sales|holding|special|reserve)-[a-z0-9-]+)"/g)]
-    .map((match) => match[1])
-    .sort();
-
-  assert.equal(denseMetricIds.length, 56);
-  assert.equal(new Set(denseMetricIds).size, 56);
-  assert.deepEqual(denseMetricIds, annualMetricIds);
-  assert.doesNotMatch(denseSource, /补充指标|次级展示|原稿灰底/);
+  assert.equal(annualMetricIds.length, 56);
+  assert.equal(new Set(annualMetricIds).size, 56);
   const integratedSource = await readFile(new URL("../app/map-integrated-overview.tsx", import.meta.url), "utf8");
   assert.match(integratedSource, /fusion-combined-panel/);
-  assert.doesNotMatch(integratedSource, /className="fusion-stage-panel"|className="fusion-metric-panel"|本章指标/);
+  assert.match(integratedSource, /const STAGE_SIGNAL_METRIC_IDS/);
+  assert.match(integratedSource, /const cardMetrics = activeGroup\.metrics\.filter\(\(metric\) => !stageMetricIds\.includes\(metric\.id\)\)/);
+  const featureConfigSource = integratedSource.slice(
+    integratedSource.indexOf("const STAGE_SIGNAL_METRIC_IDS"),
+    integratedSource.indexOf("function MetricTile"),
+  );
+  const featureGroups = [...featureConfigSource.matchAll(/^\s*(investment|construction|delivery|sales|holding|special|reserve): \[([^\]]+)\]/gm)];
+  const expectedFeatureCounts = { investment: 2, construction: 3, delivery: 3, sales: 3, holding: 2, special: 3, reserve: 3 };
+  const featureMetricIds = featureGroups.flatMap(([, groupId, ids]) => {
+    const parsedIds = [...ids.matchAll(/"([a-z0-9-]+)"/g)].map((match) => match[1]);
+    assert.equal(parsedIds.length, expectedFeatureCounts[groupId], `${groupId} feature metric count must stay intentional`);
+    const groupStart = annualGroupSource.indexOf(`\n    id: "${groupId}",`);
+    const nextGroupStart = [...Object.keys(expectedFeatureCounts)]
+      .map((candidateId) => annualGroupSource.indexOf(`\n    id: "${candidateId}",`, groupStart + 1))
+      .filter((position) => position > groupStart)
+      .sort((left, right) => left - right)[0] ?? annualGroupSource.length;
+    const groupMetricIds = [...annualGroupSource.slice(groupStart, nextGroupStart).matchAll(/\bid:\s*"([a-z0-9-]+)"/g)]
+      .map((match) => match[1])
+      .filter((id) => id.includes("-"));
+    for (const featureMetricId of parsedIds) assert.ok(groupMetricIds.includes(featureMetricId), `${featureMetricId} must belong to ${groupId}`);
+    return parsedIds;
+  });
+  assert.equal(featureGroups.length, 7);
+  assert.equal(featureMetricIds.length, 19);
+  assert.equal(new Set(featureMetricIds).size, featureMetricIds.length);
+  for (const featureMetricId of featureMetricIds) assert.ok(annualMetricIds.includes(featureMetricId), `${featureMetricId} must exist in annual metrics`);
+  assert.match(integratedSource, /data-metric-id="delivery-households"/);
+  assert.equal((integratedSource.match(/cardMetrics\.map/g) ?? []).length, 1);
+  assert.match(integratedSource, /fusion-unified-metrics/);
+  assert.doesNotMatch(integratedSource, /primaryMetrics\.map|supportingMetrics\.map|fusion-primary-metrics|fusion-supporting-metrics|BUSINESS STRUCTURE|结构与效率|本章指标|密集地图/);
+  const shellSource = await readFile(new URL("../app/dashboard-shell.tsx", import.meta.url), "utf8");
+  assert.match(shellSource, /useState<DashboardView>\("showcase"\)/);
+  assert.doesNotMatch(shellSource, /DenseMapOverview|dense-map-overview|密集地图|"dense"/);
+  const layoutSource = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(layoutSource, /dense-map-overview|高密度地图/);
+  await assert.rejects(access(new URL("../app/dense-map-overview.tsx", import.meta.url)), { code: "ENOENT" });
+  await assert.rejects(access(new URL("../app/dense-map-overview.css", import.meta.url)), { code: "ENOENT" });
   await access(new URL("../app/map-integrated-overview.css", import.meta.url));
 });
 
