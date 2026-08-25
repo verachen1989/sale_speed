@@ -1,6 +1,8 @@
 export type WenshuOrganizationSnapshot = {
   code: string;
   name: string;
+  navName?: string;
+  dashboardAvailable?: boolean;
   adcodes: number[];
   sales: number;
   salesMomentum: number;
@@ -130,4 +132,59 @@ export const WENSHU_ORGANIZATIONS: WenshuOrganizationSnapshot[] = [
     pendingProjects: 2, pendingArea: 67.1,
     soilArea: 131.4, constructionArea: 64.3, sellingProjects: 14,
   },
+  {
+    code: "00000005", name: "绿城小镇集团", adcodes: [],
+    sales: 25.15, salesMomentum: -69.23,
+    monthlySales: [4.96069418, 4.27033324, 5.4596238936, 3.41295169, 2.19719035, 2.0404913545, 1.86868814, .95821567],
+    newValue: 0, newValueGrowth: 0, equityValue: null,
+    investment: 0, equityInvestment: null, newProjects: 0,
+    cashFlow: 0, totalProjects: 43, constructionProjects: 20,
+    pendingProjects: 0, pendingArea: 93.46,
+    soilArea: 238.5, constructionArea: 145.05, sellingProjects: 23,
+  },
+  {
+    code: "50052679", name: "海外公司", adcodes: [], dashboardAvailable: false,
+    sales: 0, salesMomentum: 0, monthlySales: [0, 0, 0, 0, 0, 0, 0, 0],
+    newValue: 0, newValueGrowth: 0, equityValue: null,
+    investment: 0, equityInvestment: null, newProjects: 0,
+    cashFlow: 0, totalProjects: 1, constructionProjects: 0,
+    pendingProjects: 1, pendingArea: 1.36,
+    soilArea: 1.36, constructionArea: 0, sellingProjects: 0,
+  },
+  {
+    code: "00000003", name: "绿城管理集团", adcodes: [], dashboardAvailable: false,
+    sales: 0, salesMomentum: 0, monthlySales: [0, 0, 0, 0, 0, 0, 0, 0],
+    newValue: 0, newValueGrowth: 0, equityValue: null,
+    investment: 0, equityInvestment: null, newProjects: 0,
+    cashFlow: 0, totalProjects: 0, constructionProjects: 0,
+    pendingProjects: 0, pendingArea: 0,
+    soilArea: 0, constructionArea: 0, sellingProjects: 0,
+  },
 ];
+
+// Matches the 2025 top-level organization tree used by 经营指挥. 成都公司 is
+// retained in the local snapshot for historical comparisons, but is not a
+// first-level organization and therefore is intentionally excluded here.
+export const WENSHU_FIRST_LEVEL_ORGANIZATION_CODES = [
+  "50127376", "10002002", "10002006", "00000005", "10002007",
+  "10002216", "50052675", "50121142", "50121143", "50052679", "00000003",
+] as const;
+
+export const WENSHU_FIRST_LEVEL_ORGANIZATIONS = WENSHU_FIRST_LEVEL_ORGANIZATION_CODES
+  .map((code) => WENSHU_ORGANIZATIONS.find((organization) => organization.code === code))
+  .filter((organization): organization is WenshuOrganizationSnapshot => Boolean(organization));
+
+export const WENSHU_ORGANIZATION_NAV_LABELS: Record<string, string> = {
+  "00000001": "全国",
+  "50127376": "浙江",
+  "10002002": "华东",
+  "10002006": "华北",
+  "00000005": "小镇",
+  "10002007": "中原",
+  "10002216": "华南",
+  "50052675": "华中",
+  "50121142": "西北",
+  "50121143": "东北",
+  "50052679": "海外",
+  "00000003": "绿管",
+};

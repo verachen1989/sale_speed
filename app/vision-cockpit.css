@@ -10,9 +10,12 @@
   --vision-cyan: #61c9e8;
   --vision-mint: #64d7b4;
   --vision-amber: #f0b96d;
+  --vision-accent-cyan: #00d4ff;
+  --vision-accent-mint: #00ff9d;
+  --vision-accent-gold: #ffd700;
   --vision-copy: #f3f7fc;
   --vision-muted: #8fa1b8;
-  font-synthesis: weight;
+  font-synthesis: none;
   -webkit-font-smoothing: auto;
   text-rendering: optimizeLegibility;
   background:
@@ -25,6 +28,22 @@
       rgba(1, 5, 16, .08) 100%
     ),
     url("/dashboard-bg-cityscape.png") center bottom / cover fixed no-repeat;
+}
+
+/* Keep value and unit on one baseline in the project cockpit as well. */
+.vision-cockpit .grand-composite-value,
+.vision-cockpit .grand-embedded-fact,
+.vision-cockpit .grand-sales-kpi > div {
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.vision-cockpit .grand-composite-value > em,
+.vision-cockpit .grand-embedded-fact > em,
+.vision-cockpit .grand-sales-kpi > div > em {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .vision-cockpit::before {
@@ -103,6 +122,7 @@
   border-radius: 50%;
   background: var(--vision-mint);
   box-shadow: 0 0 0 4px rgba(100, 215, 180, .08), 0 0 16px rgba(100, 215, 180, .56);
+  animation: vision-status-pulse 2s ease-in-out infinite;
 }
 
 .vision-cockpit .grand-header-filterbar {
@@ -129,7 +149,7 @@
   color: #fff;
   border-color: rgba(98, 168, 236, .24);
   background: linear-gradient(135deg, rgba(47, 116, 192, .44), rgba(10, 36, 83, .66));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 8px 20px rgba(5, 39, 84, .26);
+  box-shadow: inset 0 -2px 0 var(--vision-accent-cyan), inset 0 1px 0 rgba(255, 255, 255, .08), 0 0 14px rgba(0, 212, 255, .12), 0 8px 20px rgba(5, 39, 84, .26);
 }
 
 .vision-cockpit .grand-city-index-trigger {
@@ -218,7 +238,16 @@
 }
 
 .vision-cockpit .grand-command-panel::before {
-  display: none;
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 24px;
+  left: 24px;
+  z-index: 2;
+  display: block;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, .68), rgba(0, 255, 157, .24), transparent);
 }
 
 .vision-cockpit .grand-city-index-panel {
@@ -360,6 +389,7 @@
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  animation: vision-soft-enter .45s ease-out both;
 }
 
 .vision-cockpit .grand-metric-group::after {
@@ -401,14 +431,14 @@
   color: #9fb2c8;
   font-size: clamp(10px, .48vw, 12px);
   letter-spacing: .17em;
-  font-weight: 500;
+  font-weight: 400;
   opacity: .88;
 }
 
 .vision-cockpit .grand-group-heading > div h2 {
   color: #edf5fc;
-  font-size: clamp(18px, .92vw, 22px);
-  font-weight: 500;
+  font-size: clamp(17px, .84vw, 20px);
+  font-weight: 400;
   line-height: 1.18;
   letter-spacing: .1em;
 }
@@ -516,8 +546,8 @@
 .vision-cockpit .grand-composite-label {
   overflow: hidden;
   color: #dce7f2;
-  font-size: clamp(15px, .74vw, 18px);
-  font-weight: 600;
+  font-size: clamp(13px, .66vw, 16px);
+  font-weight: 400;
   line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -534,8 +564,8 @@
 .vision-cockpit .grand-composite-value strong {
   overflow: hidden;
   color: #fff;
-  font-size: clamp(29px, 1.55vw, 38px);
-  font-weight: 600;
+  font-size: clamp(25px, 1.35vw, 32px);
+  font-weight: 400;
   line-height: 1;
   letter-spacing: -.015em;
   font-variant-numeric: tabular-nums;
@@ -548,7 +578,7 @@
   flex: 0 0 auto;
   color: #b7c6d8;
   font-size: clamp(12px, .58vw, 14px);
-  font-weight: 500;
+  font-weight: 400;
   font-style: normal;
 }
 
@@ -571,8 +601,8 @@
   flex: 0 1 auto;
   overflow: hidden;
   color: #cbd7e6;
-  font-size: clamp(13px, .64vw, 16px);
-  font-weight: 600;
+  font-size: clamp(12px, .58vw, 14px);
+  font-weight: 400;
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -582,8 +612,8 @@
   flex: 0 1 auto;
   overflow: hidden;
   color: #fff;
-  font-size: clamp(20px, 1.02vw, 25px);
-  font-weight: 600;
+  font-size: clamp(18px, .9vw, 22px);
+  font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
@@ -636,13 +666,17 @@
 
 .vision-cockpit .grand-sales-kpi > span {
   color: #aeb3ca;
-  font-size: clamp(14px, .75vw, 17px);
+  font-size: clamp(13px, .66vw, 16px);
+  font-weight: 400;
 }
 
 .vision-cockpit .grand-sales-kpi strong {
   color: #fff;
-  font-size: clamp(37px, 2vw, 48px);
+  font-size: clamp(32px, 1.72vw, 42px);
+  font-weight: 400;
 }
+
+.vision-cockpit .grand-sales-kpi > div > em { font-weight: 400; }
 
 .vision-cockpit .grand-sales-kpi > i {
   color: var(--vision-amber);
@@ -658,10 +692,23 @@
 
 .vision-cockpit .grand-story-chart {
   min-height: 175px;
-  padding: 8px 10px 2px;
+  padding: 25px 10px 2px;
   border: 0;
   border-radius: 0;
   background: linear-gradient(145deg, rgba(15, 49, 94, .4), rgba(4, 19, 42, .3));
+}
+
+.vision-cockpit .grand-story-chart > .grand-story-unit {
+  position: absolute;
+  top: 7px;
+  right: 10px;
+  z-index: 2;
+  color: #9fb3c7;
+  font-family: var(--font-cn);
+  font-size: clamp(10px, .54vw, 12px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: .04em;
 }
 
 .vision-cockpit .grand-story-chart::before {
@@ -785,6 +832,8 @@
     radial-gradient(circle at 100% 0, rgba(37, 100, 176, .14), transparent 38%),
     linear-gradient(145deg, rgba(13, 39, 78, .95), rgba(5, 16, 34, .92));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 28px 70px rgba(0, 0, 10, .34);
+  backdrop-filter: blur(6px) saturate(104%);
+  -webkit-backdrop-filter: blur(6px) saturate(104%);
 }
 
 .vision-cockpit .grand-project-drilldown > header,
@@ -912,8 +961,9 @@
 }
 
 .vision-cockpit .grand-cockpit-map-layer .three-city-label.is-selected::before {
-  background: var(--vision-mint);
-  box-shadow: 0 0 13px rgba(100, 215, 180, .72);
+  background: var(--vision-accent-mint);
+  box-shadow: 0 0 13px rgba(0, 255, 157, .5);
+  animation: vision-status-pulse 2s ease-in-out infinite;
 }
 
 .vision-cockpit .grand-cockpit-map-layer .three-city-label.is-hub.is-selected::before {
@@ -1104,6 +1154,16 @@
   }
 }
 
+@keyframes vision-soft-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vision-status-pulse {
+  0%, 100% { filter: brightness(1); opacity: 1; }
+  50% { filter: brightness(1.08); opacity: .9; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .vision-cockpit *,
   .vision-cockpit *::before,
@@ -1157,23 +1217,23 @@
   }
 
   .vision-cockpit .grand-group-heading > div h2 {
-    font-size: clamp(22px, 1.05vw, 30px);
+    font-size: clamp(20px, .95vw, 26px);
   }
 
   .vision-cockpit .grand-composite-label {
-    font-size: clamp(16px, .82vw, 22px);
+    font-size: clamp(14px, .72vw, 18px);
   }
 
   .vision-cockpit .grand-composite-value strong {
-    font-size: clamp(36px, 1.8vw, 56px);
+    font-size: clamp(31px, 1.55vw, 44px);
   }
 
   .vision-cockpit .grand-embedded-fact > span {
-    font-size: clamp(14px, .68vw, 20px);
+    font-size: clamp(13px, .62vw, 17px);
   }
 
   .vision-cockpit .grand-embedded-fact > strong {
-    font-size: clamp(21px, 1.08vw, 32px);
+    font-size: clamp(18px, .92vw, 26px);
   }
 
   .vision-cockpit .grand-cockpit-map-layer .three-city-label b,
@@ -1308,4 +1368,220 @@
     scrollbar-color: rgba(47, 116, 192, .34) transparent;
     scrollbar-width: thin;
   }
+}
+
+/* Project register: larger typography, explicit close action and a non-overlapping map viewport. */
+.vision-cockpit .grand-project-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.vision-cockpit .grand-project-drilldown > header .grand-project-close {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.vision-cockpit .grand-project-drilldown > header { padding: 17px 20px 14px; }
+.vision-cockpit .grand-project-drilldown > header,
+.vision-cockpit .grand-project-drilldown > .grand-city-directory,
+.vision-cockpit .grand-project-drilldown > .grand-project-table-head { flex: 0 0 auto; }
+.vision-cockpit .grand-project-drilldown > .grand-city-directory {
+  display: flex;
+  flex-wrap: nowrap;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.vision-cockpit .grand-project-drilldown > .grand-city-directory button {
+  flex: 0 0 auto;
+  min-width: 96px;
+}
+.vision-cockpit .grand-project-drilldown > header p { font-size: clamp(13px, .66vw, 15px); }
+.vision-cockpit .grand-project-drilldown > header h3 { font-size: clamp(24px, 1.25vw, 30px); }
+.vision-cockpit .grand-project-drilldown > header span,
+.vision-cockpit .grand-project-drilldown > header button { font-size: clamp(13px, .68vw, 16px); }
+.vision-cockpit .grand-project-drilldown > header button { min-height: 40px; padding-inline: 14px; }
+.vision-cockpit .grand-city-directory { gap: 7px; padding: 10px 14px; }
+.vision-cockpit .grand-city-directory button { min-height: 42px; }
+.vision-cockpit .grand-city-directory b { font-size: clamp(14px, .76vw, 18px); }
+.vision-cockpit .grand-city-directory span { font-size: clamp(12px, .64vw, 15px); }
+.vision-cockpit .grand-project-table-head { min-height: 42px; font-size: clamp(13px, .68vw, 16px); }
+.vision-cockpit .grand-project-list > article { min-height: 64px; font-size: clamp(14px, .76vw, 18px); }
+.vision-cockpit .grand-project-list > article > div b { font-size: clamp(16px, .86vw, 20px); }
+.vision-cockpit .grand-project-list > article > div span { font-size: clamp(12px, .64vw, 15px); }
+.vision-cockpit .grand-project-list > article > em { font-size: clamp(12px, .64vw, 15px); }
+.vision-cockpit .grand-project-list {
+  contain: layout paint;
+}
+.vision-cockpit .grand-project-list > article {
+  content-visibility: auto;
+  contain-intrinsic-size: 64px;
+}
+.vision-cockpit .grand-project-number {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.vision-cockpit .grand-project-number b {
+  overflow: visible;
+  color: #f2f8fc;
+  font-family: var(--font-num);
+  font-size: clamp(17px, .92vw, 21px);
+  font-weight: 400;
+  line-height: 1;
+  text-overflow: clip;
+}
+.vision-cockpit .grand-project-number small {
+  flex: 0 0 auto;
+  color: #9fb2c0;
+  font-family: var(--font-cn);
+  font-size: clamp(12px, .64vw, 15px);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+@media (min-width: 1181px) {
+  .vision-cockpit {
+    --grand-command-width: clamp(650px, 37vw, 820px);
+    --grand-stage-gap: 18px;
+    --grand-project-list-height: min(var(--grand-project-content-height, 480px), 58vh, 480px);
+  }
+
+  .vision-cockpit .grand-overlay-layout {
+    grid-template-columns: var(--grand-command-width) minmax(0, 1fr);
+    gap: var(--grand-stage-gap);
+  }
+
+  .vision-cockpit[data-project-list-open="true"] .grand-cockpit-map-layer {
+    inset:
+      124px
+      26px
+      calc(20px + var(--grand-project-list-height) + 28px)
+      calc(26px + var(--grand-command-width) + var(--grand-stage-gap));
+    border: 1px solid rgba(104, 153, 211, .11);
+    border-radius: 24px;
+  }
+
+  .vision-cockpit[data-project-list-open="true"] .grand-cockpit-map-layer::after,
+  .vision-cockpit[data-project-list-open="true"] .grand-cockpit-map-layer .tech-map-webgl::after {
+    background: linear-gradient(180deg, rgba(2, 8, 20, .08), transparent 24%, rgba(2, 7, 18, .12));
+  }
+
+  .vision-cockpit[data-project-list-open="true"] .grand-map-ui > .grand-project-drilldown {
+    inset: auto 0 0 auto;
+    top: auto;
+    width: 100%;
+    height: var(--grand-project-list-height);
+    max-height: none;
+  }
+}
+
+@media (min-width: 1181px) and (min-aspect-ratio: 1/1) and (max-aspect-ratio: 4/3) {
+  .vision-cockpit {
+    --grand-command-width: clamp(500px, 34vw, 760px);
+    --grand-stage-gap: clamp(12px, 1vw, 20px);
+  }
+}
+
+/* Organization is the only primary query dimension. Administrative regions
+   remain available as nested map drilldowns instead of a competing mode. */
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar {
+  width: min(1260px, calc(100% - 340px));
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 54px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 54px), transparent 100%);
+}
+
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar .grand-scope-switch {
+  justify-content: flex-start;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-right: 74px;
+}
+
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar .grand-scope-switch button {
+  flex: 0 0 clamp(84px, 5.2vw, 104px);
+  min-width: 84px;
+  scroll-snap-align: start;
+}
+
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar .grand-scope-switch button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar::after {
+  content: "›";
+  position: absolute;
+  z-index: 3;
+  right: 7px;
+  top: 50%;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  color: rgba(184, 229, 247, .78);
+  font-size: 22px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  border: 1px solid rgba(97, 201, 232, .2);
+  border-radius: 50%;
+  background: rgba(7, 31, 67, .82);
+  box-shadow: 0 0 18px rgba(66, 179, 235, .18);
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  max-width: min(760px, calc(100% - 32px));
+  pointer-events: none;
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption > small {
+  grid-column: 1 / 3;
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption > .grand-map-caption-action {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  align-self: center;
+  min-height: 38px;
+  padding: 0 14px;
+  color: #e6f7ff;
+  font: inherit;
+  font-size: clamp(12px, .64vw, 15px);
+  font-weight: 400;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  border: 1px solid rgba(91, 205, 231, .24);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(28, 119, 172, .34), rgba(13, 53, 101, .48));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 22px rgba(0, 15, 40, .24);
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption > .grand-map-caption-action:hover {
+  border-color: rgba(102, 226, 239, .42);
+  background: linear-gradient(135deg, rgba(34, 139, 191, .46), rgba(14, 63, 117, .58));
+}
+
+/* Let roughly 10% more of the map pass through the command panel. */
+.vision-cockpit .grand-command-panel {
+  background:
+    radial-gradient(circle at 4% 0%, rgba(54, 139, 232, .1), transparent 30%),
+    linear-gradient(90deg, rgba(5, 22, 50, .7) 0%, rgba(4, 18, 42, .64) 70%, rgba(3, 15, 35, .56) 100%);
 }

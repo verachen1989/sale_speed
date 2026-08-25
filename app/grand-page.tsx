@@ -5,6 +5,8 @@ import type { CSSProperties } from "react";
 import TechMap from "./tech-map";
 import type { CitySelection, ProvinceSelection } from "./tech-map";
 import {
+  WENSHU_FIRST_LEVEL_ORGANIZATIONS,
+  WENSHU_ORGANIZATION_NAV_LABELS,
   WENSHU_ORGANIZATIONS,
   WENSHU_SNAPSHOT_DATE,
   type WenshuOrganizationSnapshot,
@@ -15,22 +17,13 @@ import {
 } from "./wenshu-city-sales-snapshot";
 import {
   WENSHU_CITY_SUMMARIES,
-  WENSHU_CONSTRUCTION_PROJECT_COUNT,
   WENSHU_COVERED_CITY_COUNT,
   WENSHU_DOMESTIC_PROJECT_COUNT,
   WENSHU_PROJECTS,
-  type WenshuProjectSnapshot,
 } from "./wenshu-projects-snapshot";
 import { WENSHU_PROJECT_ATTRIBUTES } from "./wenshu-project-attributes";
-
-type QueryMode = "administrative" | "organization";
-
-type DashboardScope = {
-  id: string;
-  name: string;
-  level: "national" | "cluster" | "province";
-  adcodes: number[];
-};
+import { WENSHU_ORGANIZATION_DEVELOPMENT_3002 } from "./wenshu-organization-development-snapshot";
+import { formatMoneyFromYi } from "./money-format";
 
 type RegionMetrics = {
   sales: number;
@@ -70,62 +63,8 @@ type CompositeFact = MetricFact & {
   supporting?: MetricFact & { id: string };
 };
 
-const NATIONAL_SCOPE: DashboardScope = {
-  id: "national",
-  name: "全国",
-  level: "national",
-  adcodes: [],
-};
-
-const SCOPE_OPTIONS: DashboardScope[] = [
-  NATIONAL_SCOPE,
-  { id: "yangtze-delta", name: "长三角", level: "cluster", adcodes: [310000, 320000, 330000, 340000] },
-  { id: "jing-jin-ji", name: "京津冀", level: "cluster", adcodes: [110000, 120000, 130000] },
-  { id: "cheng-yu", name: "成渝", level: "cluster", adcodes: [500000, 510000] },
-  { id: "central", name: "华中", level: "cluster", adcodes: [410000, 420000, 430000] },
-  { id: "greater-bay", name: "粤港澳大湾区", level: "cluster", adcodes: [440000] },
-  { id: "northwest", name: "西北", level: "cluster", adcodes: [610000, 620000, 630000, 640000, 650000] },
-];
-
-const PROVINCE_DATA: Record<number, RegionMetrics> = {
-  330000: { sales: 38.6, growth: 13.8, projects: 32, monthlySales: [3.1, 3.6, 4.2, 3.8, 4.9, 5.7, 6.1, 7.2], summary: "连续 3 个月保持增长" },
-  110000: { sales: 24.7, growth: 9.4, projects: 18, monthlySales: [2.3, 2.6, 2.9, 2.7, 3.1, 3.4, 3.6, 4.1], summary: "核心项目贡献持续提升" },
-  510000: { sales: 22.3, growth: 15.6, projects: 17, monthlySales: [1.8, 2.1, 2.4, 2.6, 2.8, 3.1, 3.5, 4.0], summary: "成渝区域增长动能突出" },
-  610000: { sales: 18.4, growth: 11.2, projects: 14, monthlySales: [1.5, 1.8, 2.0, 2.2, 2.3, 2.7, 2.8, 3.1], summary: "销售规模稳步扩大" },
-  310000: { sales: 16.8, growth: 8.6, projects: 6, monthlySales: [1.4, 1.6, 1.8, 1.9, 2.1, 2.4, 2.6, 3.0], summary: "高能级城市表现稳健" },
-  420000: { sales: 14.5, growth: 10.9, projects: 5, monthlySales: [1.1, 1.3, 1.5, 1.7, 1.8, 2.1, 2.3, 2.7], summary: "重点项目带动结构改善" },
-  440000: { sales: 21.6, growth: 12.7, projects: 8, monthlySales: [1.7, 2.0, 2.2, 2.5, 2.7, 3.1, 3.5, 3.9], summary: "湾区销售活力持续释放" },
-};
-
 const ROOT_ORGANIZATION = WENSHU_ORGANIZATIONS[0];
-
-const NATIONAL_METRICS: ScopeMetrics = {
-  sales: ROOT_ORGANIZATION.sales,
-  growth: ROOT_ORGANIZATION.salesMomentum,
-  projects: WENSHU_CONSTRUCTION_PROJECT_COUNT,
-  monthlySales: ROOT_ORGANIZATION.monthlySales,
-  summary: "全国实际签约及项目快照已接入问数",
-  cityCount: WENSHU_COVERED_CITY_COUNT,
-  newProjects: ROOT_ORGANIZATION.newProjects,
-  newValue: ROOT_ORGANIZATION.newValue,
-  newValueGrowth: ROOT_ORGANIZATION.newValueGrowth,
-  equityInvestment: ROOT_ORGANIZATION.equityInvestment ?? 0,
-  revenue: 164.8,
-  assets: 1280.6,
-  assetsGrowth: 6.8,
-  cashFlow: ROOT_ORGANIZATION.cashFlow,
-  cashFlowGrowth: 0,
-  constructionArea: ROOT_ORGANIZATION.constructionArea,
-  newConstructionArea: 312,
-  totalProjects: WENSHU_DOMESTIC_PROJECT_COUNT,
-  soilArea: ROOT_ORGANIZATION.soilArea,
-  investment: ROOT_ORGANIZATION.investment,
-  sellingProjects: ROOT_ORGANIZATION.sellingProjects,
-};
-
-function roundOne(value: number) {
-  return Number(value.toFixed(1));
-}
+const NAV_ORGANIZATIONS = [ROOT_ORGANIZATION, ...WENSHU_FIRST_LEVEL_ORGANIZATIONS];
 
 function formatNumber(value: number, digits = 1) {
   return value.toLocaleString("zh-CN", {
@@ -172,102 +111,6 @@ function formatSignedPercentage(value: number) {
   return `${sign}${value.toFixed(1)}%`;
 }
 
-function metricsForProvince(adcode: number): RegionMetrics {
-  if (PROVINCE_DATA[adcode]) return PROVINCE_DATA[adcode];
-  const seed = adcode % 997;
-  const projects = 3 + (seed % 12);
-  const sales = roundOne(8 + (seed % 115) / 10);
-  const growth = roundOne(6.2 + (seed % 83) / 10);
-  const monthlySales = Array.from({ length: 8 }, (_, index) => (
-    roundOne(sales * (.07 + index * .011 + ((seed + index * 7) % 9) / 200))
-  ));
-  return { sales, growth, projects, monthlySales, summary: "区域经营数据已同步联动" };
-}
-
-function metricsForScope(scope: DashboardScope): ScopeMetrics {
-  if (scope.level === "national") return NATIONAL_METRICS;
-
-  const rows = scope.adcodes.map(metricsForProvince);
-  const sales = roundOne(rows.reduce((total, row) => total + row.sales, 0));
-  const scopedProjects = WENSHU_PROJECTS.filter((project) => scope.adcodes.includes(project.provinceAdcode));
-  const projects = scopedProjects.filter((project) => project.developmentStatus === "在建").length;
-  const weightedGrowth = rows.reduce((total, row) => total + row.growth * row.sales, 0) / Math.max(1, sales);
-  const monthlySales = Array.from({ length: 8 }, (_, index) => (
-    roundOne(rows.reduce((total, row) => total + row.monthlySales[index], 0))
-  ));
-  const cityCount = new Set(scopedProjects.map((project) => project.cityName)).size;
-  const scale = Math.max(.04, projects / NATIONAL_METRICS.projects);
-
-  return {
-    sales,
-    growth: roundOne(weightedGrowth),
-    projects,
-    monthlySales,
-    summary: scope.level === "province" ? rows[0].summary : `${scope.name}重点城市协同增长`,
-    cityCount,
-    newProjects: Math.max(1, Math.round(projects * .19)),
-    newValue: roundOne(sales * 1.49),
-    newValueGrowth: roundOne(weightedGrowth + 3.2),
-    equityInvestment: roundOne(sales * .86),
-    revenue: roundOne(sales * .754),
-    assets: roundOne(NATIONAL_METRICS.assets * Math.pow(scale, .82)),
-    assetsGrowth: roundOne(Math.max(3.8, weightedGrowth * .55)),
-    cashFlow: roundOne(sales * .195),
-    cashFlowGrowth: roundOne(weightedGrowth + 2.4),
-    constructionArea: Math.max(1, Math.round(projects * (NATIONAL_METRICS.constructionArea / NATIONAL_METRICS.projects))),
-    newConstructionArea: Math.max(1, Math.round(projects * (NATIONAL_METRICS.newConstructionArea / NATIONAL_METRICS.projects))),
-    totalProjects: scopedProjects.length,
-    soilArea: Math.max(1, Math.round(projects * (NATIONAL_METRICS.soilArea / NATIONAL_METRICS.projects))),
-    investment: roundOne(sales * .86),
-    sellingProjects: Math.max(1, Math.round(projects * .65)),
-  };
-}
-
-function metricsForCity(city: CitySelection): ScopeMetrics {
-  const provinceScope: DashboardScope = {
-    id: `province-${city.provinceAdcode}`,
-    name: city.provinceName,
-    level: "province",
-    adcodes: [city.provinceAdcode],
-  };
-  const province = metricsForScope(provinceScope);
-  const cityRows = WENSHU_PROJECTS.filter((project) => project.cityAdcode === city.cityAdcode);
-  const citySales = WENSHU_CITY_SALES_6283[city.name];
-  const cityMonthlySales = citySales?.monthlyContractSalesYi ?? [0, 0, 0, 0, 0, 0, 0, 0];
-  const constructionProjects = cityRows.filter((project) => project.developmentStatus === "在建").length;
-  const share = Math.min(1, city.count / Math.max(city.count, province.totalProjects));
-  const julySales = cityMonthlySales[6];
-  const augustSales = cityMonthlySales[7];
-  const growth = julySales > 0
-    ? roundOne(((augustSales / 24) / (julySales / 31) - 1) * 100)
-    : 0;
-
-  return {
-    ...province,
-    sales: citySales?.contractSalesYi ?? 0,
-    growth,
-    projects: constructionProjects,
-    monthlySales: cityMonthlySales,
-    summary: `${city.name}合同销售已接入数据集 6283`,
-    cityCount: 1,
-    newProjects: Math.max(1, Math.round(city.count * .19)),
-    newValue: roundOne(province.newValue * share),
-    newValueGrowth: roundOne(growth + 3.2),
-    equityInvestment: roundOne(province.equityInvestment * share),
-    revenue: roundOne(province.revenue * share),
-    assets: roundOne(province.assets * share),
-    assetsGrowth: roundOne(Math.max(3.8, growth * .55)),
-    cashFlow: roundOne(province.cashFlow * share),
-    cashFlowGrowth: roundOne(growth + 2.4),
-    constructionArea: Math.max(1, Math.round(province.constructionArea * share)),
-    newConstructionArea: Math.max(1, Math.round(province.newConstructionArea * share)),
-    totalProjects: cityRows.length,
-    soilArea: Math.max(1, Math.round(province.soilArea * share)),
-    investment: roundOne(province.investment * share),
-    sellingProjects: Math.max(1, Math.round(province.sellingProjects * share)),
-  };
-}
-
 function metricsForOrganization(organization: WenshuOrganizationSnapshot): ScopeMetrics {
   const cityCount = organization.adcodes.length === 0
     ? WENSHU_COVERED_CITY_COUNT
@@ -297,280 +140,218 @@ function metricsForOrganization(organization: WenshuOrganizationSnapshot): Scope
   };
 }
 
-function projectsForCity(city: CitySelection): WenshuProjectSnapshot[] {
-  return WENSHU_PROJECTS
-    .filter((project) => project.cityAdcode === city.cityAdcode)
-    .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
-}
-
 export default function GrandDashboard() {
-  const [queryMode, setQueryMode] = useState<QueryMode>("administrative");
-  const [activeScope, setActiveScope] = useState<DashboardScope>(NATIONAL_SCOPE);
   const [activeCity, setActiveCity] = useState<CitySelection | null>(null);
-  const [isCityIndexOpen, setIsCityIndexOpen] = useState(false);
+  const [activeProvince, setActiveProvince] = useState<ProvinceSelection | null>(null);
   const [activeOrganizationCode, setActiveOrganizationCode] = useState(WENSHU_ORGANIZATIONS[0].code);
+  const [isProjectListOpen, setIsProjectListOpen] = useState(false);
   const activeOrganization = useMemo(
     () => WENSHU_ORGANIZATIONS.find((organization) => organization.code === activeOrganizationCode) ?? WENSHU_ORGANIZATIONS[0],
     [activeOrganizationCode],
   );
-  const scopeMetrics = useMemo(() => metricsForScope(activeScope), [activeScope]);
-  const organizationMetrics = useMemo(() => metricsForOrganization(activeOrganization), [activeOrganization]);
-  const metrics = useMemo(
-    () => queryMode === "organization"
-      ? organizationMetrics
-      : (activeCity ? metricsForCity(activeCity) : scopeMetrics),
-    [activeCity, organizationMetrics, queryMode, scopeMetrics],
+  const activeOrganizationDevelopment = useMemo(
+    () => WENSHU_ORGANIZATION_DEVELOPMENT_3002[activeOrganization.code] ?? null,
+    [activeOrganization.code],
   );
-  const cityProjects = useMemo(() => activeCity ? projectsForCity(activeCity) : [], [activeCity]);
-  const usesCitySales6283 = queryMode === "administrative"
-    && activeCity !== null
-    && Object.hasOwn(WENSHU_CITY_SALES_6283, activeCity.name);
-  const chartPeak = Math.max(...metrics.monthlySales.map((value) => Math.abs(value)));
-  const chartMax = usesCitySales6283
-    ? Math.max(.01, chartPeak * 1.18)
-    : Math.max(5, Math.ceil((chartPeak * 1.2) / 2) * 2);
-  const salesValueDigits = usesCitySales6283 && Math.abs(metrics.sales) < .1 ? 4 : 2;
-  const salesChartDigits = usesCitySales6283
-    ? (chartPeak < .1 ? 4 : (chartPeak < 10 ? 2 : 1))
-    : 1;
-  const displayScopeName = queryMode === "organization"
-    ? activeOrganization.name
-    : (activeCity?.name ?? activeScope.name);
-  const activeMapAdcodes = queryMode === "organization" ? activeOrganization.adcodes : activeScope.adcodes;
-  const usesActualSales = queryMode === "organization"
-    || (activeScope.level === "national" && activeCity === null)
-    || usesCitySales6283;
-  const scopedProjectRows = useMemo(() => {
-    if (activeCity) return WENSHU_PROJECTS.filter((project) => project.cityAdcode === activeCity.cityAdcode);
-    if (queryMode === "organization") {
-      return activeOrganization.adcodes.length === 0
-        ? WENSHU_PROJECTS
-        : WENSHU_PROJECTS.filter((project) => activeOrganization.adcodes.includes(project.provinceAdcode));
+  const activeOrganizationCities = useMemo(() => {
+    if (activeOrganization.code === ROOT_ORGANIZATION.code) {
+      return [...WENSHU_CITY_SUMMARIES]
+        .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name, "zh-CN"));
     }
-    return activeScope.level === "national"
-      ? WENSHU_PROJECTS
-      : WENSHU_PROJECTS.filter((project) => activeScope.adcodes.includes(project.provinceAdcode));
-  }, [activeCity, activeOrganization.adcodes, activeScope, queryMode]);
-  const scopedCityCount = useMemo(
-    () => new Set(scopedProjectRows.map((project) => project.cityAdcode)).size,
-    [scopedProjectRows],
+    const managedCityNames = new Set(activeOrganizationDevelopment?.cities.map((city) => city.name) ?? []);
+    return WENSHU_CITY_SUMMARIES
+      .filter((city) => managedCityNames.has(city.name))
+      .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name, "zh-CN"));
+  }, [activeOrganization.code, activeOrganizationDevelopment]);
+  const activeOrganizationCityAdcodes = useMemo(
+    () => activeOrganizationCities.map((city) => city.cityAdcode),
+    [activeOrganizationCities],
   );
-  const showProjectDrilldown = queryMode === "administrative" && activeScope.level === "province";
-  const activeProvinceCities = useMemo(() => (
-    activeScope.level === "province"
-      ? WENSHU_CITY_SUMMARIES
-        .filter((city) => city.provinceAdcode === activeScope.adcodes[0])
-        .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name, "zh-CN"))
-      : []
-  ), [activeScope]);
-  const activeProvinceProjectCount = useMemo(
-    () => activeProvinceCities.reduce((total, city) => total + city.count, 0),
-    [activeProvinceCities],
+  const activeOrganizationCityAdcodeSet = useMemo(
+    () => new Set(activeOrganizationCityAdcodes),
+    [activeOrganizationCityAdcodes],
   );
-  const nationwideCityOptions = useMemo(() => (
-    [...WENSHU_CITY_SUMMARIES].sort((left, right) => (
-      left.provinceName.localeCompare(right.provinceName, "zh-CN")
-      || right.count - left.count
-      || left.name.localeCompare(right.name, "zh-CN")
-    ))
-  ), []);
-  const drilldownProjects = useMemo(() => {
-    if (!showProjectDrilldown) return [];
-    return [...(activeCity ? cityProjects : scopedProjectRows)]
-      .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
-  }, [activeCity, cityProjects, scopedProjectRows, showProjectDrilldown]);
-  const usesOrganizationScale = queryMode === "organization"
-    || (activeScope.level === "national" && activeCity === null);
-  const scaleOrganization = queryMode === "organization" ? activeOrganization : ROOT_ORGANIZATION;
-  const administrativeTotalArea = roundOne(scopedProjectRows.reduce((total, project) => total + project.totalBuildingAreaWan, 0));
-  const administrativeConstructionArea = roundOne(scopedProjectRows
-    .filter((project) => project.developmentStatus === "在建")
-    .reduce((total, project) => total + project.totalBuildingAreaWan, 0));
-  const administrativePendingArea = roundOne(scopedProjectRows
-    .filter((project) => project.developmentStatus === "待开发")
-    .reduce((total, project) => total + project.totalBuildingAreaWan, 0));
-  const scaleFacts: CompositeFact[] = usesOrganizationScale ? [
+  const activeOrganizationProvinceAdcodes = useMemo(
+    () => [...new Set(activeOrganizationCities.map((city) => city.provinceAdcode))],
+    [activeOrganizationCities],
+  );
+  const visibleMapCities = useMemo(
+    () => activeProvince
+      ? activeOrganizationCities.filter((city) => city.provinceAdcode === activeProvince.adcode)
+      : activeOrganizationCities,
+    [activeOrganizationCities, activeProvince],
+  );
+  const scopedCityAdcodes = useMemo(
+    () => visibleMapCities.map((city) => city.cityAdcode),
+    [visibleMapCities],
+  );
+  const activeMapAdcodes = useMemo(
+    () => activeProvince ? [activeProvince.adcode] : activeOrganizationProvinceAdcodes,
+    [activeOrganizationProvinceAdcodes, activeProvince],
+  );
+  const organizationProjectRows = useMemo(() => {
+    if (activeOrganization.code === ROOT_ORGANIZATION.code) return WENSHU_PROJECTS;
+    return WENSHU_PROJECTS.filter((project) => activeOrganizationCityAdcodeSet.has(project.cityAdcode));
+  }, [activeOrganization.code, activeOrganizationCityAdcodeSet]);
+  const drilldownProjects = useMemo(() => (
+    organizationProjectRows
+      .filter((project) => !activeProvince || project.provinceAdcode === activeProvince.adcode)
+      .filter((project) => !activeCity || project.cityAdcode === activeCity.cityAdcode)
+      .slice()
+      .sort((left, right) => left.name.localeCompare(right.name, "zh-CN"))
+  ), [activeCity, activeProvince, organizationProjectRows]);
+  const organizationMetrics = useMemo(() => metricsForOrganization(activeOrganization), [activeOrganization]);
+  const activeCitySales = activeCity ? WENSHU_CITY_SALES_6283[activeCity.name] : undefined;
+  const usesCitySales6283 = Boolean(activeCity && activeCitySales);
+  const metrics = useMemo(() => {
+    if (!activeCitySales || !activeCity) return organizationMetrics;
+    const julySales = activeCitySales.monthlyContractSalesYi[6] ?? 0;
+    const augustSales = activeCitySales.monthlyContractSalesYi[7] ?? 0;
+    const growth = julySales > 0
+      ? ((augustSales / 24) / (julySales / 31) - 1) * 100
+      : 0;
+    return {
+      ...organizationMetrics,
+      sales: activeCitySales.contractSalesYi,
+      growth,
+      monthlySales: activeCitySales.monthlyContractSalesYi,
+      summary: `${activeCity.name}合同销售趋势`,
+    };
+  }, [activeCity, activeCitySales, organizationMetrics]);
+  const chartPeak = Math.max(...metrics.monthlySales.map((value) => Math.abs(value)));
+  const chartMax = Math.max(5, Math.ceil((chartPeak * 1.2) / 2) * 2);
+  const salesScaleAnchor = Math.max(Math.abs(metrics.sales), chartPeak);
+  const salesUnit = formatMoneyFromYi(salesScaleAnchor).unit;
+  const salesDisplay = formatMoneyFromYi(metrics.sales, { unit: salesUnit });
+  const displayScopeName = activeCity?.name ?? activeProvince?.name ?? activeOrganization.name;
+  const mapScopeName = activeCity?.name ?? activeProvince?.name ?? activeOrganization.name;
+  const showProjectDrilldown = isProjectListOpen;
+  const visibleProjectRows = Math.min(Math.max(drilldownProjects.length, 1), 5);
+  const projectListTitle = activeCity
+    ? `${activeOrganization.name} · ${activeCity.name}项目清单`
+    : activeProvince
+      ? `${activeOrganization.name} · ${activeProvince.name}项目清单`
+      : `${activeOrganization.name}覆盖城市项目`;
+  const scaleFacts: CompositeFact[] = [
     {
       id: "total-projects",
       label: "项目总数",
-      value: String(scaleOrganization.totalProjects),
+      value: String(activeOrganization.totalProjects),
       unit: "个",
       supporting: {
         id: "total-land-area",
         label: "土储总建面",
-        value: formatNumber(scaleOrganization.soilArea),
+        value: formatNumber(activeOrganization.soilArea),
         unit: "万㎡",
       },
     },
     {
       id: "construction-projects",
       label: "在建",
-      value: String(scaleOrganization.constructionProjects),
+      value: String(activeOrganization.constructionProjects),
       unit: "个",
       supporting: {
         id: "construction-area",
         label: "在建总建面",
-        value: formatNumber(scaleOrganization.constructionArea),
+        value: formatNumber(activeOrganization.constructionArea),
         unit: "万㎡",
       },
     },
     {
       id: "pending-projects",
       label: "待开发",
-      value: String(scaleOrganization.pendingProjects),
+      value: String(activeOrganization.pendingProjects),
       unit: "个",
       supporting: {
         id: "pending-area",
         label: "待开发建面",
-        value: formatNumber(scaleOrganization.pendingArea),
-        unit: "万㎡",
-      },
-    },
-  ] : [
-    {
-      id: "total-projects",
-      label: "项目总数",
-      value: String(scopedProjectRows.length),
-      unit: "个",
-      supporting: {
-        id: "total-project-area",
-        label: "项目总建面",
-        value: formatNumber(administrativeTotalArea),
-        unit: "万㎡",
-      },
-    },
-    {
-      id: "construction-projects",
-      label: "在建",
-      value: String(scopedProjectRows.filter((project) => project.developmentStatus === "在建").length),
-      unit: "个",
-      supporting: {
-        id: "construction-area",
-        label: "在建总建面",
-        value: formatNumber(administrativeConstructionArea),
-        unit: "万㎡",
-      },
-    },
-    {
-      id: "pending-projects",
-      label: "待开发",
-      value: String(scopedProjectRows.filter((project) => project.developmentStatus === "待开发").length),
-      unit: "个",
-      supporting: {
-        id: "pending-area",
-        label: "待开发建面",
-        value: formatNumber(administrativePendingArea),
+        value: formatNumber(activeOrganization.pendingArea),
         unit: "万㎡",
       },
     },
   ];
-  const usesActualInvestment = queryMode === "organization"
-    || (activeScope.level === "national" && activeCity === null);
-  const investmentOrganization = queryMode === "organization" ? activeOrganization : ROOT_ORGANIZATION;
   const investmentFacts: CompositeFact[] = [
     {
       id: "new-projects",
       label: "年度新拓项目",
-      value: usesActualInvestment ? String(investmentOrganization.newProjects) : "—",
-      unit: usesActualInvestment ? "个" : "",
+      value: String(activeOrganization.newProjects),
+      unit: "个",
     },
     {
       id: "new-value",
       label: "新拓货值",
-      value: usesActualInvestment ? formatNumber(investmentOrganization.newValue, 2) : "—",
-      unit: usesActualInvestment ? "亿元" : "",
+      value: formatNumber(activeOrganization.newValue, 2),
+      unit: "亿元",
       supporting: {
         id: "equity-value",
         label: "权益货值",
-        value: usesActualInvestment && investmentOrganization.equityValue !== null
-          ? formatNumber(investmentOrganization.equityValue, 2)
+        value: activeOrganization.equityValue !== null
+          ? formatNumber(activeOrganization.equityValue, 2)
           : "—",
-        unit: usesActualInvestment ? "亿元" : "",
+        unit: "亿元",
       },
     },
     {
       id: "investment",
       label: "投资额",
-      value: usesActualInvestment ? formatNumber(investmentOrganization.investment, 2) : "—",
-      unit: usesActualInvestment ? "亿元" : "",
+      value: formatNumber(activeOrganization.investment, 2),
+      unit: "亿元",
       supporting: {
         id: "equity-investment",
         label: "权益投资额",
-        value: usesActualInvestment && investmentOrganization.equityInvestment !== null
-          ? formatNumber(investmentOrganization.equityInvestment, 2)
+        value: activeOrganization.equityInvestment !== null
+          ? formatNumber(activeOrganization.equityInvestment, 2)
           : "—",
-        unit: usesActualInvestment ? "亿元" : "",
+        unit: "亿元",
       },
     },
   ];
 
-  const selectScope = useCallback((scope: DashboardScope) => {
-    setActiveCity(null);
-    setIsCityIndexOpen(false);
-    setActiveScope(scope);
-  }, []);
-
-  const selectQueryMode = useCallback((mode: QueryMode) => {
-    setActiveCity(null);
-    setIsCityIndexOpen(false);
-    setQueryMode(mode);
-  }, []);
-
   const selectOrganization = useCallback((organization: WenshuOrganizationSnapshot) => {
     setActiveCity(null);
-    setIsCityIndexOpen(false);
+    setActiveProvince(null);
+    setIsProjectListOpen(false);
     setActiveOrganizationCode(organization.code);
-    setQueryMode("organization");
   }, []);
 
   const handleProvinceSelect = useCallback((province: ProvinceSelection) => {
-    setQueryMode("administrative");
+    if (!activeOrganizationProvinceAdcodes.includes(province.adcode)) return;
     setActiveCity(null);
-    setIsCityIndexOpen(false);
-    setActiveScope({
-      id: `province-${province.adcode}`,
-      name: province.name,
-      level: "province",
-      adcodes: [province.adcode],
-    });
-  }, []);
+    setActiveProvince(province);
+    setIsProjectListOpen(true);
+  }, [activeOrganizationProvinceAdcodes]);
 
   const handleCitySelect = useCallback((city: CitySelection) => {
-    setQueryMode("administrative");
-    setIsCityIndexOpen(false);
-    setActiveScope({
-      id: `province-${city.provinceAdcode}`,
-      name: city.provinceName,
-      level: "province",
-      adcodes: [city.provinceAdcode],
-    });
+    if (!activeOrganizationCityAdcodeSet.has(city.cityAdcode)) return;
+    setActiveProvince({ adcode: city.provinceAdcode, name: city.provinceName });
     setActiveCity(city);
-  }, []);
+    setIsProjectListOpen(true);
+  }, [activeOrganizationCityAdcodeSet]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      if (isCityIndexOpen) setIsCityIndexOpen(false);
+      if (showProjectDrilldown) setIsProjectListOpen(false);
       else if (activeCity) setActiveCity(null);
-      else if (queryMode === "organization" && activeOrganization.code !== WENSHU_ORGANIZATIONS[0].code) {
+      else if (activeProvince) setActiveProvince(null);
+      else if (activeOrganization.code !== ROOT_ORGANIZATION.code) {
         selectOrganization(WENSHU_ORGANIZATIONS[0]);
-      } else if (queryMode === "organization") {
-        setQueryMode("administrative");
-      } else selectScope(NATIONAL_SCOPE);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeCity, activeOrganization.code, isCityIndexOpen, queryMode, selectOrganization, selectScope]);
+  }, [activeCity, activeOrganization.code, activeProvince, selectOrganization, showProjectDrilldown]);
 
   return (
     <main
       className="grand-dashboard grand-map-dashboard vision-cockpit"
-      data-query-mode={queryMode}
-      data-active-scope-id={activeScope.id}
-      data-active-province-adcode={activeScope.level === "province" ? activeScope.adcodes[0] : ""}
+      data-query-mode="organization"
+      data-active-organization-code={activeOrganization.code}
+      data-active-province-adcode={activeProvince?.adcode ?? ""}
       data-active-city-adcode={activeCity?.cityAdcode ?? ""}
       data-display-scope={displayScopeName}
-      data-city-index-open={isCityIndexOpen ? "true" : "false"}
+      data-project-list-open={showProjectDrilldown ? "true" : "false"}
+      style={{ "--grand-project-content-height": `${176 + visibleProjectRows * 64}px` } as CSSProperties}
     >
       <div className="grand-grid" aria-hidden="true" />
 
@@ -578,9 +359,11 @@ export default function GrandDashboard() {
         <TechMap
           activeAdcodes={activeMapAdcodes}
           activeCityAdcode={activeCity?.cityAdcode ?? null}
-          scopeName={displayScopeName}
-          viewOffsetX={-5.5}
+          scopedCityAdcodes={scopedCityAdcodes}
+          scopeName={mapScopeName}
+          viewOffsetX={-7}
           labelOcclusionSelector=".vision-cockpit .grand-command-panel"
+          interactionMode="drilldown"
           onProvinceSelect={handleProvinceSelect}
           onCitySelect={handleCitySelect}
         />
@@ -588,7 +371,7 @@ export default function GrandDashboard() {
 
       <header className="grand-header grand-unified-header">
         <div className="grand-brand grand-logo-brand">
-          <img src="/greentown-logo-full.png" alt="绿城中国 GREENTOWN" />
+          <img src="/greentown-logo-header.png" alt="绿城中国 GREENTOWN" />
         </div>
         <div className="grand-heading">
           <p className="vision-heading-kicker">EXECUTIVE OPERATIONS · REALTIME VIEW</p>
@@ -600,97 +383,26 @@ export default function GrandDashboard() {
         </div>
 
         <div className="grand-header-filterbar">
-          <div className="grand-query-mode" role="group" aria-label="地图查询口径">
-            <button
-              type="button"
-              className={queryMode === "administrative" ? "is-active" : ""}
-              aria-pressed={queryMode === "administrative"}
-              onClick={() => selectQueryMode("administrative")}
-            >行政区划</button>
-            <button
-              type="button"
-              className={queryMode === "organization" ? "is-active" : ""}
-              aria-pressed={queryMode === "organization"}
-              onClick={() => selectQueryMode("organization")}
-            >经营组织</button>
-          </div>
-
-          <nav className="grand-scope-switch" aria-label={queryMode === "organization" ? "经营组织选择" : "经营范围选择"}>
-            {queryMode === "organization" ? WENSHU_ORGANIZATIONS.map((organization) => (
+          <nav className="grand-scope-switch" aria-label="经营组织选择">
+            {NAV_ORGANIZATIONS.map((organization) => (
               <button
                 key={organization.code}
                 type="button"
                 className={activeOrganization.code === organization.code ? "is-active" : ""}
                 aria-pressed={activeOrganization.code === organization.code}
+                aria-label={organization.dashboardAvailable === false ? `${organization.name}，当前暂无可展示内容` : organization.name}
+                disabled={organization.dashboardAvailable === false}
                 onClick={() => selectOrganization(organization)}
               >
-                {organization.name}
-              </button>
-            )) : SCOPE_OPTIONS.map((scope) => (
-              <button
-                key={scope.id}
-                type="button"
-                className={activeScope.id === scope.id ? "is-active" : ""}
-                aria-pressed={activeScope.id === scope.id}
-                onClick={() => selectScope(scope)}
-              >
-                {scope.name}
+                {WENSHU_ORGANIZATION_NAV_LABELS[organization.code] ?? organization.name}
               </button>
             ))}
-            {queryMode === "administrative" && activeScope.level === "province" && (
-              <button type="button" className="is-active is-province" aria-pressed="true">
-                <span>当前</span>{activeScope.name}
-              </button>
-            )}
           </nav>
-          {queryMode === "administrative" && (
-            <button
-              type="button"
-              className={`grand-city-index-trigger ${isCityIndexOpen ? "is-active" : ""}`}
-              aria-expanded={isCityIndexOpen}
-              aria-controls="nationwide-city-index"
-              onClick={() => setIsCityIndexOpen((open) => !open)}
-            >
-              城市导航 <span>{WENSHU_COVERED_CITY_COUNT}</span>
-            </button>
-          )}
         </div>
       </header>
 
       <section className="grand-overlay-layout">
         <aside className="grand-command-panel" aria-label={`${displayScopeName}经营指标`}>
-          {isCityIndexOpen && (
-            <section
-              id="nationwide-city-index"
-              className="grand-city-index-panel"
-              aria-label="全国55城选择"
-              data-city-count={nationwideCityOptions.length}
-            >
-              <header>
-                <div>
-                  <p>NATIONWIDE CITY DIRECTORY</p>
-                  <h2>全国城市</h2>
-                  <span>55 城 · 点击直接定位</span>
-                </div>
-                <button type="button" onClick={() => setIsCityIndexOpen(false)}>关闭</button>
-              </header>
-              <div className="grand-city-index-grid">
-                {nationwideCityOptions.map((city) => (
-                  <button
-                    key={city.cityAdcode}
-                    type="button"
-                    className={activeCity?.cityAdcode === city.cityAdcode ? "is-active" : ""}
-                    aria-pressed={activeCity?.cityAdcode === city.cityAdcode}
-                    data-city-adcode={city.cityAdcode}
-                    onClick={() => handleCitySelect(city)}
-                  >
-                    <b>{city.name}</b>
-                    <span>{city.provinceName} · {city.count} 个项目</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
           <section
             className="grand-metric-group is-scale"
             aria-labelledby="scale-title"
@@ -713,7 +425,7 @@ export default function GrandDashboard() {
             data-composition="embedded-supporting"
             data-primary-count="3"
             data-supporting-count="2"
-            data-data-status={usesActualInvestment ? "actual" : "unavailable"}
+            data-data-status="actual"
           >
             <header className="grand-group-heading">
               <span>02</span>
@@ -725,98 +437,113 @@ export default function GrandDashboard() {
           <section
             className="grand-metric-group is-sales"
             aria-labelledby="sales-title"
-            data-data-status={usesActualSales ? "actual" : "unavailable"}
+            data-data-status="actual"
             data-source-dataset={usesCitySales6283 ? "6283" : undefined}
           >
             <header className="grand-group-heading">
               <span>03</span>
               <div><p>SALES PERFORMANCE</p><h2 id="sales-title">销售业绩</h2></div>
             </header>
-            {usesActualSales ? (
-              <div className="grand-sales-story">
-                <div className="grand-sales-kpi">
-                  <span>累计合同销售额</span>
-                  <div><strong>{formatNumber(metrics.sales, salesValueDigits)}</strong><em>亿元</em></div>
-                  <i className={!usesCitySales6283 && metrics.growth < 0 ? "is-negative" : ""}>
-                    {usesCitySales6283
-                      ? "6283 城市合同口径"
-                      : `本月日均环比 ${formatSignedPercentage(metrics.growth)}`}
-                  </i>
-                  <small>
-                    {usesCitySales6283
-                      ? `住宅、商办及车储在售项目 · 截至 ${WENSHU_CITY_SALES_6283_SNAPSHOT_DATE}`
-                      : "全业态实际签约，不含目标及预测"}
-                  </small>
-                </div>
-                <div className="grand-story-chart" aria-label={`${displayScopeName}1至8月销售趋势`}>
-                  {metrics.monthlySales.map((value, index) => {
-                    const barMagnitude = Math.abs(value);
-                    const formattedValue = value.toFixed(salesChartDigits);
-                    const barLabel = `${index + 1}月 ${formattedValue}亿元${value < 0 ? "，合同冲减" : ""}`;
-                    const barHeight = barMagnitude === 0
-                      ? "0%"
-                      : `${Math.max(usesCitySales6283 ? 4 : 10, (barMagnitude / chartMax) * 100)}%`;
-                    return (
-                      <div
-                        key={index}
-                        className={value === 0 ? "is-zero" : (value < 0 ? "is-negative" : "")}
-                        style={{ "--bar-height": barHeight } as CSSProperties}
-                      >
-                        <b>{formattedValue}</b>
-                        <i role="img" aria-label={barLabel} title={barLabel} />
-                        <span>{index + 1}月</span>
-                      </div>
-                    );
-                  })}
-                </div>
+            <div className="grand-sales-story">
+              <div className="grand-sales-kpi">
+                <span>累计合同销售额</span>
+                <div><strong>{salesDisplay.value}</strong><em>{salesDisplay.unit}</em></div>
+                <i className={!usesCitySales6283 && metrics.growth < 0 ? "is-negative" : ""}>
+                  {usesCitySales6283
+                    ? "城市累计合同销售"
+                    : <>本月日均环比 {formatSignedPercentage(metrics.growth)}</>}
+                </i>
+                <small>{usesCitySales6283
+                  ? `住宅、商办及车储在售项目 · 截至 ${WENSHU_CITY_SALES_6283_SNAPSHOT_DATE}`
+                  : "全业态实际签约，不含目标及预测"}</small>
               </div>
-            ) : (
-              <div className="grand-sales-story is-unavailable">
-                <div className="grand-sales-kpi">
-                  <span>累计合同销售额</span>
-                  <div><strong>—</strong></div>
-                  <i>行政区销售数据暂未接入</i>
-                  <small>请切换“经营组织”查看问数实际金额与月度趋势</small>
-                </div>
-                <div className="grand-story-empty">当前仅联动行政区项目规模与项目明细</div>
+              <div className="grand-story-chart" aria-label={`${displayScopeName}1至8月销售趋势`}>
+                <small className="grand-story-unit">单位：{salesDisplay.unit}</small>
+                {metrics.monthlySales.map((value, index) => {
+                  const barMagnitude = Math.abs(value);
+                  const formattedValue = formatMoneyFromYi(value, { unit: salesUnit }).value;
+                  const barLabel = `${index + 1}月 ${formattedValue}${salesUnit}${value < 0 ? "，合同冲减" : ""}`;
+                  const barHeight = barMagnitude === 0
+                    ? "0%"
+                    : `${Math.max(usesCitySales6283 ? 4 : 10, (barMagnitude / chartMax) * 100)}%`;
+                  return (
+                    <div
+                      key={index}
+                      className={value === 0 ? "is-zero" : (value < 0 ? "is-negative" : "")}
+                      style={{ "--bar-height": barHeight } as CSSProperties}
+                    >
+                      <b>{formattedValue}</b>
+                      <i role="img" aria-label={barLabel} title={barLabel} />
+                      <span>{index + 1}月</span>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
           </section>
         </aside>
 
-        <section className="grand-map-ui" aria-label="行政区经营地图与筛选">
+        <section className="grand-map-ui" aria-label="经营组织覆盖地图与项目穿透">
           {showProjectDrilldown ? (
             <section
               className="grand-project-drilldown"
-              aria-label={`${activeCity?.name ?? activeScope.name}项目列表`}
-              data-province-adcode={activeScope.adcodes[0]}
+              aria-label={projectListTitle}
+              data-organization-code={activeOrganization.code}
+              data-province-adcode={activeProvince?.adcode ?? ""}
               data-active-city-adcode={activeCity?.cityAdcode ?? ""}
             >
               <header>
                 <div>
-                  <p>全国 <i /> {activeScope.name}{activeCity && <><i /> {activeCity.name}</>}</p>
-                  <h3>{activeCity?.name ?? activeScope.name}项目列表</h3>
-                  <span>共 {drilldownProjects.length} 个项目 · {activeCity ? "点击其他城市可切换" : "点击城市节点可继续下钻"}</span>
+                  <p>
+                    全国
+                    {activeOrganization.code !== ROOT_ORGANIZATION.code && <><i /> {activeOrganization.name}</>}
+                    {activeProvince && <><i /> {activeProvince.name}</>}
+                    {activeCity && <><i /> {activeCity.name}</>}
+                  </p>
+                  <h3>{projectListTitle}</h3>
+                  <span>
+                    共 {drilldownProjects.length} 个项目 · {activeCity ? "可切换其他覆盖城市" : "点击城市继续下钻"}
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => activeCity ? setActiveCity(null) : selectScope(NATIONAL_SCOPE)}
-                >{activeCity ? "返回省级" : "返回全国"}</button>
+                <div className="grand-project-actions">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeCity) setActiveCity(null);
+                      else if (activeProvince) setActiveProvince(null);
+                      else setIsProjectListOpen(false);
+                    }}
+                  >{activeCity
+                      ? `返回${activeProvince?.name ?? activeOrganization.name}`
+                      : activeProvince
+                        ? `返回${activeOrganization.name}`
+                        : "收起列表"}</button>
+                  <button
+                    type="button"
+                    className="grand-project-close"
+                    aria-label="关闭项目列表"
+                    title="关闭项目列表"
+                    onClick={() => setIsProjectListOpen(false)}
+                  >×</button>
+                </div>
               </header>
               <nav
                 className="grand-city-directory"
-                aria-label={`${activeScope.name}城市选择`}
-                data-city-count={activeProvinceCities.length}
+                aria-label={`${activeOrganization.name}覆盖城市选择`}
+                data-city-count={activeOrganizationCities.length}
               >
                 <button
                   type="button"
-                  className={activeCity === null ? "is-active" : ""}
-                  aria-pressed={activeCity === null}
-                  onClick={() => setActiveCity(null)}
+                  className={activeCity === null && activeProvince === null ? "is-active" : ""}
+                  aria-pressed={activeCity === null && activeProvince === null}
+                  onClick={() => {
+                    setActiveCity(null);
+                    setActiveProvince(null);
+                  }}
                 >
-                  <b>全省</b><span>{activeProvinceProjectCount}</span>
+                  <b>全部项目</b><span>{organizationProjectRows.length}</span>
                 </button>
-                {activeProvinceCities.map((city) => (
+                {activeOrganizationCities.map((city) => (
                   <button
                     type="button"
                     key={city.cityAdcode}
@@ -850,8 +577,14 @@ export default function GrandDashboard() {
                     <article key={project.id} role="listitem">
                       <div><b>{project.name}</b><span>{project.cityName} · {project.developmentStatus}</span></div>
                       <span>{attribute?.propertyTypes ?? "—"}</span>
-                      <span className="grand-project-number"><b>{equityRatio == null ? "—" : `${formatNumber(equityRatio, Number.isInteger(equityRatio) ? 0 : 1)}%`}</b></span>
-                      <span className="grand-project-number"><b>{project.totalBuildingAreaWan > 0 ? formatNumber(project.totalBuildingAreaWan, 2) : "—"}</b>{project.totalBuildingAreaWan > 0 ? " 万㎡" : ""}</span>
+                      <span className="grand-project-number">
+                        <b>{equityRatio == null ? "—" : formatNumber(equityRatio, Number.isInteger(equityRatio) ? 0 : 1)}</b>
+                        {equityRatio == null ? null : <small>%</small>}
+                      </span>
+                      <span className="grand-project-number">
+                        <b>{project.totalBuildingAreaWan > 0 ? formatNumber(project.totalBuildingAreaWan, 2) : "—"}</b>
+                        {project.totalBuildingAreaWan > 0 ? <small>万㎡</small> : null}
+                      </span>
                       <em className={`is-status-${project.saleStatus}`}>{project.saleStatus}</em>
                     </article>
                   );
@@ -860,17 +593,20 @@ export default function GrandDashboard() {
             </section>
           ) : (
             <div className="grand-map-caption">
-              <b>{displayScopeName}</b>
-              <span>{queryMode === "organization"
-                ? activeOrganization.adcodes.length === 0
-                  ? `集团台账 ${metrics.totalProjects} 个项目 · 境内有效 ${WENSHU_DOMESTIC_PROJECT_COUNT} 个参与定位 · ${WENSHU_COVERED_CITY_COUNT} 城`
-                  : `${metrics.cityCount} 座覆盖城市 · ${metrics.totalProjects} 个项目 · ${metrics.projects} 个在建`
-                : activeScope.level === "national" && activeCity === null
-                  ? `集团台账 ${ROOT_ORGANIZATION.totalProjects} 个项目 · 境内有效 ${scopedProjectRows.length} 个参与定位 · ${scopedCityCount} 城`
-                  : `${scopedCityCount} 城 · ${scopedProjectRows.length} 个境内有效项目`}</span>
-              <small>{queryMode === "organization"
-                ? "经营组织已映射至行政区；点击地图行政区可切换到行政查询"
-                : "点簇按城市项目数量呈现；点击行政区或城市导航继续下钻"}</small>
+              <b>{activeCity
+                ? `${activeOrganization.name} · ${activeCity.name}`
+                : activeProvince
+                  ? `${activeOrganization.name} · ${activeProvince.name}`
+                  : activeOrganization.name}</b>
+              <span>
+                {activeOrganizationCities.length} 座覆盖城市 · {drilldownProjects.length} 个项目
+              </span>
+              <small>经营组织 → 覆盖行政区 → 城市 → 项目清单</small>
+              <button
+                type="button"
+                className="grand-map-caption-action"
+                onClick={() => setIsProjectListOpen(true)}
+              >查看{activeCity ? "城市" : activeProvince ? "行政区" : "覆盖城市"}项目 →</button>
             </div>
           )}
         </section>
@@ -878,8 +614,8 @@ export default function GrandDashboard() {
 
       <footer className="grand-footer">
         <span>{displayScopeName}经营概览 · 全业态</span>
-        <span>行政区划 / 经营组织双口径 · {WENSHU_COVERED_CITY_COUNT} 城 · {WENSHU_DOMESTIC_PROJECT_COUNT} 个国内有效项目</span>
-        <span>问数实际快照 · 不含目标及预测</span>
+        <span>经营组织 → 覆盖行政区 → 城市 → 项目清单 · {WENSHU_COVERED_CITY_COUNT} 城 · {WENSHU_DOMESTIC_PROJECT_COUNT} 个国内有效项目</span>
+        <span>数据截至 {WENSHU_SNAPSHOT_DATE} · 不含目标及预测</span>
       </footer>
     </main>
   );

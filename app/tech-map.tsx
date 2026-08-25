@@ -50,10 +50,12 @@ export type CitySelection = {
 type TechMapProps = {
   activeAdcodes: number[];
   activeCityAdcode: number | null;
+  scopedCityAdcodes?: number[];
   scopeName: string;
   viewOffsetX?: number;
   labelOcclusionSelector?: string;
-  interactionMode?: "drilldown" | "locate";
+  viewportOcclusionSelector?: string;
+  interactionMode?: "drilldown" | "locate" | "metrics";
   onProvinceSelect: (province: ProvinceSelection) => void;
   onCitySelect: (city: CitySelection) => void;
 };
@@ -229,9 +231,11 @@ function createGlowTexture() {
 export default function TechMap({
   activeAdcodes,
   activeCityAdcode,
+  scopedCityAdcodes = [],
   scopeName,
   viewOffsetX = 0,
   labelOcclusionSelector,
+  viewportOcclusionSelector,
   interactionMode = "drilldown",
   onProvinceSelect,
   onCitySelect,
@@ -240,9 +244,10 @@ export default function TechMap({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const activeAdcodesRef = useRef<number[]>(activeAdcodes);
   const activeCityAdcodeRef = useRef<number | null>(activeCityAdcode);
+  const scopedCityAdcodesRef = useRef<number[]>(scopedCityAdcodes);
   const provinceCallbackRef = useRef(onProvinceSelect);
   const cityCallbackRef = useRef(onCitySelect);
-  const updateSelectionRef = useRef<((adcodes: number[], cityAdcode: number | null) => void) | null>(null);
+  const updateSelectionRef = useRef<((adcodes: number[], cityAdcode: number | null, cityAdcodes: number[]) => void) | null>(null);
 
   useEffect(() => {
     provinceCallbackRef.current = onProvinceSelect;
@@ -252,8 +257,9 @@ export default function TechMap({
   useEffect(() => {
     activeAdcodesRef.current = activeAdcodes;
     activeCityAdcodeRef.current = activeCityAdcode;
-    updateSelectionRef.current?.(activeAdcodes, activeCityAdcode);
-  }, [activeAdcodes, activeCityAdcode]);
+    scopedCityAdcodesRef.current = scopedCityAdcodes;
+    updateSelectionRef.current?.(activeAdcodes, activeCityAdcode, scopedCityAdcodes);
+  }, [activeAdcodes, activeCityAdcode, scopedCityAdcodes]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -290,6 +296,7 @@ export default function TechMap({
     let currentViewOffsetX = resolveViewOffset(mount.clientWidth, mount.clientHeight);
     const cameraStart = new THREE.Vector3(currentViewOffsetX, 98, 0);
     const cameraEnd = new THREE.Vector3(currentViewOffsetX, 76, 0);
+    let currentFitAspect = 16 / 9;
     camera.position.copy(reducedMotion ? cameraEnd : cameraStart);
     camera.lookAt(currentViewOffsetX, 0, 0);
 
@@ -419,7 +426,10 @@ export default function TechMap({
         selectedRegions.forEach((region) => bounds.expandByObject(region.group));
         bounds.getCenter(toTarget);
         const size = bounds.getSize(new THREE.Vector3());
-        const distance = THREE.MathUtils.clamp(Math.max(size.x, size.z) * 2.65, 23, 56);
+        const halfFovTangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+        const widthDistance = size.x / Math.max(.01, 2 * halfFovTangent * currentFitAspect);
+        const heightDistance = size.z / Math.max(.01, 2 * halfFovTangent);
+        const distance = THREE.MathUtils.clamp(Math.max(widthDistance, heightDistance) * 1.35, 23, 64);
         const nationalDistance = cameraEnd.distanceTo(new THREE.Vector3(currentViewOffsetX, 0, 0));
         toTarget.x += currentViewOffsetX * distance / nationalDistance;
         const direction = new THREE.Vector3(0, 1, 0);
@@ -438,48 +448,67 @@ export default function TechMap({
       };
     };
 
-    const applySelection = (adcodes: number[], cityAdcode: number | null) => {
+    const applySelection = (adcodes: number[], cityAdcode: number | null, scopedCityAdcodes: number[]) => {
       const selected = new Set(adcodes);
+      const scopedCities = new Set(scopedCityAdcodes);
+      const hasScopedCities = scopedCities.size > 0;
       const isNational = selected.size === 0;
       regions.forEach((region) => {
-        region.selected = selected.has(region.adcode);
+        // Organization scopes can span selected cities across several provinces.
+        // At that level, keep province polygons neutral so the exact city points
+        // carry the emphasis; restore the province highlight after city drilldown.
+        region.selected = (cityAdcode !== null || !hasScopedCities) && selected.has(region.adcode);
       });
       cityVisuals.forEach((visual) => {
-        const inScope = isNational || selected.has(visual.city.provinceAdcode);
+        const inScope = isNational || (hasScopedCities
+          ? scopedCities.has(visual.city.cityAdcode)
+          : selected.has(visual.city.provinceAdcode));
         const citySelected = visual.city.cityAdcode === cityAdcode;
+        const scopeSelected = !isNational && cityAdcode === null && inScope;
         const isHub = visual.city.name === "杭州";
         const isMinor = visual.labelElement.classList.contains("is-minor");
         const baseNeon = isMinor ? NEON_CITY_VIOLET : NEON_CITY_CYAN;
-        const activeNeon = isHub ? NEON_CITY_GOLD : citySelected ? NEON_CITY_MINT : baseNeon;
+        const activeNeon = citySelected || scopeSelected
+          ? NEON_CITY_MINT
+          : isHub
+            ? NEON_CITY_GOLD
+            : baseNeon;
         const scopeWeight = citySelected
           ? 1
           : cityAdcode !== null
             ? (inScope ? .2 : .08)
-            : (inScope ? 1 : .24);
+            : (inScope ? 1 : .08);
         visual.objects.forEach((object) => { object.visible = true; });
+        visual.hitTarget.visible = !hasScopedCities || inScope || citySelected;
         visual.labelObject.visible = citySelected || inScope;
         visual.coreMaterial.color.copy(activeNeon);
-        visual.coreMaterial.opacity = (citySelected ? .96 : isHub ? .88 : isMinor ? .78 : .84) * scopeWeight;
+        visual.coreMaterial.opacity = (citySelected ? .98 : scopeSelected ? .94 : isHub ? .88 : isMinor ? .78 : .84) * scopeWeight;
         visual.beamMaterial.color.copy(activeNeon);
-        visual.beamMaterial.opacity = (citySelected ? .82 : isHub ? .68 : visual.city.count > 10 ? .62 : .48) * scopeWeight;
+        visual.beamMaterial.opacity = (citySelected ? .84 : scopeSelected ? .78 : isHub ? .68 : visual.city.count > 10 ? .62 : .48) * scopeWeight;
         visual.glowMaterial.color.copy(activeNeon);
-        visual.glowMaterial.opacity = (citySelected ? .72 : isHub ? .58 : .38) * scopeWeight;
+        visual.glowMaterial.opacity = (citySelected ? .76 : scopeSelected ? .66 : isHub ? .58 : .38) * scopeWeight;
         visual.ringMaterial.color.copy(activeNeon);
         visual.ringMaterial.userData.scopeWeight = scopeWeight;
         visual.cloudMaterial.color.copy(activeNeon);
-        visual.cloudMaterial.opacity = (citySelected ? .94 : isHub ? .82 : isMinor ? .64 : .72) * scopeWeight;
-        visual.cloudMaterial.size = citySelected ? .17 : isHub ? .15 : isMinor ? .12 : .13;
+        visual.cloudMaterial.opacity = (citySelected ? .96 : scopeSelected ? .9 : isHub ? .82 : isMinor ? .64 : .72) * scopeWeight;
+        visual.cloudMaterial.size = citySelected ? .18 : scopeSelected ? .16 : isHub ? .15 : isMinor ? .12 : .13;
         visual.labelElement.classList.toggle("is-selected", citySelected);
+        visual.labelElement.classList.toggle("is-in-scope", scopeSelected);
         visual.labelElement.setAttribute("aria-pressed", citySelected ? "true" : "false");
         visual.labelElement.classList.toggle("is-national-view", isNational && !citySelected);
       });
       networkVisuals.forEach((visual) => {
-        const visible = isNational || selected.has(330000) || selected.has(visual.provinceAdcode);
+        const visible = isNational || (hasScopedCities
+          ? scopedCities.has(visual.cityAdcode)
+          : selected.has(visual.provinceAdcode));
         visual.arc.visible = visible;
         visual.halo.visible = visible;
         visual.light.visible = visible;
       });
       focusSelection(adcodes);
+      // Reflow labels on the next frame after a selection without polling the
+      // DOM at full animation speed while the map is otherwise idle.
+      collisionFrame = 30;
     };
     updateSelectionRef.current = applySelection;
 
@@ -520,8 +549,8 @@ export default function TechMap({
       }
       const rect = renderer.domElement.getBoundingClientRect();
       tooltip.textContent = city
-        ? `${city.city.name} · ${city.city.count}个项目 · 点击${interactionMode === "locate" ? "定位" : "穿透"}`
-        : `${cleanRegionName(region!.name)} · 点击${interactionMode === "locate" ? "定位行政区" : "联动行政区数据"}`;
+        ? `${city.city.name} · ${city.city.count}个项目 · 点击${interactionMode === "locate" ? "定位" : interactionMode === "metrics" ? "查看城市指标" : "穿透"}`
+        : `${cleanRegionName(region!.name)} · 点击${interactionMode === "locate" ? "定位行政区" : interactionMode === "metrics" ? "查看行政区指标" : "联动行政区数据"}`;
       tooltip.style.left = event.clientX - rect.left + 14 + "px";
       tooltip.style.top = event.clientY - rect.top - 8 + "px";
       tooltip.style.opacity = "1";
@@ -803,9 +832,14 @@ export default function TechMap({
             "aria-label",
             interactionMode === "locate"
               ? `${city.name}，${city.count}个项目，点击定位城市`
-              : `${city.name}，${city.count}个项目，点击查看项目列表`,
+              : interactionMode === "metrics"
+                ? `${city.name}，点击查看城市指标`
+                : `${city.name}，${city.count}个项目，点击查看项目列表`,
           );
           label.style.pointerEvents = "auto";
+          const stopMapPointer = (event: Event) => event.stopPropagation();
+          label.addEventListener("pointerdown", stopMapPointer);
+          label.addEventListener("pointerup", stopMapPointer);
           const activateCity = (event: Event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -919,7 +953,7 @@ export default function TechMap({
           });
         }
 
-        applySelection(activeAdcodesRef.current, activeCityAdcodeRef.current);
+        applySelection(activeAdcodesRef.current, activeCityAdcodeRef.current, scopedCityAdcodesRef.current);
       })
       .catch((error: unknown) => {
         if ((error as { name?: string }).name !== "AbortError") {
@@ -946,19 +980,40 @@ export default function TechMap({
         }
       }
       camera.aspect = width / height;
+      const mountBounds = mount.getBoundingClientRect();
+      let safeLeft = 0;
+      let safeRight = width;
+      if (viewportOcclusionSelector) {
+        document.querySelectorAll<HTMLElement>(viewportOcclusionSelector).forEach((element) => {
+          const bounds = element.getBoundingClientRect();
+          const left = THREE.MathUtils.clamp(bounds.left - mountBounds.left, 0, width);
+          const right = THREE.MathUtils.clamp(bounds.right - mountBounds.left, 0, width);
+          if (right <= width / 2) safeLeft = Math.max(safeLeft, right);
+          if (left >= width / 2) safeRight = Math.min(safeRight, left);
+        });
+      }
+      const safeWidth = Math.max(1, safeRight - safeLeft);
+      // The map remains a full-screen background, while its camera leaves enough
+      // breathing room for the visible centre stage between the two metric rails.
+      const fittedWidth = viewportOcclusionSelector
+        ? Math.max(safeWidth, width * .64)
+        : width;
+      currentFitAspect = fittedWidth / height;
       const baselineAspect = 16 / 9;
       const baselineHalfFov = THREE.MathUtils.degToRad(15);
-      const adaptiveFov = camera.aspect < baselineAspect
+      const adaptiveFov = currentFitAspect < baselineAspect
         ? THREE.MathUtils.radToDeg(2 * Math.atan(
-          Math.tan(baselineHalfFov) * baselineAspect / camera.aspect,
+          Math.tan(baselineHalfFov) * baselineAspect / currentFitAspect,
         ))
         : 30;
       camera.fov = THREE.MathUtils.clamp(adaptiveFov, 30, 52);
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
       renderer.setSize(width, height, false);
       composer.setSize(width, height);
       bloomPass.resolution.set(width, height);
       labelRenderer.setSize(width, height);
+      collisionFrame = 30;
     };
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(mount);
@@ -978,13 +1033,14 @@ export default function TechMap({
       const occupied: DOMRect[] = [];
       const mapBounds = mount.getBoundingClientRect();
       const occlusionBounds = labelOcclusionSelector
-        ? document.querySelector<HTMLElement>(labelOcclusionSelector)?.getBoundingClientRect()
-        : undefined;
+        ? Array.from(document.querySelectorAll<HTMLElement>(labelOcclusionSelector), (element) => element.getBoundingClientRect())
+        : [];
       const visibleLabels = cityVisuals
         .filter((visual) => visual.labelObject.visible && visual.labelElement.offsetParent !== null)
         .sort((left, right) => {
           const priority = (visual: CityVisual) => {
             if (visual.labelElement.classList.contains("is-selected")) return 1_000_000 + visual.city.count;
+            if (visual.labelElement.classList.contains("is-in-scope")) return 750_000 + visual.city.count;
             if (visual.city.name === "杭州") return 500_000 + visual.city.count;
             if (!visual.labelElement.classList.contains("is-minor")) return 100_000 + visual.city.count;
             return visual.city.count;
@@ -998,13 +1054,30 @@ export default function TechMap({
         visual.labelElement.style.marginLeft = `${baseOffsetX}px`;
         visual.labelElement.style.marginTop = `${baseOffsetY}px`;
         const initialRect = visual.labelElement.getBoundingClientRect();
-        const intersectsOcclusionVertically = occlusionBounds
-          ? initialRect.top < occlusionBounds.bottom + 12 && initialRect.bottom > occlusionBounds.top - 12
-          : false;
-        const safeLeft = intersectsOcclusionVertically && occlusionBounds
-          ? THREE.MathUtils.clamp(occlusionBounds.right + 12, mapBounds.left, mapBounds.right - 24)
-          : mapBounds.left;
-        if (initialRect.right <= safeLeft + 4) {
+        const blockingBounds = occlusionBounds.find((bounds) => (
+          initialRect.left < bounds.right + 12
+          && initialRect.right > bounds.left - 12
+          && initialRect.top < bounds.bottom + 12
+          && initialRect.bottom > bounds.top - 12
+        ));
+        let safeLeft = mapBounds.left;
+        let safeRight = mapBounds.right;
+        if (blockingBounds) {
+          const blockingCenter = (blockingBounds.left + blockingBounds.right) / 2;
+          const mapCenter = (mapBounds.left + mapBounds.right) / 2;
+          if (blockingCenter < mapCenter) {
+            safeLeft = THREE.MathUtils.clamp(blockingBounds.right + 12, mapBounds.left, mapBounds.right - 24);
+          } else if (blockingCenter > mapCenter) {
+            safeRight = THREE.MathUtils.clamp(blockingBounds.left - 12, mapBounds.left + 24, mapBounds.right);
+          } else {
+            visual.labelElement.style.opacity = "0";
+            visual.labelElement.style.pointerEvents = "none";
+            visual.labelElement.setAttribute("aria-hidden", "true");
+            visual.labelElement.tabIndex = -1;
+            return;
+          }
+        }
+        if (initialRect.right <= safeLeft + 4 || initialRect.left >= safeRight - 4) {
           visual.labelElement.style.opacity = "0";
           visual.labelElement.style.pointerEvents = "none";
           visual.labelElement.setAttribute("aria-hidden", "true");
@@ -1014,7 +1087,7 @@ export default function TechMap({
         let boundaryShiftX = 0;
         let boundaryShiftY = 0;
         if (initialRect.left < safeLeft + 12) boundaryShiftX = safeLeft + 12 - initialRect.left;
-        if (initialRect.right > mapBounds.right - 12) boundaryShiftX = mapBounds.right - 12 - initialRect.right;
+        if (initialRect.right > safeRight - 12) boundaryShiftX = safeRight - 12 - initialRect.right;
         if (initialRect.top < mapBounds.top + 12) boundaryShiftY = mapBounds.top + 12 - initialRect.top;
         if (initialRect.bottom > mapBounds.bottom - 12) boundaryShiftY = mapBounds.bottom - 12 - initialRect.bottom;
         visual.labelElement.style.marginLeft = `${baseOffsetX + boundaryShiftX}px`;
@@ -1104,8 +1177,12 @@ export default function TechMap({
 
       composer.render();
       labelRenderer.render(scene, camera);
-      collisionFrame = (collisionFrame + 1) % 8;
-      if (collisionFrame === 0) resolveCityLabelCollisions();
+      collisionFrame += 1;
+      const collisionInterval = !introFinished || focusTransition ? 6 : 30;
+      if (collisionFrame >= collisionInterval) {
+        collisionFrame = 0;
+        resolveCityLabelCollisions();
+      }
     };
 
     const handleVisibility = () => {
@@ -1146,22 +1223,23 @@ export default function TechMap({
       renderer.forceContextLoss();
       mount.replaceChildren();
     };
-  }, [interactionMode, labelOcclusionSelector, viewOffsetX]);
+  }, [interactionMode, labelOcclusionSelector, viewportOcclusionSelector, viewOffsetX]);
 
   return (
     <div
       className="tech-map"
-      aria-label={`${scopeName}三维经营地图，可按行政区和城市${interactionMode === "locate" ? "定位" : "穿透"}`}
+      aria-label={`${scopeName}三维经营地图，可按行政区和城市${interactionMode === "locate" ? "定位" : interactionMode === "metrics" ? "查看指标" : "穿透"}`}
       data-city-anchor-count={WENSHU_COVERED_CITY_COUNT}
       data-project-cloud-count={WENSHU_DOMESTIC_PROJECT_COUNT}
       data-city-label-mode="all-with-collision-avoidance"
       data-label-occlusion={labelOcclusionSelector ? "measured-panel" : "none"}
+      data-viewport-fit={viewportOcclusionSelector ? "safe-stage" : "full-canvas"}
     >
       <div ref={mountRef} className="tech-map-webgl" />
       <div ref={tooltipRef} className="tech-map-tooltip" />
       <div className="tech-map-scan" aria-hidden="true" />
       <div className="tech-map-status"><i /> THREE.JS · REALTIME</div>
-      <div className="tech-map-controls">拖拽旋转 · 滚轮缩放 · 点击行政区 · 点击城市{interactionMode === "locate" ? "定位" : "穿透项目"}</div>
+      <div className="tech-map-controls">拖拽旋转 · 滚轮缩放 · 点击行政区 · 点击城市{interactionMode === "locate" ? "定位" : interactionMode === "metrics" ? "查看指标" : "穿透项目"}</div>
       <div className="tech-map-legend"><span><i />项目数量点簇</span><span><i />城市定位锚点</span></div>
       <div className="tech-map-note">点簇表示城市项目数量，不代表项目精确地址</div>
     </div>

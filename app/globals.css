@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 :root {
+  /* vinext may not emit next/font variables in every runtime; keep the
+     typography scale deterministic instead of invalidating font shorthands. */
+  --font-geist-sans: "Helvetica Neue", Arial, sans-serif;
+  --font-geist-mono: "SFMono-Regular", "Roboto Mono", Consolas, monospace;
   --ink: #eefaff;
   --muted: #85abc2;
   --cyan: #37e4ff;
