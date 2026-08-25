@@ -10,6 +10,10 @@ import {
   type WenshuOrganizationSnapshot,
 } from "./wenshu-snapshot";
 import {
+  WENSHU_CITY_SALES_6283,
+  WENSHU_CITY_SALES_6283_SNAPSHOT_DATE,
+} from "./wenshu-city-sales-snapshot";
+import {
   WENSHU_CITY_SUMMARIES,
   WENSHU_CONSTRUCTION_PROJECT_COUNT,
   WENSHU_COVERED_CITY_COUNT,
@@ -228,17 +232,23 @@ function metricsForCity(city: CitySelection): ScopeMetrics {
   };
   const province = metricsForScope(provinceScope);
   const cityRows = WENSHU_PROJECTS.filter((project) => project.cityAdcode === city.cityAdcode);
+  const citySales = WENSHU_CITY_SALES_6283[city.name];
+  const cityMonthlySales = citySales?.monthlyContractSalesYi ?? [0, 0, 0, 0, 0, 0, 0, 0];
   const constructionProjects = cityRows.filter((project) => project.developmentStatus === "在建").length;
   const share = Math.min(1, city.count / Math.max(city.count, province.totalProjects));
-  const growth = roundOne(province.growth + ((city.cityAdcode % 7) - 3) * .35);
+  const julySales = cityMonthlySales[6];
+  const augustSales = cityMonthlySales[7];
+  const growth = julySales > 0
+    ? roundOne(((augustSales / 24) / (julySales / 31) - 1) * 100)
+    : 0;
 
   return {
     ...province,
-    sales: roundOne(province.sales * share),
+    sales: citySales?.contractSalesYi ?? 0,
     growth,
     projects: constructionProjects,
-    monthlySales: province.monthlySales.map((value) => roundOne(value * share)),
-    summary: `${city.name}全部 ${city.count} 个项目已展开`,
+    monthlySales: cityMonthlySales,
+    summary: `${city.name}合同销售已接入数据集 6283`,
     cityCount: 1,
     newProjects: Math.max(1, Math.round(city.count * .19)),
     newValue: roundOne(province.newValue * share),
@@ -312,13 +322,24 @@ export default function GrandDashboard() {
     [activeCity, organizationMetrics, queryMode, scopeMetrics],
   );
   const cityProjects = useMemo(() => activeCity ? projectsForCity(activeCity) : [], [activeCity]);
-  const chartMax = Math.max(5, Math.ceil((Math.max(...metrics.monthlySales) * 1.2) / 2) * 2);
+  const usesCitySales6283 = queryMode === "administrative"
+    && activeCity !== null
+    && Object.hasOwn(WENSHU_CITY_SALES_6283, activeCity.name);
+  const chartPeak = Math.max(...metrics.monthlySales.map((value) => Math.abs(value)));
+  const chartMax = usesCitySales6283
+    ? Math.max(.01, chartPeak * 1.18)
+    : Math.max(5, Math.ceil((chartPeak * 1.2) / 2) * 2);
+  const salesValueDigits = usesCitySales6283 && Math.abs(metrics.sales) < .1 ? 4 : 2;
+  const salesChartDigits = usesCitySales6283
+    ? (chartPeak < .1 ? 4 : (chartPeak < 10 ? 2 : 1))
+    : 1;
   const displayScopeName = queryMode === "organization"
     ? activeOrganization.name
     : (activeCity?.name ?? activeScope.name);
   const activeMapAdcodes = queryMode === "organization" ? activeOrganization.adcodes : activeScope.adcodes;
   const usesActualSales = queryMode === "organization"
-    || (activeScope.level === "national" && activeCity === null);
+    || (activeScope.level === "national" && activeCity === null)
+    || usesCitySales6283;
   const scopedProjectRows = useMemo(() => {
     if (activeCity) return WENSHU_PROJECTS.filter((project) => project.cityAdcode === activeCity.cityAdcode);
     if (queryMode === "organization") {
@@ -701,7 +722,12 @@ export default function GrandDashboard() {
             <CompositeMetricFacts facts={investmentFacts} />
           </section>
 
-          <section className="grand-metric-group is-sales" aria-labelledby="sales-title">
+          <section
+            className="grand-metric-group is-sales"
+            aria-labelledby="sales-title"
+            data-data-status={usesActualSales ? "actual" : "unavailable"}
+            data-source-dataset={usesCitySales6283 ? "6283" : undefined}
+          >
             <header className="grand-group-heading">
               <span>03</span>
               <div><p>SALES PERFORMANCE</p><h2 id="sales-title">销售业绩</h2></div>
@@ -710,19 +736,34 @@ export default function GrandDashboard() {
               <div className="grand-sales-story">
                 <div className="grand-sales-kpi">
                   <span>累计合同销售额</span>
-                  <div><strong>{formatNumber(metrics.sales, 2)}</strong><em>亿元</em></div>
-                  <i className={metrics.growth < 0 ? "is-negative" : ""}>
-                    本月日均环比 {formatSignedPercentage(metrics.growth)}
+                  <div><strong>{formatNumber(metrics.sales, salesValueDigits)}</strong><em>亿元</em></div>
+                  <i className={!usesCitySales6283 && metrics.growth < 0 ? "is-negative" : ""}>
+                    {usesCitySales6283
+                      ? "6283 城市合同口径"
+                      : `本月日均环比 ${formatSignedPercentage(metrics.growth)}`}
                   </i>
-                  <small>全业态实际签约，不含目标及预测</small>
+                  <small>
+                    {usesCitySales6283
+                      ? `住宅、商办及车储在售项目 · 截至 ${WENSHU_CITY_SALES_6283_SNAPSHOT_DATE}`
+                      : "全业态实际签约，不含目标及预测"}
+                  </small>
                 </div>
                 <div className="grand-story-chart" aria-label={`${displayScopeName}1至8月销售趋势`}>
                   {metrics.monthlySales.map((value, index) => {
-                    const barHeight = `${Math.max(10, (value / chartMax) * 100)}%`;
+                    const barMagnitude = Math.abs(value);
+                    const formattedValue = value.toFixed(salesChartDigits);
+                    const barLabel = `${index + 1}月 ${formattedValue}亿元${value < 0 ? "，合同冲减" : ""}`;
+                    const barHeight = barMagnitude === 0
+                      ? "0%"
+                      : `${Math.max(usesCitySales6283 ? 4 : 10, (barMagnitude / chartMax) * 100)}%`;
                     return (
-                      <div key={index} style={{ "--bar-height": barHeight } as CSSProperties}>
-                        <b>{value.toFixed(1)}</b>
-                        <i title={`${index + 1}月 ${value.toFixed(1)}亿元`} />
+                      <div
+                        key={index}
+                        className={value === 0 ? "is-zero" : (value < 0 ? "is-negative" : "")}
+                        style={{ "--bar-height": barHeight } as CSSProperties}
+                      >
+                        <b>{formattedValue}</b>
+                        <i role="img" aria-label={barLabel} title={barLabel} />
                         <span>{index + 1}月</span>
                       </div>
                     );

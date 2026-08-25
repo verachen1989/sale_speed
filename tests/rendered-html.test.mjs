@@ -186,6 +186,45 @@ test("project cockpit embeds structural facts inside their headline metric group
   assert.match(projectSource, /"cityAdcode": 330300,[\s\S]{0,180}"provinceAdcode": 330000,[\s\S]{0,180}"name": "温州",[\s\S]{0,180}"count": 7/);
 });
 
+test("city drilldown uses source-backed dataset 6283 contract sales", async () => {
+  const salesSource = await readFile(new URL("../app/wenshu-city-sales-snapshot.ts", import.meta.url), "utf8");
+  const declarationStart = salesSource.indexOf("export const WENSHU_CITY_SALES_6283");
+  const objectStart = salesSource.indexOf("{", declarationStart);
+  const objectEnd = salesSource.indexOf("\n};", objectStart) + 2;
+  assert.ok(declarationStart >= 0 && objectStart > declarationStart && objectEnd > objectStart);
+  const citySales = JSON.parse(salesSource.slice(objectStart, objectEnd));
+
+  assert.equal(Object.keys(citySales).length, 58);
+  assert.equal(citySales["杭州"].contractSalesYi, 116.426);
+  assert.equal(citySales["温州"].contractSalesYi, 0.9781);
+  assert.deepEqual(citySales["温州"].monthlyContractSalesYi, [0, 0, 0, 0.1724, 0, 0.7765, 0, 0.0292]);
+  for (const [cityName, row] of Object.entries(citySales)) {
+    assert.equal(row.monthlyContractSalesYi.length, 8, `${cityName} must have eight monthly values`);
+    const monthlyTotal = row.monthlyContractSalesYi.reduce((total, value) => total + value, 0);
+    assert.ok(Math.abs(monthlyTotal - row.contractSalesYi) <= .00021, `${cityName} monthly sales must reconcile`);
+  }
+
+  const projectSource = await readFile(new URL("../app/wenshu-projects-snapshot.ts", import.meta.url), "utf8");
+  const cityArrayStart = projectSource.indexOf("export const WENSHU_CITY_SUMMARIES");
+  const cityArrayEnd = projectSource.indexOf("export const WENSHU_VALUE_BY_ORG", cityArrayStart);
+  const mapCityNames = [...projectSource.slice(cityArrayStart, cityArrayEnd).matchAll(/"name": "([^"]+)"/g)]
+    .map((match) => match[1]);
+  assert.equal(mapCityNames.length, 55);
+  for (const cityName of mapCityNames) assert.ok(citySales[cityName], `${cityName} must have dataset 6283 sales`);
+
+  const cockpitSource = await readFile(new URL("../app/grand-page.tsx", import.meta.url), "utf8");
+  assert.match(cockpitSource, /sales: citySales\?\.contractSalesYi \?\? 0/);
+  assert.match(cockpitSource, /monthlySales: cityMonthlySales/);
+  assert.match(cockpitSource, /const usesCitySales6283 =/);
+  assert.match(cockpitSource, /data-source-dataset=\{usesCitySales6283 \? "6283" : undefined\}/);
+  assert.match(cockpitSource, /barMagnitude === 0\s*\? "0%"/);
+  assert.match(cockpitSource, /value === 0 \? "is-zero"/);
+  assert.match(cockpitSource, /value < 0 \? "，合同冲减" : ""/);
+  const cockpitCss = await readFile(new URL("../app/vision-cockpit.css", import.meta.url), "utf8");
+  assert.match(cockpitCss, /\.grand-story-chart > div\.is-negative i::after/);
+  assert.match(cockpitCss, /border-top-color: #e87378/);
+});
+
 test("city anchors reconcile exactly to the domestic project snapshot", async () => {
   const source = await readFile(new URL("../app/wenshu-projects-snapshot.ts", import.meta.url), "utf8");
   const parseExportedArray = (name, nextName) => {
