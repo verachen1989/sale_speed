@@ -22,7 +22,7 @@ jobs:
       - name: Checkout published dashboard
         uses: actions/checkout@v4
         with:
-          ref: '0cf19776c9e567d6ac2ecc01c46047264f6857b7'
+          ref: '6156eb9e0f8031d68f1938c57f56d2ac24c43d71'
 
       - name: Setup Node
         uses: actions/setup-node@v4
