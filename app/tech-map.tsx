@@ -13,6 +13,7 @@ import {
   WENSHU_COVERED_CITY_COUNT,
   WENSHU_DOMESTIC_PROJECT_COUNT,
 } from "./wenshu-projects-snapshot";
+import { publicAssetPath } from "./public-path";
 
 type Position = [number, number];
 type Polygon = Position[][];
@@ -591,7 +592,7 @@ export default function TechMap({
     renderer.domElement.addEventListener("pointerup", handlePointerUp);
     renderer.domElement.addEventListener("pointerleave", handlePointerLeave);
 
-    fetch("/china-geo.json", { signal: controller.signal })
+    fetch(publicAssetPath("/china-geo.json"), { signal: controller.signal })
       .then((response) => response.json() as Promise<MapCollection>)
       .then((collection) => {
         if (disposed) return;

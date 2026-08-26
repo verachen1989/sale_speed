@@ -98,7 +98,8 @@ test("server-renders the integrated map as the default exhibition view", async (
   assert.equal(new Set(renderedMetricIds).size, 56);
   assert.match(visibleHtml, /2025 年度经营概览/);
   assert.match(visibleHtml, /7 大经营板块 · 56 项年度经营指标/);
-  assert.match(html, /https:\/\/dashboard\.example\/og\.png/);
+  assert.match(html, /https:\/\/verachen1989\.github\.io\/sale_speed\/og\.png/);
+  assert.match(html, /href="\/favicon\.svg"/);
   assert.doesNotMatch(visibleHtml, /密集地图|DENSE MAP WORKBENCH|BUSINESS STRUCTURE|结构与效率|补充指标|次级展示|原稿灰底|本章|07 CHAPTERS|人民币|自动轮播|继续轮播/);
   assert.doesNotMatch(html, /fusion-hero-strip|fusion-stage-controls|fusion-map-caption/);
   assert.doesNotMatch(html, /fusion-region-facts/);
@@ -620,8 +621,25 @@ test("city anchors reconcile exactly to the domestic project snapshot", async ()
 test("ships a project-local social preview asset", async () => {
   await access(new URL("../public/og.png", import.meta.url));
   const layout = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
-  assert.match(layout, /x-forwarded-host/);
+  assert.match(layout, /https:\/\/verachen1989\.github\.io\/sale_speed\//);
+  assert.doesNotMatch(layout, /next\/headers|x-forwarded-host/);
   assert.match(layout, /summary_large_image/);
-  assert.match(layout, /\/og\.png/);
+  assert.match(layout, /og\.png/);
   await access(projectRoot);
+});
+
+test("keeps browser-loaded public assets compatible with the GitHub Pages base path", async () => {
+  const [publicPath, layoutSource, mapSource, cockpitSource, integratedSource] = await Promise.all([
+    readFile(new URL("../app/public-path.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/tech-map.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/grand-page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/map-integrated-overview.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(publicPath, /process\.env\.NEXT_PUBLIC_BASE_PATH/);
+  assert.match(publicPath, /export function publicAssetPath/);
+  assert.match(layoutSource, /publicAssetPath\("\/favicon\.svg"\)/);
+  assert.match(mapSource, /fetch\(publicAssetPath\("\/china-geo\.json"\)/);
+  assert.match(cockpitSource, /publicAssetPath\("\/greentown-logo-header\.png"\)/);
+  assert.match(integratedSource, /publicAssetPath\("\/greentown-logo-header\.png"\)/);
 });

@@ -39,3 +39,6 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+
+# Local terminal capture; never publish with the dashboard.
+/screenlog.0

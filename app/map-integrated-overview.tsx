@@ -17,6 +17,7 @@ import {
 import { WENSHU_PROJECT_ATTRIBUTES } from "./wenshu-project-attributes";
 import { formatMoneyFromYi } from "./money-format";
 import { getMapRegionMetrics, type MapRegionMetrics } from "./map-region-metrics";
+import { publicAssetPath } from "./public-path";
 import {
   WENSHU_ORGANIZATION_DEVELOPMENT_3002,
   WENSHU_ORGANIZATION_DEVELOPMENT_SNAPSHOT_DATE,
@@ -570,7 +571,7 @@ export default function MapIntegratedOverview({
         <div className="fusion-brand">
           {/* Existing project asset; native sizing keeps this dashboard compatible with vinext. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/greentown-logo-header.png" alt="绿城中国 GREENTOWN" />
+          <img src={publicAssetPath("/greentown-logo-header.png")} alt="绿城中国 GREENTOWN" />
         </div>
         <div className="fusion-heading">
           <p>ANNUAL OPERATIONS · MAP INTEGRATED VIEW</p>

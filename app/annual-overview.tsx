@@ -7,6 +7,7 @@ import {
   ANNUAL_METRIC_GROUPS,
   ANNUAL_METRIC_TOTALS,
 } from "./annual-metrics";
+import { publicAssetPath } from "./public-path";
 
 const AUTO_ROTATE_MS = 14_000;
 
@@ -207,7 +208,7 @@ export default function AnnualOverview({ onSwitchToLive }: { onSwitchToLive: () 
         <div className="annual-brand">
           {/* Existing project asset; native sizing avoids a dependency on the Next image loader in vinext. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/greentown-logo-full.png" alt="绿城中国 GREENTOWN" />
+          <img src={publicAssetPath("/greentown-logo-full.png")} alt="绿城中国 GREENTOWN" />
         </div>
         <div className="annual-heading">
           <p>ANNUAL OPERATIONS · PUBLIC SHOWCASE</p>

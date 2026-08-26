@@ -23,6 +23,7 @@ import {
 import { WENSHU_PROJECT_ATTRIBUTES } from "./wenshu-project-attributes";
 import { WENSHU_ORGANIZATION_DEVELOPMENT_3002 } from "./wenshu-organization-development-snapshot";
 import { formatMoneyFromYi } from "./money-format";
+import { publicAssetPath } from "./public-path";
 import { useDashboardCountUp } from "./use-dashboard-count-up";
 
 type RegionMetrics = {
@@ -383,7 +384,7 @@ export default function GrandDashboard({
 
       <header className="grand-header grand-unified-header">
         <div className="grand-brand grand-logo-brand">
-          <img src="/greentown-logo-header.png" alt="绿城中国 GREENTOWN" />
+          <img src={publicAssetPath("/greentown-logo-header.png")} alt="绿城中国 GREENTOWN" />
         </div>
         <div className="grand-heading">
           <p className="vision-heading-kicker">EXECUTIVE OPERATIONS · REALTIME VIEW</p>
