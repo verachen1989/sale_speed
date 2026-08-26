@@ -16,13 +16,7 @@ export default function DashboardShell() {
           onSwitchToProjects={() => setView("projects")}
         />
       ) : (
-        <>
-          <GrandDashboard />
-          <div className="dashboard-view-switch" role="group" aria-label="大屏视图切换">
-            <button type="button" aria-pressed="false" onClick={() => setView("showcase")}>融合地图</button>
-            <button type="button" className="is-active" aria-pressed="true">项目驾驶舱</button>
-          </div>
-        </>
+        <GrandDashboard onSwitchToShowcase={() => setView("showcase")} />
       )}
     </div>
   );

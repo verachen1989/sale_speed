@@ -102,6 +102,17 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045);
 }
 
+.vision-cockpit .grand-header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vision-cockpit.grand-map-dashboard > .grand-header {
+  grid-template-columns: 180px minmax(0, 1fr) minmax(390px, auto);
+}
+
 .vision-cockpit .grand-data-date > div {
   display: grid;
   gap: 1px;
@@ -677,6 +688,12 @@
 }
 
 .vision-cockpit .grand-sales-kpi > div > em { font-weight: 400; }
+
+.vision-cockpit [data-counting="true"] {
+  color: #f4fbff;
+  text-shadow: 0 0 14px rgba(0, 212, 255, .28);
+  will-change: contents;
+}
 
 .vision-cockpit .grand-sales-kpi > i {
   color: var(--vision-amber);

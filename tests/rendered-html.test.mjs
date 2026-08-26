@@ -69,6 +69,7 @@ test("server-renders the integrated map as the default exhibition view", async (
   assert.match(html, /data-source-snapshot="2026\.08\.23"/);
   assert.equal((html.match(/data-organization-code="[0-9]+"/g) ?? []).length, 11);
   assert.match(visibleHtml, /经营组织总览/);
+  assert.match(html, /aria-label="查看更多经营组织"/);
   assert.match(visibleHtml, /浙江区域/);
   assert.match(visibleHtml, /620\.53/);
   assert.match(visibleHtml, /未售货值 · 2026\.08\.23/);
@@ -213,6 +214,7 @@ test("both dashboard views share a motion-safe type hierarchy and bright detail 
   const globalsCss = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const integratedCss = await readFile(new URL("../app/map-integrated-overview.css", import.meta.url), "utf8");
   const cockpitCss = await readFile(new URL("../app/vision-cockpit.css", import.meta.url), "utf8");
+  const countUpSource = await readFile(new URL("../app/use-dashboard-count-up.ts", import.meta.url), "utf8");
 
   assert.match(globalsCss, /--font-geist-sans:\s*"Helvetica Neue"/);
   assert.match(globalsCss, /--font-geist-mono:\s*"SFMono-Regular"/);
@@ -236,6 +238,9 @@ test("both dashboard views share a motion-safe type hierarchy and bright detail 
   assert.match(cockpitCss, /@keyframes vision-soft-enter\s*\{[\s\S]*?translateY\(8px\)[\s\S]*?translateY\(0\)/);
   assert.match(cockpitCss, /\.three-city-label\.is-selected::before\s*\{[^}]*animation:\s*vision-status-pulse 2s ease-in-out infinite;/s);
   assert.match(cockpitCss, /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?animation-duration:\s*\.01ms !important;[\s\S]*?transition-duration:\s*\.01ms !important;/);
+  assert.match(countUpSource, /requestAnimationFrame\(draw\)/);
+  assert.match(countUpSource, /prefers-reduced-motion: reduce/);
+  assert.match(countUpSource, /const duration = 760/);
 });
 
 test("map renders a source-backed city project-count cloud without claiming exact addresses", async () => {
@@ -263,6 +268,9 @@ test("map renders a source-backed city project-count cloud without claiming exac
   assert.match(mapSource, /pointerup", stopMapPointer/);
   assert.match(mapSource, /\? `\$\{city\.name\}，点击查看城市指标`/);
   assert.match(mapSource, /camera\.fov = THREE\.MathUtils\.clamp\(adaptiveFov, 30, 52\)/);
+  assert.match(mapSource, /mount\.dataset\.renderState = "loading"/);
+  assert.match(mapSource, /landParticleTimer = window\.setTimeout/);
+  assert.match(mapSource, /mount\.dataset\.renderState = "ready"/);
   assert.match(mapSource, /点簇表示城市项目数量，不代表项目精确地址/);
 });
 
@@ -286,6 +294,8 @@ test("project cockpit embeds structural facts inside their headline metric group
   assert.match(cockpitSource, /data-city-adcode=\{city\.cityAdcode\}/);
   assert.match(cockpitSource, /activeOrganizationCities\.map/);
   assert.match(cockpitSource, /data-query-mode="organization"/);
+  assert.match(cockpitSource, /const PUBLIC_DISPLAY_DATE = "2025\.8\.6"/);
+  assert.match(cockpitSource, /className="grand-header-actions"[\s\S]*?className="fusion-view-switch"/);
   assert.match(cockpitSource, /WENSHU_ORGANIZATION_DEVELOPMENT_3002\[activeOrganization\.code\]/);
   assert.match(cockpitSource, /scopedCityAdcodes=\{scopedCityAdcodes\}/);
   assert.match(cockpitSource, /activeOrganizationCityAdcodeSet\.has\(project\.cityAdcode\)/);
@@ -435,10 +445,17 @@ test("map region snapshot keeps administrative metrics source-backed and two-ste
   assert.match(integratedSource, /handleProvinceSelect[\s\S]*?setActiveOrganizationCode\(null\)[\s\S]*?setIsProjectListOpen\(false\)/);
   assert.match(integratedSource, /handleCitySelect[\s\S]*?setIsProjectListOpen\(openProjectList\)/);
   assert.match(integratedSource, /setIsProjectListOpen\(true\)/);
+  assert.match(integratedSource, /className="fusion-organization-scroll-next"/);
+  assert.match(integratedSource, /grid\.scrollTo\(\{/);
+  assert.match(integratedSource, /onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/);
+  assert.match(integratedSource, /onClick=\{\(event\) => \{[\s\S]*?scrollOrganizations\(\)/);
   assert.doesNotMatch(integratedSource, /setAutoRotate/);
 
   const projectUiCss = await readFile(new URL("../app/map-integrated-overview.css", import.meta.url), "utf8");
   assert.match(projectUiCss, /\.fusion-organization-city-nav\s*\{/);
+  assert.match(projectUiCss, /\.fusion-organization-scroll-next\s*\{/);
+  assert.match(projectUiCss, /\.fusion-organization-grid\s*\{[\s\S]*?margin-right:\s*40px;/);
+  assert.doesNotMatch(projectUiCss, /\.fusion-organization-board::after/);
   assert.match(projectUiCss, /data-project-list-open="true"[\s\S]*?\.fusion-project-drilldown\s*\{[\s\S]*?grid-column:\s*2;/);
   assert.doesNotMatch(projectUiCss, /data-project-list-open="true"\][^{]*\.fusion-module-rail\.is-right\s*\{[\s\S]*?visibility:\s*hidden/);
 

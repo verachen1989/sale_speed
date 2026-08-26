@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import TechMap from "./tech-map";
 import type { CitySelection, ProvinceSelection } from "./tech-map";
@@ -8,7 +8,6 @@ import {
   WENSHU_FIRST_LEVEL_ORGANIZATIONS,
   WENSHU_ORGANIZATION_NAV_LABELS,
   WENSHU_ORGANIZATIONS,
-  WENSHU_SNAPSHOT_DATE,
   type WenshuOrganizationSnapshot,
 } from "./wenshu-snapshot";
 import {
@@ -24,6 +23,7 @@ import {
 import { WENSHU_PROJECT_ATTRIBUTES } from "./wenshu-project-attributes";
 import { WENSHU_ORGANIZATION_DEVELOPMENT_3002 } from "./wenshu-organization-development-snapshot";
 import { formatMoneyFromYi } from "./money-format";
+import { useDashboardCountUp } from "./use-dashboard-count-up";
 
 type RegionMetrics = {
   sales: number;
@@ -65,6 +65,7 @@ type CompositeFact = MetricFact & {
 
 const ROOT_ORGANIZATION = WENSHU_ORGANIZATIONS[0];
 const NAV_ORGANIZATIONS = [ROOT_ORGANIZATION, ...WENSHU_FIRST_LEVEL_ORGANIZATIONS];
+const PUBLIC_DISPLAY_DATE = "2025.8.6";
 
 function formatNumber(value: number, digits = 1) {
   return value.toLocaleString("zh-CN", {
@@ -140,11 +141,21 @@ function metricsForOrganization(organization: WenshuOrganizationSnapshot): Scope
   };
 }
 
-export default function GrandDashboard() {
+export default function GrandDashboard({
+  onSwitchToShowcase,
+}: {
+  onSwitchToShowcase: () => void;
+}) {
+  const cockpitRef = useRef<HTMLElement>(null);
   const [activeCity, setActiveCity] = useState<CitySelection | null>(null);
   const [activeProvince, setActiveProvince] = useState<ProvinceSelection | null>(null);
   const [activeOrganizationCode, setActiveOrganizationCode] = useState(WENSHU_ORGANIZATIONS[0].code);
   const [isProjectListOpen, setIsProjectListOpen] = useState(false);
+  useDashboardCountUp(
+    cockpitRef,
+    "initial-dashboard-entry",
+    ".grand-composite-value strong, .grand-embedded-fact strong, .grand-sales-kpi strong",
+  );
   const activeOrganization = useMemo(
     () => WENSHU_ORGANIZATIONS.find((organization) => organization.code === activeOrganizationCode) ?? WENSHU_ORGANIZATIONS[0],
     [activeOrganizationCode],
@@ -344,6 +355,7 @@ export default function GrandDashboard() {
 
   return (
     <main
+      ref={cockpitRef}
       className="grand-dashboard grand-map-dashboard vision-cockpit"
       data-query-mode="organization"
       data-active-organization-code={activeOrganization.code}
@@ -377,9 +389,15 @@ export default function GrandDashboard() {
           <p className="vision-heading-kicker">EXECUTIVE OPERATIONS · REALTIME VIEW</p>
           <h1>绿城中国经营驾驶舱</h1>
         </div>
-        <div className="grand-data-date">
-          <i className="vision-live-dot" aria-hidden="true" />
-          <div><span>数据截至</span><b>{WENSHU_SNAPSHOT_DATE}</b></div>
+        <div className="grand-header-actions">
+          <div className="fusion-view-switch" role="group" aria-label="大屏视图切换">
+            <button type="button" aria-pressed="false" onClick={onSwitchToShowcase}>融合地图</button>
+            <button type="button" className="is-active" aria-pressed="true">项目驾驶舱</button>
+          </div>
+          <div className="grand-data-date">
+            <i className="vision-live-dot" aria-hidden="true" />
+            <div><span>数据截至</span><b>{PUBLIC_DISPLAY_DATE}</b></div>
+          </div>
         </div>
 
         <div className="grand-header-filterbar">
@@ -615,7 +633,7 @@ export default function GrandDashboard() {
       <footer className="grand-footer">
         <span>{displayScopeName}经营概览 · 全业态</span>
         <span>经营组织 → 覆盖行政区 → 城市 → 项目清单 · {WENSHU_COVERED_CITY_COUNT} 城 · {WENSHU_DOMESTIC_PROJECT_COUNT} 个国内有效项目</span>
-        <span>数据截至 {WENSHU_SNAPSHOT_DATE} · 不含目标及预测</span>
+        <span>数据截至 {PUBLIC_DISPLAY_DATE} · 不含目标及预测</span>
       </footer>
     </main>
   );

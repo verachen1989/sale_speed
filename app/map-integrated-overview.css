@@ -31,24 +31,40 @@
     url("/dashboard-bg-cityscape.png") center bottom / cover fixed no-repeat;
 }
 
-/* A fixed cue sits above the fade, while the next organization remains partly visible. */
-.fusion-organization-board::after {
-  content: "›";
+.fusion-cockpit [data-counting="true"] {
+  color: #f4fbff;
+  text-shadow: 0 0 14px rgba(0, 212, 255, .28);
+  will-change: contents;
+}
+
+/* The organization pager must intercept clicks instead of letting them reach a card below. */
+.fusion-organization-scroll-next {
   position: absolute;
   z-index: 5;
   right: 8px;
-  bottom: 18px;
+  top: 43px;
+  bottom: 9px;
   display: grid;
   place-items: center;
-  width: 27px;
-  height: 27px;
+  width: 36px;
+  height: auto;
+  padding: 0;
   color: #bdf4ff;
   font: 22px/1 "DIN Alternate", "Helvetica Neue", Arial, sans-serif;
   border: 1px solid rgba(89, 212, 228, .42);
-  border-radius: 50%;
+  border-radius: 8px;
   background: rgba(5, 34, 69, .9);
   box-shadow: 0 0 16px rgba(0, 212, 255, .2);
-  pointer-events: none;
+  cursor: pointer;
+}
+
+.fusion-organization-scroll-next:hover,
+.fusion-organization-scroll-next:focus-visible {
+  color: #fff;
+  border-color: rgba(89, 212, 228, .82);
+  outline: none;
+  background: rgba(13, 69, 118, .96);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, .08), 0 0 20px rgba(0, 212, 255, .28);
 }
 
 .fusion-cockpit::before {
@@ -1071,13 +1087,14 @@
 
 .fusion-organization-grid {
   display: flex;
+  margin-right: 40px;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 52px), transparent 100%);
-  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 52px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 22px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 22px), transparent 100%);
 }
 
 .fusion-organization-grid::-webkit-scrollbar {

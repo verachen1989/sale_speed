@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { AnnualMetric, AnnualMetricGroup } from "./annual-metrics";
 import {
   ANNUAL_METRIC_GROUPS,
@@ -29,9 +29,9 @@ import {
 import {
   WENSHU_FIRST_LEVEL_ORGANIZATIONS,
   WENSHU_ORGANIZATION_NAV_LABELS,
-  WENSHU_ORGANIZATIONS,
   type WenshuOrganizationSnapshot,
 } from "./wenshu-snapshot";
+import { useDashboardCountUp } from "./use-dashboard-count-up";
 
 const STAGE_SIGNAL_METRIC_IDS: Record<AnnualMetricGroup["id"], readonly string[]> = {
   investment: ["investment-projects", "investment-new-value", "investment-saleable-area"],
@@ -244,6 +244,22 @@ function OrganizationBoard({
   onSelect: (organization: WenshuOrganizationSnapshot) => void;
   onReset: () => void;
 }) {
+  const organizationGridRef = useRef<HTMLDivElement>(null);
+
+  const scrollOrganizations = () => {
+    const grid = organizationGridRef.current;
+    if (!grid) return;
+
+    const maxScrollLeft = Math.max(0, grid.scrollWidth - grid.clientWidth);
+    const isAtEnd = grid.scrollLeft >= maxScrollLeft - 4;
+    grid.scrollTo({
+      left: isAtEnd
+        ? 0
+        : Math.min(maxScrollLeft, grid.scrollLeft + Math.max(280, grid.clientWidth * .68)),
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section
       className="fusion-organization-board"
@@ -269,7 +285,7 @@ function OrganizationBoard({
         </div>
       </header>
 
-      <div className="fusion-organization-grid">
+      <div ref={organizationGridRef} className="fusion-organization-grid">
         {OPERATING_ORGANIZATIONS.map((organization, index) => {
           const isActive = activeOrganizationCode === organization.code;
           const isAvailable = organization.dashboardAvailable !== false;
@@ -298,6 +314,18 @@ function OrganizationBoard({
           );
         })}
       </div>
+      <button
+        type="button"
+        className="fusion-organization-scroll-next"
+        aria-label="查看更多经营组织"
+        title="查看更多经营组织"
+        onPointerDown={(event) => event.stopPropagation()}
+        onPointerUp={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          scrollOrganizations();
+        }}
+      ><span aria-hidden="true">›</span></button>
     </section>
   );
 }
@@ -389,10 +417,16 @@ export default function MapIntegratedOverview({
 }: {
   onSwitchToProjects: () => void;
 }) {
+  const cockpitRef = useRef<HTMLElement>(null);
   const [activeProvince, setActiveProvince] = useState<ProvinceSelection | null>(null);
   const [activeCity, setActiveCity] = useState<CitySelection | null>(null);
   const [activeOrganizationCode, setActiveOrganizationCode] = useState<string | null>(null);
   const [isProjectListOpen, setIsProjectListOpen] = useState(false);
+  useDashboardCountUp(
+    cockpitRef,
+    "initial-dashboard-entry",
+    ".fusion-module-card strong, .fusion-module-card b, .fusion-organization-board b, .fusion-region-facts strong",
+  );
   const activeOrganization = useMemo(() => (
     OPERATING_ORGANIZATIONS.find((organization) => organization.code === activeOrganizationCode) ?? null
   ), [activeOrganizationCode]);
@@ -529,7 +563,7 @@ export default function MapIntegratedOverview({
   }, [activeCity, activeOrganization, activeProvince, isProjectListOpen]);
 
   return (
-    <main className="fusion-cockpit" data-layout="all-modules">
+    <main ref={cockpitRef} className="fusion-cockpit" data-layout="all-modules">
       <div className="fusion-grid" aria-hidden="true" />
 
       <header className="fusion-header">

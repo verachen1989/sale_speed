@@ -269,6 +269,8 @@ export default function TechMap({
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let disposed = false;
     let animationFrame = 0;
+    let landParticleTimer: number | null = null;
+    mount.dataset.renderState = "loading";
     let collisionFrame = 0;
     let sceneVisible = !document.hidden;
     const regions: RegionVisual[] = [];
@@ -693,36 +695,42 @@ export default function TechMap({
           });
         });
 
-        const particlePositions: number[] = [];
-        const particleColors: number[] = [];
-        const particleColor = new THREE.Color();
-        let attempts = 0;
-        while (particlePositions.length < 7200 && attempts < 36000) {
-          attempts += 1;
-          const point: Position = [73 + random() * 62, 18 + random() * 36];
-          if (!allPolygons.some((polygon) => isInsidePolygon(point, polygon))) continue;
-          const projected = projectPosition(point);
-          particlePositions.push(projected.x, projected.y, MAP_DEPTH + .014 + random() * .024);
-          getMapGradientColor(projected.x, projected.y, particleColor);
-          particleColor.lerp(MAP_PARTICLE_LIGHT, .22).multiplyScalar(1.12);
-          particleColors.push(particleColor.r, particleColor.g, particleColor.b);
-        }
-        const particleGeometry = new THREE.BufferGeometry();
-        particleGeometry.setAttribute("position", new THREE.Float32BufferAttribute(particlePositions, 3));
-        particleGeometry.setAttribute("color", new THREE.Float32BufferAttribute(particleColors, 3));
-        const particleMaterial = new THREE.PointsMaterial({
-          color: 0xffffff,
-          size: .055,
-          map: glowTexture,
-          transparent: true,
-          opacity: .34,
-          vertexColors: true,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-          alphaTest: .07,
-        });
-        mapParticles = new THREE.Points(particleGeometry, particleMaterial);
-        mapRoot.add(mapParticles);
+        // Interior sparkle points are decorative and expensive to sample against
+        // every polygon. Build them after the map and city anchors have already
+        // reached the screen, so they never block the first useful frame.
+        landParticleTimer = window.setTimeout(() => {
+          if (disposed) return;
+          const particlePositions: number[] = [];
+          const particleColors: number[] = [];
+          const particleColor = new THREE.Color();
+          let attempts = 0;
+          while (particlePositions.length < 4800 && attempts < 24000) {
+            attempts += 1;
+            const point: Position = [73 + random() * 62, 18 + random() * 36];
+            if (!allPolygons.some((polygon) => isInsidePolygon(point, polygon))) continue;
+            const projected = projectPosition(point);
+            particlePositions.push(projected.x, projected.y, MAP_DEPTH + .014 + random() * .024);
+            getMapGradientColor(projected.x, projected.y, particleColor);
+            particleColor.lerp(MAP_PARTICLE_LIGHT, .22).multiplyScalar(1.12);
+            particleColors.push(particleColor.r, particleColor.g, particleColor.b);
+          }
+          const particleGeometry = new THREE.BufferGeometry();
+          particleGeometry.setAttribute("position", new THREE.Float32BufferAttribute(particlePositions, 3));
+          particleGeometry.setAttribute("color", new THREE.Float32BufferAttribute(particleColors, 3));
+          const particleMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: .055,
+            map: glowTexture,
+            transparent: true,
+            opacity: .34,
+            vertexColors: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            alphaTest: .07,
+          });
+          mapParticles = new THREE.Points(particleGeometry, particleMaterial);
+          mapRoot.add(mapParticles);
+        }, 120);
 
         cities.forEach((city, index) => {
           const projected = projectPosition([city.lon, city.lat]);
@@ -954,6 +962,7 @@ export default function TechMap({
         }
 
         applySelection(activeAdcodesRef.current, activeCityAdcodeRef.current, scopedCityAdcodesRef.current);
+        mount.dataset.renderState = "ready";
       })
       .catch((error: unknown) => {
         if ((error as { name?: string }).name !== "AbortError") {
@@ -1200,6 +1209,7 @@ export default function TechMap({
     return () => {
       disposed = true;
       controller.abort();
+      if (landParticleTimer !== null) window.clearTimeout(landParticleTimer);
       updateSelectionRef.current = null;
       cancelAnimationFrame(animationFrame);
       document.removeEventListener("visibilitychange", handleVisibility);
