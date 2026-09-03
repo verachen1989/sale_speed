@@ -56,6 +56,30 @@ Final result: passed
 
 final result: passed
 
+## Design QA — UI-20260903-F
+
+- Browser-rendered implementation: current local preview at `http://127.0.0.1:3100/`
+- Figma file: `https://www.figma.com/design/9MXlhXqMrxHxgds3xBlqQU?node-id=1-2`
+- SVG export: `greentown-cockpit-figma-export-20260903.svg`
+- State checked: 全国、深色主题、desktop cockpit view.
+
+### Focused title and Figma handoff check
+
+- All visible module-title sequence numbers are hidden, including left-rail panels and right-rail specialty panels.
+- `项目交付` and `集团客户评价` are promoted into independent title rows with the same shared title size and weight as `投资与土储`.
+- The prior `经营指挥交付` title is removed.
+- The temporary Figma capture script was removed after export, so the runtime app no longer loads `html-to-design/capture.js`.
+- The current local page was captured to the approved Figma file and exported as SVG for design review.
+
+### Verification
+
+- `node --test --test-name-pattern='UI-015 promotes delivery|town module uses the six supplied|desktop resolution scaling|dense desktop mode|mid-height desktop|dashboard density adapts' tests/rendered-html.test.mjs` passed 6/6.
+- `npm run build` passed.
+- `git diff --check` passed.
+- `rg -n "html-to-design/capture|figmacapture|figmaendpoint" app` returned no matches.
+
+final result: passed
+
 ## Design QA — UI-20260903-E
 
 - Source visual truth: `/var/folders/zf/f275pyb93ys3vy3qtwt8yq2h0000gn/T/codex-clipboard-033e86c6-d4b2-4f5a-a97c-e81a22035baa.png`

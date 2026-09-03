@@ -693,12 +693,14 @@ test("organization loading keeps investment labels stable and the left rail cont
 
   assert.match(
     dashboardSource,
-    /const liveFacts: readonly RegionFact\[\] = usesOperatingOverview[\s\S]*?: state === "unavailable"[\s\S]*?\? facts[\s\S]*?: OPERATING_OVERVIEW_PLACEHOLDER_FACTS/,
-    "organization loading must keep the new-investment labels instead of falling back to landbank labels",
+    /const liveFacts: readonly RegionFact\[\] = usesOperatingOverview[\s\S]*?: facts;/,
+    "organization loading must render the source-backed local fallback instead of empty placeholders",
   );
+  assert.match(dashboardSource, /function buildOperatingOverviewFallbackFacts\([\s\S]*?organization\.newProjects[\s\S]*?newProjectTotalBuildingAreaWan[\s\S]*?organization\.newValue[\s\S]*?organization\.investment/);
+  assert.match(dashboardSource, /facts=\{isAdministrativeMapScope \? regionFacts : operatingOverviewFallbackFacts\}/);
   assert.match(
     dashboardCss,
-    /--half-rail-left-template:\s*auto minmax\(0, 1\.85fr\) minmax\(0, 2\.9fr\) minmax\(0, \.95fr\) minmax\(0, \.95fr\);/,
+    /--half-rail-left-template:\s*auto minmax\(0, 1\.9fr\) minmax\(0, 2\.35fr\) minmax\(72px, \.64fr\) minmax\(72px, \.64fr\) minmax\(0, 1fr\) minmax\(0, 1fr\);/,
     "the left rail should use one centralized desktop template instead of competing content-sized rows",
   );
   assert.doesNotMatch(dashboardCss, /minmax\(max-content/);
@@ -803,18 +805,18 @@ test("compact command-centre view keeps the inventory performance strip visible"
   );
   assert.match(
     dashboardCss,
-    /@media \(min-width: 1201px\) and \(max-height: 875px\) \{[\s\S]*?\.panel\[data-panel-index="03"\] \.panelBody \{[^}]*grid-template-rows: minmax\(0, 1\.15fr\) minmax\(0, \.72fr\) minmax\(0, \.58fr\) minmax\(0, \.86fr\);/,
-    "the compact sales panel should keep dynamic sales, inventory KPIs, project delivery, and customer evaluation visible in that order",
+    /@media \(min-width: 1201px\) and \(max-height: 875px\) \{[\s\S]*?\.panel\[data-panel-index="03"\] \.panelBody \{[^}]*grid-template-rows: minmax\(0, 1\.85fr\) minmax\(54px, 1fr\);/,
+    "the compact sales panel should reserve two clear rows for dynamic sales and inventory KPIs",
   );
 });
 
-test("sales panel balances four visible rows", async () => {
+test("sales panel balances its two visible content rows", async () => {
   const dashboardCss = await readFile(new URL("../app/half-year-2026-dashboard.module.css", import.meta.url), "utf8");
 
   assert.match(
     dashboardCss,
-    /\.panel\[data-panel-index="03"\] \.panelBody \{\s*grid-template-rows: minmax\(0, 1\.12fr\) minmax\(58px, \.76fr\) minmax\(50px, \.62fr\) minmax\(40px, \.42fr\);\s*\}/,
-    "the sales panel should reserve balanced height for dynamic sales, inventory KPIs, project delivery, and customer evaluation",
+    /\.dashboard\[data-dashboard-view="half-year-2026"\] \.panel\[data-panel-index="03"\] \.panelBody \{\s*grid-template-rows: minmax\(0, 1\.85fr\) minmax\(72px, 1fr\);\s*\}/,
+    "the sales panel should reserve balanced height for dynamic sales and inventory KPIs",
   );
 });
 
@@ -823,8 +825,8 @@ test("dense desktop mode removes empty bands before shrinking readable KPIs", as
 
   assert.match(
     dashboardCss,
-    /@media \(min-width: 1201px\) and \(max-height: 875px\) \{[\s\S]*?\.dashboard\[data-dashboard-view="half-year-2026"\] \.panel\[data-panel-index="03"\] \.panelBody \{[\s\S]*?grid-template-rows: minmax\(0, 1\.1fr\) minmax\(50px, \.7fr\) minmax\(42px, \.52fr\) minmax\(36px, \.36fr\);/,
-    "short screens should compress the low-content customer-evaluation band instead of squeezing every sales KPI",
+    /@media \(min-width: 1201px\) and \(max-height: 875px\) \{[\s\S]*?\.dashboard\[data-dashboard-view="half-year-2026"\] \.panel\[data-panel-index="03"\] \.panelBody \{[\s\S]*?grid-template-rows: minmax\(0, 1\.85fr\) minmax\(54px, 1fr\);/,
+    "short screens should preserve the sales chart and inventory row without nested delivery modules",
   );
   assert.match(
     dashboardCss,
@@ -844,7 +846,7 @@ test("mid-height desktop switches components to a presentation layout without cl
 
   assert.match(
     presentationCss,
-    /@media \(min-width: 1201px\) and \(min-height: 876px\) and \(max-height: 1080px\) \{[\s\S]*?--half-screen-density:\s*presentation;[\s\S]*?--half-rail-left-template:\s*auto minmax\(0, 1\.85fr\) minmax\(0, 3fr\) minmax\(0, \.92fr\) minmax\(0, \.88fr\);/,
+    /@media \(min-width: 1201px\) and \(min-height: 876px\) and \(max-height: 1080px\) \{[\s\S]*?--half-screen-density:\s*presentation;[\s\S]*?--half-rail-left-template:\s*auto minmax\(0, 2fr\) minmax\(0, 2\.06fr\) minmax\(78px, \.68fr\) minmax\(58px, \.64fr\) minmax\(0, \.92fr\) minmax\(0, \.98fr\);/,
     "900–1080 class screens need their own presentation layout instead of inheriting dense-screen compression",
   );
   assert.match(
@@ -867,16 +869,7 @@ test("mid-height desktop switches components to a presentation layout without cl
     /\.panel\[data-panel-index="01"\] \.ratioRow article \{[^}]*padding-block:\s*1px;/,
     "the compact investment ratio row must not lose its border pixels at 900–960px tall viewports",
   );
-  assert.match(
-    presentationCss,
-    /@media \(min-width: 1201px\) and \(min-height: 876px\) and \(max-height: 1080px\) \{[\s\S]*?\.salesDeliveryHeader > small,[\s\S]*?\.salesDeliveryGrid small \{ display: none; \}/,
-    "project delivery should reserve its compact row for values instead of clipping hidden plan notes",
-  );
-  assert.match(
-    presentationCss,
-    /\.salesDeliverySnapshot \{[^}]*padding:\s*2px 4px;[^}]*gap:\s*2px;[^}]*\}[\s\S]*?\.salesDeliveryGrid article \{[^}]*padding:\s*1px 4px 2px;/,
-    "the delivery cards must fit their allocated track after large-screen typography is applied",
-  );
+  assert.match(presentationCss, /\.deliveryPanel \.salesDeliveryGrid small,[\s\S]*?\.customerEvaluationPanel \.salesCustomerEvaluationGrid article > small \{[\s\S]*?display: none;/);
   assert.match(
     presentationCss,
     /@media \(min-width: 1201px\) and \(min-height: 876px\) and \(max-height: 1080px\) \{[\s\S]*?\.panel\[data-panel-index="01"\] \.panelBody \{[^}]*grid-template-rows:\s*minmax\(72px, 1\.08fr\) minmax\(48px, \.7fr\) minmax\(40px, \.58fr\);/,
@@ -1152,7 +1145,7 @@ test("city project lists sort acquisition dates newest first", async () => {
   assert.doesNotMatch(dashboardSource, /left\.saleStatus\.localeCompare\(right\.saleStatus/);
 });
 
-test("UI-015 promotes delivery and customer evaluation to independent title rows and unifies rail title scale", async () => {
+test("UI-015 renders delivery and customer evaluation as independent left-rail panels", async () => {
   const [dashboardSource, dashboardCss] = await Promise.all([
     readFile(new URL("../app/half-year-2026-dashboard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/half-year-2026-dashboard.module.css", import.meta.url), "utf8"),
@@ -1160,13 +1153,13 @@ test("UI-015 promotes delivery and customer evaluation to independent title rows
 
   assert.match(dashboardSource, /const OPERATING_DELIVERY_SNAPSHOT/);
   assert.match(dashboardSource, /data-delivery-snapshot="operating-command"/);
-  assert.match(dashboardSource, /<span>项目交付<\/span>/);
-  assert.match(dashboardSource, /<span>集团客户评价<\/span>/);
+  assert.match(dashboardSource, /<Panel[\s\S]{0,220}?index="10"[\s\S]{0,220}?title="项目交付"/);
+  assert.match(dashboardSource, /<Panel[\s\S]{0,220}?index="11"[\s\S]{0,220}?title="集团客户评价"/);
   assert.doesNotMatch(dashboardSource, /<span>经营指挥交付<\/span>/);
   assert.match(
     dashboardSource,
-    /className=\{styles\.salesOverviewRow\}[\s\S]*?className=\{styles\.inventoryLine\}[\s\S]*?data-delivery-snapshot="operating-command"[\s\S]*?data-sales-customer-evaluation="group-disclosure"/,
-    "inventory clearance should sit between dynamic sales and project delivery, followed by customer evaluation",
+    /<SalesPanel[\s\S]*?<DeliveryPanel \/>[\s\S]*?<CustomerEvaluationPanel \/>[\s\S]*?<ResourcesPanel \/>[\s\S]*?<ConstructionPanel \/>/,
+    "the left rail should follow the layout approved in the reference screenshot",
   );
 
   const deliveryMetricIds = [...dashboardSource.matchAll(/id: "delivery-(households|value|area)"/g)].map((match) => match[1]);
@@ -1182,8 +1175,8 @@ test("UI-015 promotes delivery and customer evaluation to independent title rows
   );
   assert.match(
     dashboardCss,
-    /\.salesDeliveryHeader > span,[\s\S]*?\.salesCustomerEvaluationHeader > span \{[^}]*font-size: var\(--half-panel-title-size-canonical\) !important;[^}]*font-weight: 500 !important;/,
-    "project delivery and customer evaluation headings should be promoted to the shared module-title scale",
+    /--half-rail-left-template:[^;]*auto[^;]*minmax\(0, 1\.9fr\)[^;]*minmax\(0, 2\.35fr\)[^;]*minmax\(72px, \.64fr\)[^;]*minmax\(72px, \.64fr\)/,
+    "the desktop left rail should reserve independent rows for delivery and customer evaluation",
   );
   assert.doesNotMatch(
     dashboardCss,
@@ -1204,7 +1197,7 @@ test("development efficiency follows resources in the left rail and releases the
   assert.match(dashboardSource, /viewportOcclusionSelector='\.fusion-module-rail'/);
   assert.match(dashboardSource, /layoutRole="left-rail-development"/);
   assert.doesNotMatch(leftRailSource, /mapOcclusion/);
-  assert.match(dashboardCss, /grid-template-rows:\s*auto\s*minmax\(0, 1\.85fr\)\s*minmax\(0, 2\.75fr\)\s*minmax\(0, 1fr\)\s*minmax\(0, 1fr\);/);
+  assert.match(dashboardCss, /grid-template-rows:\s*auto\s*minmax\(0, 1\.9fr\)\s*minmax\(0, 2\.35fr\)\s*minmax\(72px, \.64fr\)\s*minmax\(72px, \.64fr\)\s*minmax\(0, 1fr\)\s*minmax\(0, 1fr\);/);
   assert.match(dashboardCss, /\.developmentDock \{[\s\S]*?grid-column: 1;[\s\S]*?grid-row: auto;[\s\S]*?width: 100%;[\s\S]*?margin: 0;/);
   assert.match(dashboardCss, /\.mapCoverageLegend \{ margin-bottom: 14px; \}/);
 });
@@ -1219,7 +1212,7 @@ test("compact sales trend keeps value labels below its title", async () => {
   );
 });
 
-test("compact left rail keeps all four panels inside the command-centre viewport", async () => {
+test("compact left rail keeps all six panels inside the command-centre viewport", async () => {
   const dashboardCss = await readFile(new URL("../app/half-year-2026-dashboard.module.css", import.meta.url), "utf8");
 
   assert.match(dashboardCss, /\.developmentDock \{[\s\S]*?height: auto;/);
@@ -1229,11 +1222,69 @@ test("compact left rail keeps all four panels inside the command-centre viewport
   );
   assert.match(
     dashboardCss,
-    /\.panel\[data-panel-index="03"\] \.salesCustomerEvaluation \{ margin-top: 0; padding: 2px 4px 1px; \}/,
+    /:is\(\.deliveryPanel, \.customerEvaluationPanel\) \{[\s\S]*?padding: 4px;/,
   );
   assert.match(
     dashboardCss,
-    /@media \(min-width: 1201px\) and \(max-height: 875px\) \{[\s\S]*?\.rail:global\(\.is-left\) \{[^}]*grid-template-rows: auto minmax\(0, 1\.6fr\) minmax\(0, 2\.4fr\) minmax\(0, \.82fr\) minmax\(0, \.76fr\);/,
+    /@media \(min-width: 1201px\) and \(max-height: 875px\) \{[\s\S]*?\.rail:global\(\.is-left\) \{[^}]*grid-template-rows: auto minmax\(0, 1\.7fr\) minmax\(0, 2\.05fr\) minmax\(54px, \.62fr\) minmax\(50px, \.55fr\) minmax\(0, \.85fr\) minmax\(0, \.8fr\);/,
+  );
+});
+
+test("MacBook and ThinkPad laptop layouts preserve readable aligned dashboard cards", async () => {
+  const [dashboardSource, dashboardCss] = await Promise.all([
+    readFile(new URL("../app/half-year-2026-dashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/half-year-2026-dashboard.module.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(
+    dashboardCss,
+    /@media \(min-width: 1280px\) and \(max-width: 1600px\) and \(max-height: 920px\) \{[\s\S]*?--half-laptop-profile:\s*compact-laptop;/,
+    "common 1366/1440-wide laptop screens should use an explicit compact layout profile",
+  );
+  assert.match(
+    dashboardCss,
+    /@media \(min-width: 1400px\) and \(max-width: 1728px\) and \(min-height: 921px\) and \(max-aspect-ratio: 11 \/ 6\) \{[\s\S]*?--half-laptop-profile:\s*macbook-tall;/,
+    "16:10 MacBook screens should use a dedicated tall laptop profile",
+  );
+  assert.match(
+    dashboardCss,
+    /\.investmentLiveGrid article \{[^}]*position:\s*relative;/,
+    "investment metric cards should provide a stable positioning context for rank labels",
+  );
+  assert.match(
+    dashboardCss,
+    /\.investmentLiveGrid \.rankDetail \{[^}]*position:\s*absolute;[^}]*top:\s*2px;[^}]*right:\s*5px;/,
+    "the new-value rank should share the label row without deforming the value row",
+  );
+  assert.match(
+    dashboardCss,
+    /\.panel\[data-panel-index="03"\] \.salesTrendCard \{[^}]*display:\s*grid;[^}]*grid-template-rows:\s*minmax\(0, 1fr\);/,
+    "the sales trend card should vertically center its chart within the available card height",
+  );
+  assert.doesNotMatch(
+    dashboardSource,
+    /<div className=\{styles\.salesTrendHeader\}>/,
+    "the compact chart should not spend vertical space on a redundant visible title",
+  );
+  assert.match(
+    dashboardCss,
+    /:is\(\.inventoryLine, \.salesDeliveryGrid\) article > span \{[^}]*font-size:\s*8px;[^}]*line-height:\s*1\.2;/,
+    "inventory and delivery labels should share one readable laptop baseline",
+  );
+  assert.match(
+    dashboardCss,
+    /\.greenPlusGroup\[data-green-plus-layout="metric-matrix"\] \.greenPlusFacts article > span \{[^}]*overflow:\s*visible;[^}]*text-overflow:\s*clip;[^}]*white-space:\s*normal;/,
+    "town metric labels must be shown in full instead of ellipsized",
+  );
+  assert.match(
+    dashboardCss,
+    /\.greenPlusGroup\[data-green-plus-layout="metric-matrix"\] \.greenPlusFacts article\[data-green-plus-metric-id="green-plus-town-industries"\] > b \{[^}]*overflow:\s*visible;[^}]*text-overflow:\s*clip;[^}]*white-space:\s*normal;/,
+    "the five-industry value must remain fully readable",
+  );
+  assert.match(
+    dashboardCss,
+    /\.greenPlusGroup:not\(\[data-green-plus-layout="metric-matrix"\]\) \.greenPlusNarrative \{[^}]*row-gap:\s*4px;/,
+    "right-rail business narrative rows should retain breathing room on laptop screens",
   );
 });
 
@@ -1787,6 +1838,8 @@ test("single fused cockpit keeps external-scale disclosure metrics and live dril
 
   const investmentHtml = panelHtml("01");
   const salesHtml = panelHtml("03");
+  const deliveryHtml = panelHtml("10");
+  const customerEvaluationHtml = panelHtml("11");
   const constructionHtml = panelHtml("02");
   const managedHtml = panelHtml("04");
   assert.match(investmentHtml, /<h2[^>]*>投资与土储<\/h2>/);
@@ -1824,9 +1877,9 @@ test("single fused cockpit keeps external-scale disclosure metrics and live dril
   const leftRailEnd = html.indexOf("</aside>", leftRailStart);
   assert.ok(leftRailStart >= 0 && leftRailEnd > leftRailStart, "left rail must render as one operating-overview group");
   const leftRailHtml = html.slice(leftRailStart, leftRailEnd);
-  const leftRailOrder = ["01", "03", "05", "02"].map((index) => leftRailHtml.indexOf(`data-panel-index="${index}"`));
-  assert.ok(leftRailOrder.every((position) => position >= 0), "left rail must contain investment, sales, resources, and development efficiency");
-  assert.deepEqual([...leftRailOrder].sort((a, b) => a - b), leftRailOrder, "resources and development efficiency must follow sales in the left rail");
+  const leftRailOrder = ["01", "03", "10", "11", "05", "02"].map((index) => leftRailHtml.indexOf(`data-panel-index="${index}"`));
+  assert.ok(leftRailOrder.every((position) => position >= 0), "left rail must contain six independently titled operating modules");
+  assert.deepEqual([...leftRailOrder].sort((a, b) => a - b), leftRailOrder, "delivery and customer evaluation must follow sales before resources and development efficiency");
 
   const rightRailStart = html.indexOf('aria-labelledby="specialty-business-heading"');
   const rightRailEnd = html.indexOf("</aside>", rightRailStart);
@@ -1859,7 +1912,7 @@ test("single fused cockpit keeps external-scale disclosure metrics and live dril
   assert.match(rightRailHtml, /data-material-pages="12"/);
   assert.doesNotMatch(rightRailHtml, /2025展示|初步意向/);
 
-  for (const index of ["01", "02", "03", "04", "05", "06", "07", "08", "09"]) {
+  for (const index of ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11"]) {
     const header = panelHtml(index).match(/<header[^>]*>[\s\S]*?<\/header>/)?.[0];
     assert.ok(header, `panel ${index} needs a visible header`);
     assert.doesNotMatch(header, /<small\b/, `panel ${index} header must not repeat source cadence or scope`);
@@ -1871,9 +1924,13 @@ test("single fused cockpit keeps external-scale disclosure metrics and live dril
   assert.match(dashboardCss, /\.investmentLiveGrid small:not\(\.rankDetail\) \{ display: none; \}/);
   assert.doesNotMatch(dashboardCss, /\.panel \{ min-height: 330px; \}/);
   assert.match(salesHtml, /data-rank-badge="sales-performance"[^>]*>自投销售 Top6</);
-  assert.match(salesHtml, /data-sales-customer-evaluation="group-disclosure"/);
-  assert.match(salesHtml, /data-metric-id="h1-customer-satisfaction"[\s\S]{0,500}?<strong>93\.3<\/strong><em>分<\/em>/);
-  assert.match(salesHtml, /data-metric-id="h1-customer-loyalty"[\s\S]{0,500}?<strong>89\.1<\/strong><em>%<\/em>/);
+  assert.doesNotMatch(salesHtml, /data-delivery-snapshot|data-sales-customer-evaluation/);
+  assert.match(deliveryHtml, /data-delivery-snapshot="operating-command"/);
+  assert.match(deliveryHtml, /<h2[^>]*>项目交付<\/h2>/);
+  assert.match(customerEvaluationHtml, /data-sales-customer-evaluation="group-disclosure"/);
+  assert.match(customerEvaluationHtml, /<h2[^>]*>集团客户评价<\/h2>/);
+  assert.match(customerEvaluationHtml, /data-metric-id="h1-customer-satisfaction"[\s\S]{0,500}?<strong>93\.3<\/strong><em>分<\/em>/);
+  assert.match(customerEvaluationHtml, /data-metric-id="h1-customer-loyalty"[\s\S]{0,500}?<strong>89\.1<\/strong><em>%<\/em>/);
   assert.doesNotMatch(managedHtml, /data-metric-id="h1-customer-(?:satisfaction|loyalty)"/);
   for (const [honorId, label, value] of [
     ["managed-capability-rating", "代建综合能力评价", "三星级"],
