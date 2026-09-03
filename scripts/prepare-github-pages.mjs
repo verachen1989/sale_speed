@@ -97,7 +97,15 @@ const chunkSources = await Promise.all(
 );
 const mapChunk = chunkSources.find((source) => source.includes("china-geo.json"));
 assert.ok(mapChunk, "A client chunk must load china-geo.json");
-assert.ok(mapChunk.includes(basePath), "The map client chunk must include the GitHub Pages base path");
+assert.ok(
+  chunkSources.some((source) => source.includes(basePath)),
+  "A client chunk must provide the GitHub Pages base path used by publicAssetPath",
+);
+assert.match(
+  mapChunk,
+  /fetch\([A-Za-z_$][\w$]*\(["'`]\/china-geo\.json["'`]\)\)/,
+  "The map client chunk must resolve china-geo.json through publicAssetPath",
+);
 assert.doesNotMatch(mapChunk, /fetch\(["'`]\/china-geo\.json/);
 assert.ok(chunkSources.some((source) => source.includes("2025.8.6")), "Project cockpit display date must remain in the client bundle");
 

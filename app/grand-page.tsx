@@ -11,10 +11,6 @@ import {
   type WenshuOrganizationSnapshot,
 } from "./wenshu-snapshot";
 import {
-  WENSHU_CITY_SALES_6283,
-  WENSHU_CITY_SALES_6283_SNAPSHOT_DATE,
-} from "./wenshu-city-sales-snapshot";
-import {
   WENSHU_CITY_SUMMARIES,
   WENSHU_COVERED_CITY_COUNT,
   WENSHU_DOMESTIC_PROJECT_COUNT,
@@ -25,6 +21,7 @@ import { WENSHU_ORGANIZATION_DEVELOPMENT_3002 } from "./wenshu-organization-deve
 import { formatMoneyFromYi } from "./money-format";
 import { publicAssetPath } from "./public-path";
 import { useDashboardCountUp } from "./use-dashboard-count-up";
+import DashboardViewSwitch, { type DashboardView } from "./dashboard-view-switch";
 
 type RegionMetrics = {
   sales: number;
@@ -32,6 +29,27 @@ type RegionMetrics = {
   projects: number;
   monthlySales: number[];
   summary: string;
+};
+
+type LatestSalesSnapshot = {
+  orgUnitCode: string;
+  cityName: string;
+  asOfDate: string;
+  statYear: string;
+  datasetCode: "6286";
+  scope: "全业态实际合同";
+  cumulativeContractSalesYi: number;
+  monthlyContractSalesYi: number[];
+  currentMonthDailyAverageYi: number;
+  previousMonthDailyAverageYi: number;
+  dailyAverageGrowthPct: number | null;
+};
+
+type LatestSalesResult = {
+  requestKey: string;
+  snapshot: LatestSalesSnapshot | null;
+  state: "ready" | "error";
+  error: string;
 };
 
 type ScopeMetrics = RegionMetrics & {
@@ -66,7 +84,6 @@ type CompositeFact = MetricFact & {
 
 const ROOT_ORGANIZATION = WENSHU_ORGANIZATIONS[0];
 const NAV_ORGANIZATIONS = [ROOT_ORGANIZATION, ...WENSHU_FIRST_LEVEL_ORGANIZATIONS];
-const PUBLIC_DISPLAY_DATE = "2025.8.6";
 
 function formatNumber(value: number, digits = 1) {
   return value.toLocaleString("zh-CN", {
@@ -143,15 +160,21 @@ function metricsForOrganization(organization: WenshuOrganizationSnapshot): Scope
 }
 
 export default function GrandDashboard({
-  onSwitchToShowcase,
+  onSelectView,
 }: {
-  onSwitchToShowcase: () => void;
+  onSelectView: (view: DashboardView) => void;
 }) {
   const cockpitRef = useRef<HTMLElement>(null);
   const [activeCity, setActiveCity] = useState<CitySelection | null>(null);
   const [activeProvince, setActiveProvince] = useState<ProvinceSelection | null>(null);
   const [activeOrganizationCode, setActiveOrganizationCode] = useState(WENSHU_ORGANIZATIONS[0].code);
   const [isProjectListOpen, setIsProjectListOpen] = useState(false);
+  const [latestSalesResult, setLatestSalesResult] = useState<LatestSalesResult>({
+    requestKey: "",
+    snapshot: null,
+    state: "error",
+    error: "",
+  });
   useDashboardCountUp(
     cockpitRef,
     "initial-dashboard-entry",
@@ -161,6 +184,52 @@ export default function GrandDashboard({
     () => WENSHU_ORGANIZATIONS.find((organization) => organization.code === activeOrganizationCode) ?? WENSHU_ORGANIZATIONS[0],
     [activeOrganizationCode],
   );
+  const latestSalesRequestKey = `${activeOrganization.code}::${activeCity?.name ?? ""}`;
+  const latestSales = latestSalesResult.requestKey === latestSalesRequestKey
+    ? latestSalesResult.snapshot
+    : null;
+  const salesLoadState = latestSalesResult.requestKey === latestSalesRequestKey
+    ? latestSalesResult.state
+    : "loading";
+  const salesLoadError = latestSalesResult.requestKey === latestSalesRequestKey
+    ? latestSalesResult.error
+    : "";
+  useEffect(() => {
+    const abortController = new AbortController();
+    const [orgUnitCode, cityName] = latestSalesRequestKey.split("::");
+    const params = new URLSearchParams({ orgUnitCode });
+    if (cityName) params.set("cityName", cityName);
+
+    fetch(`/api/latest-sales?${params.toString()}`, {
+      cache: "no-store",
+      signal: abortController.signal,
+    })
+      .then(async (response) => {
+        const body = await response.json() as LatestSalesSnapshot & { error?: string };
+        if (!response.ok) throw new Error(body.error || `最新销售数据查询失败（${response.status}）`);
+        return body;
+      })
+      .then((body) => {
+        if (abortController.signal.aborted) return;
+        setLatestSalesResult({
+          requestKey: latestSalesRequestKey,
+          snapshot: body,
+          state: "ready",
+          error: "",
+        });
+      })
+      .catch((error: unknown) => {
+        if (abortController.signal.aborted) return;
+        setLatestSalesResult({
+          requestKey: latestSalesRequestKey,
+          snapshot: null,
+          state: "error",
+          error: error instanceof Error ? error.message : "最新销售数据查询失败",
+        });
+      });
+
+    return () => abortController.abort();
+  }, [latestSalesRequestKey]);
   const activeOrganizationDevelopment = useMemo(
     () => WENSHU_ORGANIZATION_DEVELOPMENT_3002[activeOrganization.code] ?? null,
     [activeOrganization.code],
@@ -212,25 +281,22 @@ export default function GrandDashboard({
       .slice()
       .sort((left, right) => left.name.localeCompare(right.name, "zh-CN"))
   ), [activeCity, activeProvince, organizationProjectRows]);
-  const organizationMetrics = useMemo(() => metricsForOrganization(activeOrganization), [activeOrganization]);
-  const activeCitySales = activeCity ? WENSHU_CITY_SALES_6283[activeCity.name] : undefined;
-  const usesCitySales6283 = Boolean(activeCity && activeCitySales);
   const metrics = useMemo(() => {
-    if (!activeCitySales || !activeCity) return organizationMetrics;
-    const julySales = activeCitySales.monthlyContractSalesYi[6] ?? 0;
-    const augustSales = activeCitySales.monthlyContractSalesYi[7] ?? 0;
-    const growth = julySales > 0
-      ? ((augustSales / 24) / (julySales / 31) - 1) * 100
-      : 0;
+    const baseline = metricsForOrganization(activeOrganization);
+    if (!latestSales) {
+      return { ...baseline, sales: 0, growth: 0, monthlySales: [] };
+    }
     return {
-      ...organizationMetrics,
-      sales: activeCitySales.contractSalesYi,
-      growth,
-      monthlySales: activeCitySales.monthlyContractSalesYi,
-      summary: `${activeCity.name}合同销售趋势`,
+      ...baseline,
+      sales: latestSales.cumulativeContractSalesYi,
+      growth: latestSales.dailyAverageGrowthPct ?? 0,
+      monthlySales: latestSales.monthlyContractSalesYi,
+      summary: `${activeCity?.name ?? activeOrganization.name}月度实际合同趋势`,
     };
-  }, [activeCity, activeCitySales, organizationMetrics]);
-  const chartPeak = Math.max(...metrics.monthlySales.map((value) => Math.abs(value)));
+  }, [activeCity?.name, activeOrganization, latestSales]);
+  const salesDataReady = salesLoadState === "ready" && latestSales !== null;
+  const salesAsOfLabel = latestSales?.asOfDate.replaceAll("-", ".") ?? "加载最新数据";
+  const chartPeak = Math.max(0, ...metrics.monthlySales.map((value) => Math.abs(value)));
   const chartMax = Math.max(5, Math.ceil((chartPeak * 1.2) / 2) * 2);
   const salesScaleAnchor = Math.max(Math.abs(metrics.sales), chartPeak);
   const salesUnit = formatMoneyFromYi(salesScaleAnchor).unit;
@@ -391,13 +457,10 @@ export default function GrandDashboard({
           <h1>绿城中国经营驾驶舱</h1>
         </div>
         <div className="grand-header-actions">
-          <div className="fusion-view-switch" role="group" aria-label="大屏视图切换">
-            <button type="button" aria-pressed="false" onClick={onSwitchToShowcase}>融合地图</button>
-            <button type="button" className="is-active" aria-pressed="true">项目驾驶舱</button>
-          </div>
+          <DashboardViewSwitch activeView="projects" onSelectView={onSelectView} />
           <div className="grand-data-date">
             <i className="vision-live-dot" aria-hidden="true" />
-            <div><span>数据截至</span><b>{PUBLIC_DISPLAY_DATE}</b></div>
+            <div><span>销售数据截至</span><b>{salesAsOfLabel}</b></div>
           </div>
         </div>
 
@@ -456,8 +519,9 @@ export default function GrandDashboard({
           <section
             className="grand-metric-group is-sales"
             aria-labelledby="sales-title"
-            data-data-status="actual"
-            data-source-dataset={usesCitySales6283 ? "6283" : undefined}
+            data-data-status={salesLoadState}
+            data-source-dataset="6286"
+            data-source-date={latestSales?.asOfDate ?? ""}
           >
             <header className="grand-group-heading">
               <span>03</span>
@@ -466,17 +530,26 @@ export default function GrandDashboard({
             <div className="grand-sales-story">
               <div className="grand-sales-kpi">
                 <span>累计合同销售额</span>
-                <div><strong>{salesDisplay.value}</strong><em>{salesDisplay.unit}</em></div>
-                <i className={!usesCitySales6283 && metrics.growth < 0 ? "is-negative" : ""}>
-                  {usesCitySales6283
-                    ? "城市累计合同销售"
-                    : <>本月日均环比 {formatSignedPercentage(metrics.growth)}</>}
+                <div>
+                  <strong>{salesDataReady ? salesDisplay.value : "—"}</strong>
+                  <em>{salesDataReady ? salesDisplay.unit : ""}</em>
+                </div>
+                <i className={salesDataReady && metrics.growth < 0 ? "is-negative" : ""}>
+                  {salesLoadState === "loading"
+                    ? "正在查询最新数据"
+                    : salesLoadState === "error"
+                      ? "最新数据暂不可用"
+                      : latestSales?.dailyAverageGrowthPct == null
+                        ? "本月日均环比：上月无可比基数"
+                        : <>本月日均环比 {formatSignedPercentage(metrics.growth)}</>}
                 </i>
-                <small>{usesCitySales6283
-                  ? `住宅、商办及车储在售项目 · 截至 ${WENSHU_CITY_SALES_6283_SNAPSHOT_DATE}`
-                  : "全业态实际签约，不含目标及预测"}</small>
+                <small>{salesLoadState === "error"
+                  ? `查询失败：${salesLoadError}`
+                  : salesDataReady
+                    ? `全业态实际合同 · 数据集6286 · 截至 ${salesAsOfLabel}`
+                    : "按最新完整日自动更新，不读取固定销售快照"}</small>
               </div>
-              <div className="grand-story-chart" aria-label={`${displayScopeName}1至8月销售趋势`}>
+              <div className="grand-story-chart" aria-label={`${displayScopeName}1至${metrics.monthlySales.length}月销售趋势`}>
                 <small className="grand-story-unit">单位：{salesDisplay.unit}</small>
                 {metrics.monthlySales.map((value, index) => {
                   const barMagnitude = Math.abs(value);
@@ -484,7 +557,7 @@ export default function GrandDashboard({
                   const barLabel = `${index + 1}月 ${formattedValue}${salesUnit}${value < 0 ? "，合同冲减" : ""}`;
                   const barHeight = barMagnitude === 0
                     ? "0%"
-                    : `${Math.max(usesCitySales6283 ? 4 : 10, (barMagnitude / chartMax) * 100)}%`;
+                    : `${Math.max(activeCity ? 4 : 10, (barMagnitude / chartMax) * 100)}%`;
                   return (
                     <div
                       key={index}
@@ -634,7 +707,7 @@ export default function GrandDashboard({
       <footer className="grand-footer">
         <span>{displayScopeName}经营概览 · 全业态</span>
         <span>经营组织 → 覆盖行政区 → 城市 → 项目清单 · {WENSHU_COVERED_CITY_COUNT} 城 · {WENSHU_DOMESTIC_PROJECT_COUNT} 个国内有效项目</span>
-        <span>数据截至 {PUBLIC_DISPLAY_DATE} · 不含目标及预测</span>
+        <span>销售数据截至 {salesAsOfLabel} · 不含目标及预测</span>
       </footer>
     </main>
   );

@@ -1,23 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import GrandDashboard from "./grand-page";
-import MapIntegratedOverview from "./map-integrated-overview";
-
-type DashboardView = "showcase" | "projects";
+import HalfYear2026Dashboard from "./half-year-2026-dashboard";
 
 export default function DashboardShell() {
-  const [view, setView] = useState<DashboardView>("showcase");
-
   return (
     <div className="dashboard-shell">
-      {view === "showcase" ? (
-        <MapIntegratedOverview
-          onSwitchToProjects={() => setView("projects")}
-        />
-      ) : (
-        <GrandDashboard onSwitchToShowcase={() => setView("showcase")} />
-      )}
+      <HalfYear2026Dashboard />
     </div>
   );
 }

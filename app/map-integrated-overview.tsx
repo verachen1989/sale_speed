@@ -33,6 +33,7 @@ import {
   type WenshuOrganizationSnapshot,
 } from "./wenshu-snapshot";
 import { useDashboardCountUp } from "./use-dashboard-count-up";
+import DashboardViewSwitch, { type DashboardView } from "./dashboard-view-switch";
 
 const STAGE_SIGNAL_METRIC_IDS: Record<AnnualMetricGroup["id"], readonly string[]> = {
   investment: ["investment-projects", "investment-new-value", "investment-saleable-area"],
@@ -414,9 +415,9 @@ function OrganizationScopeFacts({
 }
 
 export default function MapIntegratedOverview({
-  onSwitchToProjects,
+  onSelectView,
 }: {
-  onSwitchToProjects: () => void;
+  onSelectView: (view: DashboardView) => void;
 }) {
   const cockpitRef = useRef<HTMLElement>(null);
   const [activeProvince, setActiveProvince] = useState<ProvinceSelection | null>(null);
@@ -578,10 +579,7 @@ export default function MapIntegratedOverview({
           <h1>绿城中国经营驾驶舱</h1>
         </div>
         <div className="fusion-header-actions">
-          <div className="fusion-view-switch" role="group" aria-label="大屏视图切换">
-            <button type="button" className="is-active" aria-pressed="true">融合地图</button>
-            <button type="button" aria-pressed="false" onClick={onSwitchToProjects}>项目驾驶舱</button>
-          </div>
+          <DashboardViewSwitch activeView="showcase" onSelectView={onSelectView} />
           <div className="fusion-period"><i /><span>2025 年度经营概览</span></div>
         </div>
       </header>

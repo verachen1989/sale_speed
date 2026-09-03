@@ -2,6 +2,35 @@
   min-height: 100vh;
 }
 
+.dashboard-view-loading {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  min-height: 100vh;
+  color: #a7c5d8;
+  font-size: 13px;
+  letter-spacing: .12em;
+  background: #031022;
+}
+
+.dashboard-view-loading i {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(99, 211, 232, .22);
+  border-top-color: #63d3e8;
+  border-radius: 50%;
+  animation: dashboard-view-loading-spin .8s linear infinite;
+}
+
+@keyframes dashboard-view-loading-spin {
+  to { transform: rotate(1turn); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-view-loading i { animation: none; }
+}
+
 .dashboard-view-switch {
   position: fixed;
   right: 24px;
