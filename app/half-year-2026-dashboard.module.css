@@ -4646,9 +4646,9 @@
   --half-type-label: #b3c7d9;
   --half-type-unit: #829db5;
   --half-type-note: #708ba3;
-  --half-type-highlight: #63d5f4;
-  --half-bar-amber: linear-gradient(180deg, #a5edff 0%, #4fc6ed 48%, #1689bc 100%);
-  --half-glow-amber: 0 0 10px rgba(79, 198, 237, .24);
+  --half-type-highlight: #60edfd;
+  --half-bar-amber: linear-gradient(180deg, #b4f9ff 0%, #60edfd 48%, #239fc9 100%);
+  --half-glow-amber: 0 0 10px rgba(96, 237, 253, .24);
 }
 
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel .panelBody article > span,
@@ -4691,11 +4691,23 @@
   text-shadow: 0 0 8px rgba(99, 213, 244, .2);
 }
 
-.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .deliveryPanel .salesDeliveryGrid b,
-.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .deliveryPanel .salesDeliveryGrid b em,
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .managedInsightStrip strong b,
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .managedInsightStrip strong b em {
   color: var(--half-type-highlight) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .deliveryPanel .salesDeliveryGrid b {
+  color: var(--half-type-value) !important;
+  text-shadow: none;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .deliveryPanel .salesDeliveryGrid b em {
+  color: var(--half-type-unit) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .customerEvaluationPanel .valueLineCompact strong {
+  color: var(--half-type-highlight) !important;
+  text-shadow: 0 0 8px rgba(96, 237, 253, .18) !important;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .managedInsightStrip > article > span {
@@ -4723,8 +4735,54 @@
 }
 
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .resourceDock .recognitionChart article > div i {
-  background: var(--half-bar-amber);
-  box-shadow: var(--half-glow-amber), inset 1px 0 rgba(255, 255, 255, .18);
+  background: linear-gradient(180deg, #86ceff 0%, #55a6ef 42%, #235db3 100%);
+  box-shadow: 0 0 10px rgba(72, 158, 238, .18), inset 0 1px rgba(255, 255, 255, .22);
+}
+
+/* Specialty scorecards: let alignment and one cyan rule carry the hierarchy. */
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts {
+  column-gap: clamp(8px, .7vw, 12px);
+  row-gap: clamp(5px, .55vh, 8px);
+  overflow: visible;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id],
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id][data-green-plus-featured="true"] {
+  min-height: 0;
+  padding: clamp(4px, .55vh, 7px) clamp(8px, .65vw, 12px);
+  border: 1px solid rgba(99, 184, 255, .1) !important;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(12, 58, 92, .72), rgba(7, 30, 59, .5)) !important;
+  box-shadow: inset 0 1px 0 rgba(190, 239, 255, .08), inset 0 -1px 0 rgba(29, 121, 181, .06) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id][data-green-plus-featured="true"] {
+  border-left: 2px solid rgba(96, 237, 253, .68) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id]::before,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id]::after {
+  content: none;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id] > span {
+  color: var(--half-type-label) !important;
+  font-weight: 600;
+}
+
+/* Project and honor rows stay in the same auto-flow and use the same rhythm. */
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusNarrative,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusHighlights,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusHighlights li {
+  min-height: 0;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusHighlights li {
+  padding: clamp(4px, .55vh, 7px) clamp(8px, .65vw, 12px);
+  border: 1px solid rgba(99, 184, 255, .1);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(12, 58, 92, .72), rgba(7, 30, 59, .5));
+  box-shadow: inset 0 1px 0 rgba(190, 239, 255, .08), inset 0 -1px 0 rgba(29, 121, 181, .06);
 }
 
 /* Executive map labels: translucent blue glass instead of heavy black plaques. */
@@ -4732,18 +4790,19 @@
   gap: 8px;
   padding: 7px 10px;
   color: var(--half-type-value);
-  border: 1px solid rgba(99, 184, 255, .3);
-  border-radius: 8px;
-  background: linear-gradient(138deg, rgba(12, 55, 101, .88), rgba(4, 24, 52, .82));
-  box-shadow: 0 9px 22px rgba(0, 14, 38, .28), inset 0 1px 0 rgba(216, 241, 255, .1);
+  border: 1px solid rgba(96, 237, 253, .42) !important;
+  border-radius: 9px;
+  background: linear-gradient(138deg, rgba(22, 96, 157, .94), rgba(6, 47, 94, .92)) !important;
+  box-shadow: 0 9px 22px rgba(0, 14, 38, .25), inset 3px 0 0 rgba(96, 237, 253, .58), inset 0 1px 0 rgba(222, 248, 255, .15) !important;
   backdrop-filter: blur(10px) saturate(112%);
 }
 
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label::before) {
+  display: block !important;
   width: 6px;
   height: 6px;
-  background: #63d5f4;
-  box-shadow: 0 0 9px rgba(99, 213, 244, .5);
+  background: #60edfd !important;
+  box-shadow: 0 0 9px rgba(96, 237, 253, .55) !important;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label > b) {
@@ -4763,23 +4822,23 @@
 }
 
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.is-hub) {
-  border-color: rgba(99, 213, 244, .46);
-  background: linear-gradient(138deg, rgba(16, 72, 124, .92), rgba(5, 31, 65, .86));
-  box-shadow: 0 10px 25px rgba(0, 17, 43, .3), 0 0 14px rgba(65, 174, 224, .1), inset 0 1px 0 rgba(220, 247, 255, .12);
+  border-color: rgba(96, 237, 253, .58) !important;
+  background: linear-gradient(138deg, rgba(27, 112, 176, .96), rgba(7, 56, 106, .94)) !important;
+  box-shadow: 0 10px 25px rgba(0, 17, 43, .28), 0 0 16px rgba(96, 237, 253, .13), inset 3px 0 0 rgba(96, 237, 253, .72), inset 0 1px 0 rgba(225, 249, 255, .18) !important;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.is-selected),
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.is-in-scope) {
-  border-color: rgba(110, 224, 249, .68);
-  background: linear-gradient(138deg, rgba(19, 87, 139, .94), rgba(5, 37, 74, .9));
-  box-shadow: 0 0 0 1px rgba(99, 213, 244, .12), 0 10px 26px rgba(0, 17, 43, .32), 0 0 18px rgba(65, 174, 224, .16);
+  border-color: rgba(96, 237, 253, .76) !important;
+  background: linear-gradient(138deg, rgba(31, 127, 190, .97), rgba(7, 64, 117, .95)) !important;
+  box-shadow: 0 0 0 1px rgba(96, 237, 253, .14), 0 10px 26px rgba(0, 17, 43, .3), 0 0 18px rgba(96, 237, 253, .2), inset 3px 0 0 #60edfd !important;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.is-minor.is-national-view) {
   opacity: .9;
-  border-color: rgba(99, 184, 255, .22);
-  background: linear-gradient(138deg, rgba(10, 48, 90, .82), rgba(4, 23, 49, .78));
-  box-shadow: 0 6px 16px rgba(0, 14, 38, .2), inset 0 1px 0 rgba(216, 241, 255, .06);
+  border-color: rgba(96, 204, 238, .3) !important;
+  background: linear-gradient(138deg, rgba(17, 76, 130, .88), rgba(5, 39, 80, .86)) !important;
+  box-shadow: 0 6px 16px rgba(0, 14, 38, .18), inset 2px 0 0 rgba(96, 237, 253, .38), inset 0 1px 0 rgba(216, 241, 255, .08) !important;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.has-project-case) {
