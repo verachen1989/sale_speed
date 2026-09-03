@@ -67,10 +67,10 @@ const GREEN_PLUS_FEATURED_FACT_IDS: Record<GreenPlusGroup["id"], string> = {
   wellness: "green-plus-wellness-beds",
 };
 const GREEN_PLUS_SUBTITLES: Record<GreenPlusGroup["id"], string> = {
-  "commercial-operations": "COMMERCIAL OPS",
+  "commercial-operations": "",
   "town-operations": "TOWN SERVICES",
-  "life-technology": "LIFE TECH",
-  wellness: "WELLNESS CARE",
+  "life-technology": "",
+  wellness: "",
 };
 const OPERATING_ORGANIZATIONS = WENSHU_FIRST_LEVEL_ORGANIZATIONS.filter((organization) => (
   organization.dashboardAvailable !== false
@@ -698,7 +698,7 @@ function CustomerEvaluationPanel() {
   return (
     <Panel
       index="11"
-      title="集团客户评价"
+      title="客户评价"
       className={styles.customerEvaluationPanel}
       sourceLabel="2026中期披露"
       sourcePeriod={HALF_YEAR_2026_SOURCE.period}
@@ -707,7 +707,7 @@ function CustomerEvaluationPanel() {
     >
       <div
         className={styles.salesCustomerEvaluationGrid}
-        aria-label="集团客户评价"
+        aria-label="客户评价"
         data-sales-customer-evaluation="group-disclosure"
         data-source-kind="disclosure"
         data-source-period={HALF_YEAR_2026_SOURCE.period}

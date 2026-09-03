@@ -160,11 +160,11 @@ export const HALF_YEAR_2026_GREEN_PLUS_GROUPS = [
     materialPages: [12],
     facts: [
       { id: "green-plus-town-industries", label: "五大产业", value: "商业、教育、文旅、康养、农业", numericValue: 5, unit: "" },
-      { id: "green-plus-town-members", label: "绿城悦己宿集 · 会员数", value: "4万+", numericValue: 4, unit: "" },
+      { id: "green-plus-town-members", label: "会员数", value: "4万+", numericValue: 4, unit: "" },
       { id: "green-plus-town-first-year-sales", label: "旅居产品首年销量", value: "4万", numericValue: 4, unit: "套" },
-      { id: "green-plus-town-exposure", label: "活动运营 · 年曝光量", value: "1亿+", numericValue: 1, unit: "" },
-      { id: "green-plus-town-light-projects", label: "轻资产拓展 · 项目数", value: "9", numericValue: 9, unit: "个" },
-      { id: "green-plus-town-honors", label: "行业认可 · 累计荣誉", value: "60+", numericValue: 60, unit: "项" },
+      { id: "green-plus-town-exposure", label: "年曝光量", value: "1亿+", numericValue: 1, unit: "" },
+      { id: "green-plus-town-light-projects", label: "项目数", value: "9", numericValue: 9, unit: "个" },
+      { id: "green-plus-town-honors", label: "累计荣誉", value: "60+", numericValue: 60, unit: "项" },
     ],
     highlights: [
       { kind: "honor", label: "小镇IP运营获“产业综合运营优秀企业”" },
