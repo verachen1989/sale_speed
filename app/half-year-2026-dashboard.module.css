@@ -40,8 +40,8 @@
   --half-rail-min-width: 360px;
   --half-rail-left-width: clamp(420px, 27vw, 620px);
   --half-rail-right-width: clamp(420px, 27vw, 620px);
-  --half-rail-left-template: auto minmax(0, 1.9fr) minmax(0, 2.35fr) minmax(72px, .64fr) minmax(72px, .64fr) minmax(0, 1fr) minmax(0, 1fr);
-  --half-rail-right-template: auto minmax(0, 1.34fr) repeat(4, minmax(0, .83fr));
+  --half-rail-left-template: auto minmax(0, 1.9fr) minmax(0, 2.15fr) minmax(88px, .84fr) minmax(72px, .64fr) minmax(0, 1fr) minmax(0, 1fr);
+  --half-rail-right-template: auto minmax(0, 1.34fr) minmax(0, .92fr) minmax(0, .92fr) minmax(0, .74fr) minmax(0, .74fr);
   --half-coral: #f08e82;
   --half-accent-cyan: #00d4ff;
   --half-accent-mint: #00ff9d;
@@ -416,16 +416,12 @@
 .inventoryLine { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 6px; margin-top: 7px; }
 .inventoryLine > article { display: grid; grid-template-rows: minmax(22px, auto) 24px 10px; align-content: start; min-width: 0; padding: 7px 8px; border: 1px solid rgba(98, 176, 206, .12); border-radius: 9px; background: linear-gradient(145deg, rgba(16, 53, 91, .68), rgba(8, 31, 61, .5)); }
 .inventoryLine > article:last-child { grid-column: auto; }
-.inventoryLine > article > span,
-.progressMetric > div span { display: -webkit-box; min-height: 22px; overflow: hidden; color: var(--half-label); font-size: 9px; font-weight: 550; line-height: 1.2; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.inventoryLine > article > span { display: -webkit-box; min-height: 22px; overflow: hidden; color: var(--half-label); font-size: 9px; font-weight: 550; line-height: 1.2; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .inventoryLine > article > small { display: block; margin-top: 2px; color: var(--half-label-note); font-size: 7px; font-weight: 500; }
-.progressMetric > div { display: contents; }
-.progressMetric > div b { align-self: center; color: #e4c07a; font: 550 20px/1 "DIN Alternate", "Helvetica Neue", sans-serif; }
+.inventoryLine .valueLineCompact strong { color: #60edfd; }
 .inventoryLine .valueLineCompact { align-self: center; }
 .progressMetric > i { align-self: center; }
-.progressMetric > i u { background: var(--half-bar-amber); box-shadow: var(--half-glow-amber); }
-.inventoryLine > article:nth-child(1) .valueLineCompact strong,
-.inventoryLine > article:nth-child(3) .valueLineCompact strong { color: #60edfd; }
+.progressMetric > i u { background: var(--half-bar-cyan); box-shadow: var(--half-glow-cyan); }
 
 .salesCustomerEvaluation {
   margin-top: 6px;
@@ -493,11 +489,10 @@
   align-items: baseline;
   gap: 2px;
   margin-top: 2px;
-  color: #72efff;
+  color: #ffd479;
   font: 600 18px/1 "DIN Alternate", "Helvetica Neue", sans-serif;
-  text-shadow: 0 0 10px rgba(40, 219, 247, .22);
+  text-shadow: 0 0 12px rgba(245, 175, 62, .28);
 }
-.salesDeliveryGrid article:nth-child(2) b { color: #ffd479; text-shadow: 0 0 12px rgba(245, 175, 62, .28); }
 .salesDeliveryGrid em { color: var(--half-label-note); font-size: 7px; font-style: normal; white-space: nowrap; }
 .salesDeliveryGrid small { display: block; margin-top: 1px; overflow: hidden; color: #729eb6; font-size: 6px; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -644,11 +639,24 @@
 .costBars small { grid-column: 2; grid-row: 2; color: #68b69f; font-size: 7px; white-space: nowrap; }
 
 .managedPerformanceBoard {
+  position: relative;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 6px;
   height: 100%;
   min-height: 0;
+}
+.managedPanelPeriod {
+  position: absolute;
+  top: -24px;
+  right: 13px;
+  z-index: 2;
+  color: #7ee5c7;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  white-space: nowrap;
+  text-shadow: 0 0 10px rgba(126, 229, 199, .26);
 }
 .managedGrid {
   display: grid;
@@ -658,6 +666,7 @@
   min-height: 0;
 }
 .managedGrid .metricCardCompact {
+  position: relative;
   display: grid;
   grid-template-rows: auto minmax(18px, 1fr);
   align-content: center;
@@ -668,12 +677,15 @@
   box-shadow: inset 0 1px 0 rgba(204, 247, 255, .08), 0 6px 12px rgba(1, 22, 42, .08);
 }
 .managedMetricTitle {
-  display: flex !important;
-  align-items: baseline;
-  gap: 2px;
+  display: block !important;
+  min-width: 0;
+  padding-right: 0;
 }
 .managedMetricTitle > small {
-  min-width: 0;
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  max-width: 68px;
   overflow: hidden;
   color: var(--half-label-note);
   font-size: 6px;
@@ -692,60 +704,76 @@
   white-space: nowrap;
 }
 .managedGrid .metricCardCompact:nth-child(3),
-.managedGrid .metricCardCompact:nth-child(5) { border-left-color: rgba(245, 175, 62, .7); }
+.managedGrid .metricCardCompact:nth-child(5) { border-left-color: rgba(99, 184, 255, .68); }
 .managedGrid .valueLineCompact { align-self: center; }
 .managedInsightStrip {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
+  gap: 0;
   container-type: inline-size;
 }
 .managedInsightStrip article {
+  position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 7px;
-  min-height: 40px;
+  gap: 5px;
+  min-height: 25px;
   min-width: 0;
-  padding: 6px 8px;
-  border: 1px solid rgba(91, 211, 193, .2);
-  border-left: 2px solid rgba(90, 220, 175, .64);
+  padding: 3px 5px;
+  overflow: hidden;
+  border: 1px solid rgba(99, 184, 255, .28);
   border-radius: 8px;
-  background: linear-gradient(90deg, rgba(19, 94, 102, .46), rgba(7, 40, 69, .36));
+  background:
+    linear-gradient(90deg, rgba(33, 131, 205, .16), rgba(7, 34, 62, .08) 68%),
+    rgba(7, 34, 62, .16);
+  box-shadow: inset 0 1px 0 rgba(222, 246, 255, .06), 0 0 12px rgba(41, 174, 255, .05);
 }
-.managedInsightStrip article:last-child { border-left-color: rgba(245, 175, 62, .68); }
+.managedInsightStrip article::before,
+.managedInsightStrip article::after {
+  display: none;
+}
+.managedInsightStrip article:last-child { border-left-color: rgba(99, 184, 255, .28); }
 .managedInsightStrip span {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-  color: #7ee5c7;
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  height: 15px;
+  padding: 0 6px;
+  color: #fff7dc;
   font-size: 7px;
-  font-weight: 600;
-  letter-spacing: .08em;
+  font-weight: 650;
+  letter-spacing: .04em;
+  line-height: 1;
   white-space: nowrap;
+  border: 1px solid rgba(255, 209, 111, .44);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(204, 144, 40, .92), rgba(87, 63, 31, .82));
+  box-shadow: 0 0 10px rgba(245, 189, 99, .2), inset 0 1px 0 rgba(255, 247, 220, .28);
 }
 .managedInsightStrip span small {
+  display: none;
   color: inherit;
   font-size: 6px;
   font-weight: 500;
   letter-spacing: 0;
 }
-.managedInsightStrip article:last-child span { color: #f3c875; }
+.managedInsightStrip article:last-child span { color: #fff7dc; }
 .managedInsightStrip strong {
   display: flex;
   align-items: baseline;
-  gap: 5px;
+  gap: 8px;
   min-width: 0;
   overflow: hidden;
-  color: #dcecf4;
+  color: #e0eef5;
   font-size: 8px;
-  font-weight: 550;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.managedInsightStrip strong b { display: inline-flex; flex: 0 0 auto; align-items: baseline; gap: 2px; color: #7ee5c7; font-size: 16px; font-weight: 650; }
-.managedInsightStrip strong b em { color: #7ee5c7; font-size: 7px; font-style: normal; font-weight: 550; }
-.managedInsightNote { min-width: 0; overflow: hidden; color: #dcecf4; font-size: 8px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.managedInsightStrip strong b { display: inline-flex; flex: 0 0 auto; align-items: baseline; gap: 2px; color: #ffd479; font-family: "DIN Alternate", "Helvetica Neue", Arial, sans-serif; font-size: 13px; font-weight: 600; line-height: 1; }
+.managedInsightStrip strong b em { color: #ffd479; font: 600 7px var(--font-cn); font-style: normal; }
+.managedInsightNote { min-width: 0; overflow: hidden; color: #e0eef5; font-size: 8px; font-weight: 550; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .managedHonorGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px; }
 .managedHonorGrid article {
   position: relative;
@@ -1026,7 +1054,7 @@
     --half-rail-left-width: clamp(380px, 29vw, 520px);
     --half-rail-right-width: clamp(380px, 29vw, 520px);
     --half-rail-left-template: auto minmax(0, 1.58fr) minmax(0, 3.08fr) minmax(0, .8fr) minmax(0, .74fr);
-    --half-rail-right-template: auto minmax(0, 1.24fr) repeat(4, minmax(0, .74fr));
+    --half-rail-right-template: auto minmax(0, 1.24fr) minmax(0, .82fr) minmax(0, .82fr) minmax(0, .66fr) minmax(0, .66fr);
   }
   .panel { padding: 6px; }
   .panelHeader { min-height: 29px; padding: 0 2px 5px; }
@@ -1105,10 +1133,8 @@
   .collectionCard > small { display: none; }
   .collectionGauge { margin-block: 0; }
   .inventoryLine > article { grid-template-rows: minmax(18px, auto) 20px 7px; padding: 4px 5px; }
-  .inventoryLine > article > span,
-  .progressMetric > div span { min-height: 18px; font-size: 8px; }
-  .inventoryLine .valueLineCompact strong,
-  .progressMetric > div b { font-size: 18px; }
+  .inventoryLine > article > span { min-height: 18px; font-size: 8px; }
+  .inventoryLine .valueLineCompact strong { font-size: 18px; }
   .scaleRow > i,
   .progressMetric > i,
   .costGrid article > i { height: 4px; }
@@ -1282,8 +1308,7 @@
   .recognitionBlock { grid-template-columns: 1fr; }
   .inventoryLine { grid-template-columns: repeat(3, minmax(100px, 1fr)); gap: 4px; overflow-x: auto; }
   .inventoryLine > article { padding-inline: 5px; }
-  .inventoryLine .valueLineCompact strong,
-  .progressMetric > div b { font-size: 17px; }
+  .inventoryLine .valueLineCompact strong { font-size: 17px; }
   .liquidityFactsGrid,
   .resourceCoreFacts,
   .earningsFactsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
@@ -1637,7 +1662,7 @@
 }
 
 .rail:global(.is-right) {
-  grid-template-rows: auto minmax(0, 1.4fr) repeat(4, minmax(0, .76fr));
+  grid-template-rows: auto minmax(0, 1.4fr) minmax(0, .85fr) minmax(0, .85fr) minmax(0, .67fr) minmax(0, .67fr);
   align-content: stretch;
 }
 
@@ -1826,7 +1851,7 @@
 .projectDynamicsGrid article > span { display: block; overflow: hidden; color: var(--half-label); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
 .projectDynamicsGrid article > div { display: flex; align-items: baseline; gap: 3px; min-width: 0; margin-top: 2px; }
 .projectDynamicsGrid strong { overflow: hidden; color: #eaf4ff; font: 600 17px/1 "DIN Alternate", "Helvetica Neue", sans-serif; text-overflow: ellipsis; white-space: nowrap; }
-.projectDynamicsGrid article:first-child strong { color: #6d8dff; font-size: 19px; }
+.projectDynamicsGrid article:first-child strong { color: var(--half-mint); font-size: 19px; }
 .projectDynamicsGrid em { color: #7694aa; font-size: 7px; font-style: normal; white-space: nowrap; }
 
 .salesOverviewRow {
@@ -2225,15 +2250,13 @@
     min-height: 48px;
     padding: 3px 5px;
   }
-  .panel[data-panel-index="03"] .inventoryLine > article > span,
-  .panel[data-panel-index="03"] .progressMetric > div span { min-height: 14px; font-size: 7px; -webkit-line-clamp: 1; }
-  .panel[data-panel-index="03"] .inventoryLine .valueLineCompact strong,
-  .panel[data-panel-index="03"] .progressMetric > div b { font-size: 15px; }
+  .panel[data-panel-index="03"] .inventoryLine > article > span { min-height: 14px; font-size: 7px; -webkit-line-clamp: 1; }
+  .panel[data-panel-index="03"] .inventoryLine .valueLineCompact strong { font-size: 15px; }
   .panel[data-panel-index="03"] .inventoryLine > article > small { display: none; }
   .panel[data-panel-index="04"] .managedPerformanceBoard { gap: 4px; }
   .panel[data-panel-index="04"] .managedInsightStrip { gap: 4px; }
-  .panel[data-panel-index="04"] .managedInsightStrip article { gap: 4px; padding: 3px 5px; }
-  .panel[data-panel-index="04"] .managedInsightStrip strong { font-size: 7px; }
+  .panel[data-panel-index="04"] .managedInsightStrip article { gap: 12px; padding: 7px 26px; }
+  .panel[data-panel-index="04"] .managedInsightStrip strong { font-size: 12px; }
   .resourceDock { max-height: 162px; }
 }
 
@@ -2380,8 +2403,8 @@
   .rail .panelBody p { font-size: 11px !important; }
   .rail .managedMetricTitle { font-size: 10px !important; }
   .rail .managedMetricTitle > small { font-size: 7px !important; }
-  .rail .managedInsightStrip span { font-size: 10px !important; }
-  .rail .managedInsightStrip span small { font-size: 8px !important; }
+  .rail .managedInsightStrip span { font-size: 13px !important; }
+  .rail .managedInsightStrip span small { font-size: 9px !important; }
   .rail .rankBadge,
   .rail .salesTrendBars li > b { font-size: 9px !important; }
   .rail .valueLineCompact strong { font-size: 24px; }
@@ -2731,7 +2754,7 @@
 
 .greenPlusPanel { min-height: 0; padding: 7px 8px; }
 .greenPlusPanel .panelHeader { min-height: 24px; padding-bottom: 3px; }
-.greenPlusPanel .panelBody { display: grid; min-height: 0; align-content: stretch; }
+.greenPlusPanel .panelBody { display: grid; height: 100%; min-height: 0; align-content: stretch; }
 .greenPlusGroup {
   --green-plus-accent: #55dff2;
   --green-plus-accent-soft: rgba(85, 223, 242, .2);
@@ -2790,25 +2813,15 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
-.greenPlusGroup[data-green-plus-variant="commercial-operations"] {
-  --green-plus-accent: #5adcaf;
-  --green-plus-accent-soft: rgba(90, 220, 175, .2);
-  --green-plus-surface: rgba(20, 91, 91, .3);
-}
-.greenPlusGroup[data-green-plus-variant="town-operations"] {
-  --green-plus-accent: #f5bd63;
-  --green-plus-accent-soft: rgba(245, 189, 99, .2);
-  --green-plus-surface: rgba(105, 75, 30, .25);
-}
-.greenPlusGroup[data-green-plus-variant="life-technology"] {
+.greenPlusGroup:is([data-green-plus-variant="commercial-operations"], [data-green-plus-variant="town-operations"], [data-green-plus-variant="life-technology"]) {
   --green-plus-accent: #63b8ff;
   --green-plus-accent-soft: rgba(99, 184, 255, .21);
   --green-plus-surface: rgba(31, 74, 131, .3);
 }
 .greenPlusGroup[data-green-plus-variant="wellness"] {
-  --green-plus-accent: #ef9c92;
-  --green-plus-accent-soft: rgba(239, 156, 146, .19);
-  --green-plus-surface: rgba(103, 54, 66, .25);
+  --green-plus-accent: #7ee5c7;
+  --green-plus-accent-soft: rgba(126, 229, 199, .2);
+  --green-plus-surface: rgba(19, 94, 102, .3);
 }
 .greenPlusGroupHeading { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; min-width: 0; }
 .greenPlusGroupHeading > span { color: #dff9ff; font-size: 10px; font-weight: 600; white-space: nowrap; }
@@ -2862,17 +2875,51 @@
 .greenPlusFacts article > span { position: relative; z-index: 1; overflow: hidden; color: var(--half-label); font-size: 9px; font-weight: 650; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .greenPlusFacts article > b { position: relative; z-index: 1; margin-top: 2px; color: #edf8ff; font: 650 19px/1 "DIN Alternate", "Helvetica Neue", Arial, sans-serif; white-space: nowrap; text-shadow: 0 0 10px rgba(87, 210, 255, .2); }
 .greenPlusFacts article[data-green-plus-featured="true"] > b { color: var(--green-plus-accent); font-size: 25px; text-shadow: 0 0 13px rgba(255, 212, 121, .42), 0 0 22px var(--green-plus-accent-soft); }
+.greenPlusGroup:is([data-green-plus-variant="commercial-operations"], [data-green-plus-variant="town-operations"], [data-green-plus-variant="life-technology"]) .greenPlusFacts article[data-green-plus-featured="true"] {
+  border-color: rgba(99, 184, 255, .42);
+  border-left-color: var(--green-plus-accent);
+  background:
+    radial-gradient(circle at 22% 42%, rgba(99, 184, 255, .2), transparent 48%),
+    linear-gradient(112deg, var(--green-plus-surface), rgba(7, 36, 67, .3) 72%),
+    linear-gradient(145deg, rgba(18, 70, 105, .42), rgba(7, 36, 67, .28));
+  box-shadow: 0 0 18px var(--green-plus-accent-soft), inset 0 1px 0 rgba(222, 246, 255, .12), inset 0 -1px 14px rgba(99, 184, 255, .12);
+}
+.greenPlusGroup:is([data-green-plus-variant="commercial-operations"], [data-green-plus-variant="town-operations"], [data-green-plus-variant="life-technology"]) .greenPlusFacts article[data-green-plus-featured="true"] > b {
+  text-shadow: 0 0 13px rgba(99, 184, 255, .42), 0 0 22px var(--green-plus-accent-soft);
+}
+.greenPlusGroup[data-green-plus-variant="wellness"] .greenPlusFacts article[data-green-plus-featured="true"] {
+  border-color: rgba(126, 229, 199, .42);
+  border-left-color: var(--green-plus-accent);
+  background:
+    radial-gradient(circle at 22% 42%, rgba(126, 229, 199, .2), transparent 48%),
+    linear-gradient(112deg, var(--green-plus-surface), rgba(7, 36, 67, .3) 72%),
+    linear-gradient(145deg, rgba(18, 70, 105, .42), rgba(7, 36, 67, .28));
+  box-shadow: 0 0 18px var(--green-plus-accent-soft), inset 0 1px 0 rgba(223, 255, 245, .12), inset 0 -1px 14px rgba(126, 229, 199, .12);
+}
+.greenPlusGroup[data-green-plus-variant="wellness"] .greenPlusFacts article[data-green-plus-featured="true"] > b {
+  text-shadow: 0 0 13px rgba(126, 229, 199, .42), 0 0 22px var(--green-plus-accent-soft);
+}
 .greenPlusFacts article > b em { margin-left: 3px; color: var(--half-label-muted); font: 500 8px var(--font-cn); font-style: normal; }
 .greenPlusGroup[data-green-plus-layout="metric-matrix"] { grid-template-rows: minmax(0, 1fr); }
+.greenPlusGroup[data-green-plus-layout="metric-matrix"][data-green-plus-has-highlights="true"] {
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 4px;
+}
 .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(0, 1fr));
+  grid-template-rows: none;
+  grid-auto-rows: minmax(0, 1fr);
   gap: 4px;
   height: 100%;
 }
 .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  align-items: center;
+  gap: 8px;
   min-height: 0;
-  padding: 3px 7px;
+  padding: 7px 10px;
 }
 .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article > span {
   font-size: 8px;
@@ -2897,7 +2944,8 @@
   grid-column: 1 / -1;
 }
 .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts {
-  grid-template-rows: repeat(4, minmax(0, 1fr));
+  grid-template-rows: none;
+  grid-auto-rows: minmax(0, 1fr);
 }
 .greenPlusNarrative {
   display: grid;
@@ -3002,7 +3050,6 @@
   background: linear-gradient(135deg, rgba(204, 144, 40, .92), rgba(87, 63, 31, .82));
   box-shadow: 0 0 10px rgba(245, 189, 99, .2), inset 0 1px 0 rgba(255, 247, 220, .28);
 }
-
 .rail:global(.is-left) {
   row-gap: 6px;
   padding-block: 6px;
@@ -3200,19 +3247,22 @@
 /* Keep the two headline KPI blocks typographically balanced across the map. */
 @media (min-width: 1201px) {
   .dashboard {
-    --half-highlight-kpi-size: clamp(18px, 1.2vw, 20px);
+    --half-highlight-kpi-size: 20px;
     --half-highlight-label-size: 11px;
     --half-highlight-unit-size: 9px;
-    --half-managed-share-height: clamp(40px, 5.2vh, 52px);
   }
 
   .panel[data-panel-index="01"] .investmentLiveGrid strong,
   .panel[data-panel-index="01"] .projectDynamicsGrid strong,
   .panel[data-panel-index="01"] .ratioRow .valueLineCompact strong,
   .panel[data-panel-index="04"] .managedGrid .valueLineCompact strong {
+    font-family: "DIN Alternate", "Helvetica Neue", sans-serif !important;
     font-size: var(--half-highlight-kpi-size) !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
   }
 
+  .organizationNav button,
   .panel[data-panel-index="01"] .investmentLiveGrid article > span,
   .panel[data-panel-index="01"] .projectDynamicsGrid article > span,
   .panel[data-panel-index="01"] .ratioRow article > span,
@@ -3228,25 +3278,25 @@
   }
 
   .panel[data-panel-index="04"] .managedInsightStrip article {
-    min-height: var(--half-managed-share-height);
-    padding: 6px 9px;
+    min-height: 25px;
+    padding: 3px 5px;
   }
 
   .panel[data-panel-index="04"] .managedInsightStrip span {
-    font-size: var(--half-highlight-label-size) !important;
+    font-size: 7px !important;
   }
 
   .panel[data-panel-index="04"] .managedInsightStrip span small,
   .panel[data-panel-index="04"] .managedInsightStrip strong b em {
-    font-size: var(--half-highlight-unit-size) !important;
+    font-size: 7px !important;
   }
 
   .panel[data-panel-index="04"] .managedInsightStrip strong b {
-    font-size: var(--half-highlight-kpi-size) !important;
+    font-size: 13px !important;
   }
 
   .panel[data-panel-index="04"] .managedInsightNote {
-    font-size: var(--half-highlight-label-size) !important;
+    font-size: 8px !important;
   }
 
   .panel[data-panel-index="01"] .panelTitle > span,
@@ -3282,10 +3332,9 @@
 
 @media (min-width: 2200px) and (min-height: 1200px) {
   .dashboard {
-    --half-highlight-kpi-size: min(1.2vw, 2.1vh);
-    --half-highlight-label-size: min(.65vw, 1.15vh);
-    --half-highlight-unit-size: min(.54vw, .94vh);
-    --half-managed-share-height: min(3vw, 5.2vh);
+    --half-highlight-kpi-size: 20px;
+    --half-highlight-label-size: 13px;
+    --half-highlight-unit-size: 11px;
   }
 
 }
@@ -3439,8 +3488,8 @@
     --half-panel-gap: clamp(4px, .45vw, 8px);
     --half-rail-left-width: clamp(420px, 27vw, 620px);
     --half-rail-right-width: clamp(420px, 27vw, 620px);
-    --half-rail-left-template: auto minmax(0, 1.9fr) minmax(0, 2.35fr) minmax(72px, .64fr) minmax(72px, .64fr) minmax(0, 1fr) minmax(0, 1fr);
-    --half-rail-right-template: auto minmax(0, 1.34fr) repeat(4, minmax(0, .83fr));
+    --half-rail-left-template: auto minmax(0, 1.9fr) minmax(0, 2.15fr) minmax(88px, .84fr) minmax(72px, .64fr) minmax(0, 1fr) minmax(0, 1fr);
+    --half-rail-right-template: auto minmax(0, 1.34fr) minmax(0, .92fr) minmax(0, .92fr) minmax(0, .74fr) minmax(0, .74fr);
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .workspace {
@@ -3499,8 +3548,8 @@
     --half-panel-gap: clamp(3px, .34vw, 6px);
     --half-rail-left-width: clamp(390px, 28vw, 520px);
     --half-rail-right-width: clamp(390px, 28vw, 520px);
-    --half-rail-left-template: auto minmax(0, 1.75fr) minmax(0, 2.2fr) minmax(78px, .7fr) minmax(58px, .65fr) minmax(0, .98fr) minmax(0, .92fr);
-    --half-rail-right-template: auto minmax(0, 1.24fr) repeat(4, minmax(0, .75fr));
+    --half-rail-left-template: auto minmax(0, 1.75fr) minmax(0, 2fr) minmax(88px, .9fr) minmax(58px, .65fr) minmax(0, .98fr) minmax(0, .92fr);
+    --half-rail-right-template: auto minmax(0, 1.24fr) minmax(0, .84fr) minmax(0, .84fr) minmax(0, .66fr) minmax(0, .66fr);
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .panelBody {
@@ -3528,8 +3577,8 @@
     --half-panel-gap: 4px;
     --half-rail-left-width: clamp(380px, 29vw, 510px);
     --half-rail-right-width: clamp(380px, 29vw, 510px);
-    --half-rail-left-template: auto minmax(0, 1.7fr) minmax(0, 2.05fr) minmax(78px, .62fr) minmax(50px, .55fr) minmax(0, .85fr) minmax(0, .8fr);
-    --half-rail-right-template: auto minmax(0, 1.18fr) repeat(4, minmax(0, .7fr));
+    --half-rail-left-template: auto minmax(0, 1.7fr) minmax(0, 1.85fr) minmax(84px, .82fr) minmax(50px, .55fr) minmax(0, .85fr) minmax(0, .8fr);
+    --half-rail-right-template: auto minmax(0, 1.18fr) minmax(0, .78fr) minmax(0, .78fr) minmax(0, .62fr) minmax(0, .62fr);
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .panelBody {
@@ -3550,8 +3599,8 @@
   .dashboard[data-dashboard-view="half-year-2026"] {
     --half-screen-density: presentation;
     --half-panel-gap: 5px;
-    --half-rail-left-template: auto minmax(0, 2fr) minmax(0, 2.06fr) minmax(78px, .68fr) minmax(58px, .64fr) minmax(0, .92fr) minmax(0, .98fr);
-    --half-rail-right-template: auto minmax(0, 1.25fr) repeat(4, minmax(0, .9fr));
+    --half-rail-left-template: auto minmax(0, 2fr) minmax(0, 1.86fr) minmax(90px, .88fr) minmax(58px, .64fr) minmax(0, .92fr) minmax(0, .98fr);
+    --half-rail-right-template: auto minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, .8fr) minmax(0, .8fr);
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .panelBody {
@@ -3673,33 +3722,54 @@
   gap: 0;
 }
 
+.dashboard[data-dashboard-view="half-year-2026"] .rail:global(.is-right) .greenPlusPanel .panelBody {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  align-content: stretch;
+  align-items: stretch;
+  height: 100%;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"][data-green-plus-has-highlights="true"] {
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 4px;
+}
+
 .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusSubtitle {
   display: none;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: 4px;
+  grid-template-rows: none;
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: stretch;
+  gap: clamp(5px, .45vh, 8px);
+  height: 100%;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"][data-green-plus-has-highlights="true"] .greenPlusFacts {
   height: 100%;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article,
 .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id] {
   grid-column: auto;
+  height: 100%;
   min-height: 0;
-  padding: 10px 7px;
+  padding: clamp(7px, .9vh, 12px) clamp(9px, .7vw, 14px);
+  border-radius: 10px;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article > span {
-  font-size: 8px !important;
-  line-height: 1.08;
+  font-size: clamp(10px, .64vw, 13px) !important;
+  line-height: 1.1;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article > b,
 .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-featured="true"] > b {
   margin-top: 1px;
-  font-size: 15px;
+  font-size: clamp(16px, 1vw, 22px);
   line-height: 1;
 }
 
@@ -3714,22 +3784,22 @@
 
 @media (min-width: 1201px) and (max-height: 875px) {
   .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts {
-    gap: 2px;
+    gap: 4px;
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article,
   .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id] {
-    padding: 1px 4px;
+    padding: 5px 8px;
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article > span {
-    font-size: 6.5px !important;
+    font-size: 9px !important;
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article > b,
   .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-featured="true"] > b {
     margin-top: 0;
-    font-size: 11px;
+    font-size: 15px;
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id="green-plus-town-industries"] > b {
@@ -3997,17 +4067,20 @@
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .investmentLiveGrid .rankDetail {
-  position: absolute;
-  top: 2px;
-  right: 5px;
+  position: static;
   display: block;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
   margin: 0;
   line-height: 1;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="03"] .salesTrendCard {
   display: grid;
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  padding-top: 6px;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="03"] .salesTrendChart {
@@ -4022,12 +4095,20 @@
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .investmentLiveGrid article {
-  grid-template-rows: 12px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   align-content: center;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .investmentLiveGrid article > span {
+  grid-column: 1;
+  grid-row: 1;
   line-height: 12px;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .investmentLiveGrid article > div {
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .ratioRow article,
@@ -4037,12 +4118,13 @@
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="03"] .inventoryLine > article {
-  grid-template-rows: 14px 20px auto;
+  grid-template-rows: 14px 20px 18px;
   padding: 2px 6px;
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .deliveryPanel .salesDeliveryGrid article {
-  grid-template-rows: 11px 15px;
+  grid-template-rows: auto auto;
+  row-gap: clamp(5px, .6vh, 7px);
 }
 
 .dashboard[data-dashboard-view="half-year-2026"] .deliveryPanel .salesDeliveryGrid b {
@@ -4130,6 +4212,128 @@
   white-space: normal;
 }
 
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] {
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"][data-green-plus-has-highlights="true"] {
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts {
+  align-content: stretch;
+  align-items: stretch;
+  grid-auto-rows: minmax(34px, 1fr);
+  gap: 6px;
+  height: 100%;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 34px;
+  gap: 10px;
+  padding: clamp(3px, .55vh, 6px) 12px;
+  border-radius: 11px;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article > span {
+  overflow: hidden;
+  font-size: clamp(10px, .7vw, 13px) !important;
+  font-weight: 650;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article > b,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-featured="true"] > b {
+  justify-self: end;
+  margin-top: 0;
+  font-size: clamp(17px, 1.05vw, 22px);
+  line-height: 1;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id="green-plus-town-industries"] > b {
+  overflow: hidden;
+  font-size: clamp(9px, .58vw, 12px);
+  line-height: 1.15;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* KPI cards and case/honor rows share one auto-sized grid and one row gap. */
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"][data-green-plus-has-highlights="true"] .greenPlusNarrative {
+  grid-column: 1 / -1;
+  grid-template-rows: minmax(0, 1fr);
+  align-content: stretch;
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border-top: 0;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts {
+  grid-auto-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusFacts article[data-green-plus-metric-id] {
+  min-height: 0;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusHighlights,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusHighlights li {
+  height: 100%;
+  min-height: 0;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"] .greenPlusHighlights li {
+  padding: 3px 5px;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="town-operations"] .greenPlusFacts article[data-green-plus-metric-id="green-plus-town-industries"] {
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="town-operations"] .greenPlusFacts article[data-green-plus-metric-id="green-plus-town-industries"] > span,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="town-operations"] .greenPlusFacts article[data-green-plus-metric-id="green-plus-town-industries"] > b {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="town-operations"] .greenPlusFacts article[data-green-plus-metric-id="green-plus-town-industries"] > b {
+  min-width: 0;
+  font-size: clamp(8px, .54vw, 11px);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="town-operations"] .greenPlusFacts article:not([data-green-plus-metric-id="green-plus-town-industries"]) {
+  grid-template-columns: minmax(0, 1fr) max-content;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="town-operations"] .greenPlusFacts article:not([data-green-plus-metric-id="green-plus-town-industries"]) > b {
+  min-width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="town-operations"] .greenPlusFacts article:not([data-green-plus-metric-id="green-plus-town-industries"]) > b em {
+  display: inline;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 @media (min-width: 1280px) and (max-width: 1600px) and (max-height: 920px) {
   .dashboard[data-dashboard-view="half-year-2026"] {
     --half-laptop-profile: compact-laptop;
@@ -4145,8 +4349,8 @@
     --half-rail-min-width: 380px;
     --half-rail-left-width: clamp(396px, 29.5vw, 432px);
     --half-rail-right-width: clamp(396px, 29.5vw, 432px);
-    --half-rail-left-template: auto minmax(0, 1.82fr) minmax(0, 2.25fr) minmax(78px, .68fr) minmax(54px, .62fr) minmax(0, .92fr) minmax(0, .86fr);
-    --half-rail-right-template: auto minmax(0, 1.18fr) repeat(4, minmax(0, .76fr));
+    --half-rail-left-template: auto minmax(0, 1.82fr) minmax(0, 2.05fr) minmax(88px, .88fr) minmax(54px, .62fr) minmax(0, .92fr) minmax(0, .86fr);
+    --half-rail-right-template: auto minmax(0, 1.18fr) minmax(0, .85fr) minmax(0, .85fr) minmax(0, .67fr) minmax(0, .67fr);
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .railHeading {
@@ -4189,8 +4393,8 @@
     --half-panel-title-size-canonical: 16px;
     --half-rail-left-width: clamp(416px, 28vw, 470px);
     --half-rail-right-width: clamp(416px, 28vw, 470px);
-    --half-rail-left-template: auto minmax(0, 2.05fr) minmax(0, 2.32fr) minmax(78px, .72fr) minmax(62px, .64fr) minmax(0, 1.02fr) minmax(0, .88fr);
-    --half-rail-right-template: auto minmax(0, 1.16fr) repeat(4, minmax(0, .9fr));
+    --half-rail-left-template: auto minmax(0, 2.05fr) minmax(0, 2.12fr) minmax(90px, .92fr) minmax(62px, .64fr) minmax(0, 1.02fr) minmax(0, .88fr);
+    --half-rail-right-template: auto minmax(0, 1.16fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, .8fr) minmax(0, .8fr);
   }
 
 
@@ -4206,12 +4410,396 @@
 /* Reserve enough vertical room for the delivery KPIs before applying padding. */
 @media (min-width: 1201px) {
   .dashboard[data-dashboard-view="half-year-2026"] .deliveryPanel {
-    min-height: 78px;
+    min-height: 88px;
   }
 
   .dashboard[data-dashboard-view="half-year-2026"] .deliveryPanel .salesDeliveryGrid article {
-    row-gap: 4px;
+    row-gap: clamp(5px, .6vh, 7px);
     padding-top: 5px;
     padding-bottom: 5px;
   }
+}
+
+/* The three investment sections share the available panel height equally. */
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .panelBody {
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+/* Investment and land-bank values use the new-project cyan consistently. */
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] :is(
+  .investmentLiveGrid,
+  .projectDynamicsGrid,
+  .ratioRow
+) strong {
+  color: #60edfd !important;
+  text-shadow: 0 0 10px rgba(40, 219, 247, .22);
+}
+
+/* Market-share, project and honor rows share one readable type scale. */
+.dashboard[data-dashboard-view="half-year-2026"] .managedInsightStrip span,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusHighlights small {
+  min-width: 36px;
+  height: 17px;
+  padding-inline: 7px;
+  font-size: 9px;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .managedInsightStrip strong b {
+  font-size: 15px !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .managedInsightStrip strong b em {
+  font-size: 8px !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .managedInsightNote,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusHighlights span {
+  font-size: 10px !important;
+  font-weight: 550;
+  line-height: 1.35;
+}
+
+@media (min-width: 1201px) and (max-height: 875px) {
+  .dashboard[data-dashboard-view="half-year-2026"] .managedInsightNote,
+  .dashboard[data-dashboard-view="half-year-2026"] .greenPlusHighlights span {
+    font-size: 9px !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .dashboard[data-dashboard-view="half-year-2026"] .managedInsightNote,
+  .dashboard[data-dashboard-view="half-year-2026"] .greenPlusHighlights span {
+    font-size: 10px !important;
+  }
+}
+
+/* Blue-forward glass palette: borrow the sales-trend depth and keep cyan as a small KPI accent. */
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) {
+  --half-bg: #082d56;
+  --half-panel: rgba(8, 45, 83, .7);
+  --half-panel-deep: rgba(6, 31, 62, .54);
+  --half-line: rgba(71, 160, 226, .28);
+  --half-line-hot: rgba(99, 184, 255, .52);
+  --half-cyan: #63b8ff;
+  --half-accent-cyan: #4ba8f4;
+  background:
+    radial-gradient(ellipse at 52% 48%, rgba(55, 133, 220, .3), transparent 54%),
+    linear-gradient(180deg, rgba(12, 67, 123, .32), rgba(6, 31, 62, .34)),
+    url("/dashboard-bg-cityscape.png") center bottom / cover fixed no-repeat;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .ambientGrid {
+  opacity: .065;
+  background-image:
+    linear-gradient(rgba(92, 158, 218, .08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(92, 158, 218, .08) 1px, transparent 1px);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel {
+  border-color: rgba(71, 160, 226, .28);
+  background:
+    radial-gradient(circle at 12% 0, rgba(55, 133, 220, .1), transparent 38%),
+    linear-gradient(145deg, rgba(8, 45, 83, .7), rgba(6, 31, 62, .54));
+  box-shadow: 0 14px 30px rgba(0, 17, 42, .18), inset 0 1px 0 rgba(205, 231, 255, .07);
+  backdrop-filter: blur(12px) saturate(108%);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel::before {
+  background: linear-gradient(90deg, transparent, rgba(99, 184, 255, .62), rgba(40, 219, 247, .14), transparent);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel::after {
+  border-color: rgba(99, 184, 255, .5);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .railHeading {
+  border-bottom-color: rgba(99, 184, 255, .22);
+  background: linear-gradient(90deg, rgba(34, 100, 169, .32), rgba(8, 45, 83, .05) 74%, transparent);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) :is(.metricCard, .metricCardCompact) {
+  border-color: rgba(92, 164, 226, .25);
+  background: linear-gradient(145deg, rgba(26, 83, 137, .32), rgba(6, 37, 73, .26));
+}
+
+/* The six managed-business KPIs follow the same grouped hierarchy as investment and land bank. */
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  padding: 5px 6px;
+  overflow: hidden;
+  border: 1px solid rgba(71, 160, 226, .22);
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(8, 45, 83, .62), rgba(6, 31, 62, .34));
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid .metricCardCompact {
+  display: grid;
+  grid-template-rows: auto auto;
+  align-content: center;
+  min-height: 0;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid .metricCardCompact:nth-child(2),
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid .metricCardCompact:nth-child(3),
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid .metricCardCompact:nth-child(5),
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid .metricCardCompact:nth-child(6) {
+  border-left: 1px solid rgba(93, 153, 210, .18);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid .metricCardCompact:nth-child(n + 4) {
+  border-top: 1px solid rgba(93, 153, 210, .18);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedMetricTitle {
+  color: var(--half-label) !important;
+  line-height: 12px;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid .valueLineCompact {
+  align-self: auto;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid .valueLineCompact strong {
+  color: #63b8ff !important;
+  text-shadow: 0 0 11px rgba(99, 184, 255, .28);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedGrid .valueLineCompact em {
+  color: #9fc9eb !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="04"] .managedMetricNote {
+  display: none;
+}
+
+/* Wellness uses the same blue card family as the other specialty businesses. */
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="wellness"] {
+  --green-plus-accent: #63b8ff;
+  --green-plus-accent-soft: rgba(99, 184, 255, .21);
+  --green-plus-surface: rgba(31, 74, 131, .3);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="wellness"] .greenPlusFacts article {
+  border-color: rgba(99, 184, 255, .34);
+  border-left-color: rgba(99, 184, 255, .58);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, .09), transparent 34%),
+    linear-gradient(150deg, rgba(25, 73, 126, .6), rgba(5, 31, 65, .44) 76%);
+  box-shadow: 0 0 16px rgba(55, 133, 220, .1), inset 0 1px 0 rgba(222, 246, 255, .12), inset 0 -1px 12px rgba(55, 133, 220, .1);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="wellness"] .greenPlusFacts article[data-green-plus-featured="true"] {
+  border-color: rgba(99, 184, 255, .42);
+  border-left-color: var(--green-plus-accent);
+  background:
+    radial-gradient(circle at 22% 42%, rgba(99, 184, 255, .2), transparent 48%),
+    linear-gradient(112deg, var(--green-plus-surface), rgba(7, 36, 67, .3) 72%),
+    linear-gradient(145deg, rgba(18, 70, 105, .42), rgba(7, 36, 67, .28));
+  box-shadow: 0 0 18px var(--green-plus-accent-soft), inset 0 1px 0 rgba(222, 246, 255, .12), inset 0 -1px 14px rgba(99, 184, 255, .12);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-variant="wellness"] .greenPlusFacts article[data-green-plus-featured="true"] > b {
+  text-shadow: 0 0 13px rgba(99, 184, 255, .42), 0 0 22px var(--green-plus-accent-soft);
+}
+
+/* Every specialty-business KPI uses one blue value and card color system. */
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup {
+  --green-plus-accent: #63b8ff;
+  --green-plus-accent-soft: rgba(99, 184, 255, .2);
+  --green-plus-surface: rgba(31, 74, 131, .3);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup .greenPlusFacts article[data-green-plus-metric-id] {
+  border-color: rgba(99, 184, 255, .34);
+  border-left-color: rgba(99, 184, 255, .58);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, .09), transparent 34%),
+    linear-gradient(150deg, rgba(25, 73, 126, .6), rgba(5, 31, 65, .44) 76%);
+  box-shadow: 0 0 16px rgba(55, 133, 220, .1), inset 0 1px 0 rgba(222, 246, 255, .12), inset 0 -1px 12px rgba(55, 133, 220, .1);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup .greenPlusFacts article[data-green-plus-metric-id] > b,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup .greenPlusFacts article[data-green-plus-metric-id][data-green-plus-featured="true"] > b {
+  color: #63b8ff;
+  text-shadow: 0 0 11px rgba(99, 184, 255, .28);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup .greenPlusFacts article[data-green-plus-metric-id] > b em {
+  color: #9fc9eb;
+}
+
+/* Restrained cockpit typography: one neutral hierarchy with a single cyan highlight. */
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) {
+  --half-type-value: #edf4fb;
+  --half-type-label: #b3c7d9;
+  --half-type-unit: #829db5;
+  --half-type-note: #708ba3;
+  --half-type-highlight: #63d5f4;
+  --half-bar-amber: linear-gradient(180deg, #a5edff 0%, #4fc6ed 48%, #1689bc 100%);
+  --half-glow-amber: 0 0 10px rgba(79, 198, 237, .24);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel .panelBody article > span,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) :is(.latestSalesTitle, .salesTrendHeader) > span,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel[data-panel-index="04"] .managedMetricTitle {
+  color: var(--half-type-label) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel .panelBody article > small:not(.rankBadge),
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .managedPanelPeriod {
+  color: var(--half-type-note) !important;
+  text-shadow: none;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel .panelBody :is(.valueLine, .valueLineCompact) strong,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel .panelBody :is(.investmentLiveGrid, .projectDynamicsGrid, .latestSalesFacts) strong,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .resourceDock .recognitionChart article > b,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .developmentDock .annualTimeline article > b,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .greenPlusGroup .greenPlusFacts article[data-green-plus-metric-id] > b,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .greenPlusGroup .greenPlusFacts article[data-green-plus-metric-id][data-green-plus-featured="true"] > b {
+  color: var(--half-type-value) !important;
+  text-shadow: none !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel .panelBody :is(.valueLine, .valueLineCompact) em,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .panel .panelBody :is(.investmentLiveGrid, .projectDynamicsGrid, .latestSalesFacts) em,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .resourceDock .recognitionChart article > b em,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .developmentDock .annualTimeline article > b em,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .greenPlusGroup .greenPlusFacts article[data-green-plus-metric-id] > b em {
+  color: var(--half-type-unit) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .rankBadge {
+  padding: 1px 6px;
+  color: var(--half-type-highlight) !important;
+  border: 1px solid rgba(99, 213, 244, .34);
+  border-radius: 999px;
+  background: rgba(33, 131, 205, .14);
+  box-shadow: inset 0 1px 0 rgba(220, 247, 255, .08);
+  text-shadow: 0 0 8px rgba(99, 213, 244, .2);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .deliveryPanel .salesDeliveryGrid b,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .deliveryPanel .salesDeliveryGrid b em,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .managedInsightStrip strong b,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .managedInsightStrip strong b em {
+  color: var(--half-type-highlight) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .managedInsightStrip > article > span {
+  color: #e9fbff !important;
+  border-color: rgba(99, 213, 244, .4);
+  background: linear-gradient(135deg, rgba(32, 171, 255, .88), rgba(12, 103, 203, .82));
+  box-shadow: 0 0 10px rgba(33, 169, 255, .16), inset 0 1px 0 rgba(255, 255, 255, .24);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .managedInsightNote,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .greenPlusHighlights span {
+  color: var(--half-type-value) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .deliveryPanel .salesDeliveryGrid article,
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .deliveryPanel .salesDeliveryGrid article:nth-child(2) {
+  border-left-color: rgba(99, 213, 244, .64);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .greenPlusHighlights li[data-green-plus-highlight="honor"] small {
+  color: #e9fbff;
+  border-color: rgba(99, 213, 244, .4);
+  background: linear-gradient(135deg, rgba(32, 171, 255, .88), rgba(12, 103, 203, .82));
+  box-shadow: 0 0 10px rgba(33, 169, 255, .16), inset 0 1px 0 rgba(255, 255, 255, .24);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .resourceDock .recognitionChart article > div i {
+  background: var(--half-bar-amber);
+  box-shadow: var(--half-glow-amber), inset 1px 0 rgba(255, 255, 255, .18);
+}
+
+/* Executive map labels: translucent blue glass instead of heavy black plaques. */
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label) {
+  gap: 8px;
+  padding: 7px 10px;
+  color: var(--half-type-value);
+  border: 1px solid rgba(99, 184, 255, .3);
+  border-radius: 8px;
+  background: linear-gradient(138deg, rgba(12, 55, 101, .88), rgba(4, 24, 52, .82));
+  box-shadow: 0 9px 22px rgba(0, 14, 38, .28), inset 0 1px 0 rgba(216, 241, 255, .1);
+  backdrop-filter: blur(10px) saturate(112%);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label::before) {
+  width: 6px;
+  height: 6px;
+  background: #63d5f4;
+  box-shadow: 0 0 9px rgba(99, 213, 244, .5);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label > b) {
+  color: var(--half-type-value);
+  font-weight: 620;
+  letter-spacing: .02em;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label > span) {
+  color: var(--half-type-label);
+  font-weight: 500;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label > span strong) {
+  color: #dcecf8;
+  font-weight: 620;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.is-hub) {
+  border-color: rgba(99, 213, 244, .46);
+  background: linear-gradient(138deg, rgba(16, 72, 124, .92), rgba(5, 31, 65, .86));
+  box-shadow: 0 10px 25px rgba(0, 17, 43, .3), 0 0 14px rgba(65, 174, 224, .1), inset 0 1px 0 rgba(220, 247, 255, .12);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.is-selected),
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.is-in-scope) {
+  border-color: rgba(110, 224, 249, .68);
+  background: linear-gradient(138deg, rgba(19, 87, 139, .94), rgba(5, 37, 74, .9));
+  box-shadow: 0 0 0 1px rgba(99, 213, 244, .12), 0 10px 26px rgba(0, 17, 43, .32), 0 0 18px rgba(65, 174, 224, .16);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.is-minor.is-national-view) {
+  opacity: .9;
+  border-color: rgba(99, 184, 255, .22);
+  background: linear-gradient(138deg, rgba(10, 48, 90, .82), rgba(4, 23, 49, .78));
+  box-shadow: 0 6px 16px rgba(0, 14, 38, .2), inset 0 1px 0 rgba(216, 241, 255, .06);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.has-project-case) {
+  border-color: rgba(99, 213, 244, .48);
+  background: linear-gradient(138deg, rgba(15, 70, 119, .94), rgba(5, 31, 64, .9));
+  box-shadow: 0 0 0 1px rgba(99, 213, 244, .08), 0 9px 24px rgba(0, 14, 38, .3);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.has-project-case .three-city-case) {
+  color: #8edbf4;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.has-project-case .three-city-case:hover),
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.three-city-label.has-project-case .three-city-case:focus-visible) {
+  color: #d7f5ff;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"]:not([data-visual-theme="light"]) .mapField :global(.tech-map-tooltip) {
+  color: var(--half-type-value);
+  border-color: rgba(99, 184, 255, .34);
+  background: linear-gradient(138deg, rgba(12, 55, 101, .95), rgba(4, 24, 52, .93));
+  box-shadow: 0 10px 24px rgba(0, 14, 38, .3), inset 0 1px 0 rgba(216, 241, 255, .08);
 }

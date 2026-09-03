@@ -61,10 +61,10 @@ const GROUP_DISCLOSURE_RANKS = {
   selfSales: METRIC_BY_ID.get("h1-sales-self")?.comparison ?? "行业 Top 6",
 } as const;
 const GREEN_PLUS_FEATURED_FACT_IDS: Record<GreenPlusGroup["id"], string> = {
-  "commercial-operations": "green-plus-commercial-streak",
+  "commercial-operations": "green-plus-commercial-project-count",
   "town-operations": "green-plus-town-industries",
-  "life-technology": "green-plus-life-deliveries",
-  wellness: "green-plus-wellness-beds",
+  "life-technology": "green-plus-life-new-construction",
+  wellness: "green-plus-wellness-managed-projects",
 };
 const GREEN_PLUS_SUBTITLES: Record<GreenPlusGroup["id"], string> = {
   "commercial-operations": "COMMERCIAL OPS",
@@ -529,6 +529,9 @@ function SalesTrendChart({
       data-trend-month-count={trend.bars.length}
       data-trend-display-mode={usesFallbackTrend ? "snapshot" : "live"}
     >
+      <div className={styles.salesTrendHeader}>
+        <span><i />2026年趋势变化</span>
+      </div>
       {canRenderTrend ? (
         <div
           className={styles.salesTrendChart}
@@ -647,7 +650,8 @@ function SalesPanel({
           <span>{oldSales.label}</span><ValueLine item={oldSales} compact /><small>{oldSales.comparison}</small>
         </article>
         <article className={styles.progressMetric} {...metricAttributes(oldProgress)}>
-          <div><span>{oldProgress.label}</span><b>{oldProgress.value}%</b></div>
+          <span>{oldProgress.label}</span>
+          <ValueLine item={oldProgress} compact />
           <i aria-hidden="true"><u style={{ "--bar-width": `${oldProgress.numericValue}%` } as CSSProperties} /></i>
         </article>
         <MetricCard item={unsold} compact showComparison={false} />
@@ -667,7 +671,6 @@ function DeliveryPanel() {
       sourcePeriod="operating-snapshot"
       sourceScope={OPERATING_DELIVERY_SNAPSHOT.scope}
       sourceKind="operating-snapshot"
-      style={{ paddingBottom: 6 }}
     >
       <div
         className={styles.salesDeliveryGrid}
@@ -698,7 +701,7 @@ function CustomerEvaluationPanel() {
   return (
     <Panel
       index="11"
-      title="集团客户评价"
+      title="客户评价"
       className={styles.customerEvaluationPanel}
       sourceLabel="2026中期披露"
       sourcePeriod={HALF_YEAR_2026_SOURCE.period}
@@ -707,7 +710,7 @@ function CustomerEvaluationPanel() {
     >
       <div
         className={styles.salesCustomerEvaluationGrid}
-        aria-label="集团客户评价"
+        aria-label="客户评价"
         data-sales-customer-evaluation="group-disclosure"
         data-source-kind="disclosure"
         data-source-period={HALF_YEAR_2026_SOURCE.period}
@@ -974,13 +977,38 @@ function ResourcesPanel() {
 
 function GreenPlusGroupBody({ group, showHeading = false }: { group: GreenPlusGroup; showHeading?: boolean }) {
   const featuredFactId = GREEN_PLUS_FEATURED_FACT_IDS[group.id];
+  const hasDetail = Boolean(group.detail);
+  const hasHighlights = group.highlights.length > 0;
+  const hasNarrative = hasDetail || hasHighlights;
+  const usesMetricMatrix = group.facts.length > 2;
+  const narrative = hasNarrative ? (
+    <div className={styles.greenPlusNarrative} data-green-plus-narrative="profile">
+      {hasDetail ? (
+        <div className={styles.greenPlusDescription} title={group.detail}>
+          <small>业务进展</small>
+          <p>{group.detail}</p>
+        </div>
+      ) : null}
+      {hasHighlights ? (
+        <ul className={styles.greenPlusHighlights} aria-label={`${group.label}案例与荣誉`}>
+          {group.highlights.map((highlight) => (
+            <li key={highlight.label} data-green-plus-highlight={highlight.kind} title={highlight.label}>
+              <small>{highlight.kind === "case" ? "项目" : "荣誉"}</small>
+              <span>{highlight.label}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  ) : null;
 
   return (
     <section
       className={styles.greenPlusGroup}
       {...greenPlusGroupAttributes(group)}
       data-green-plus-variant={group.id}
-      data-green-plus-layout={group.id === "town-operations" ? "metric-matrix" : undefined}
+      data-green-plus-layout={usesMetricMatrix ? "metric-matrix" : undefined}
+      data-green-plus-has-highlights={hasHighlights ? "true" : undefined}
       data-green-plus-frame="command-module"
       aria-label={`${group.label}：${group.summary}`}
     >
@@ -1002,23 +1030,9 @@ function GreenPlusGroupBody({ group, showHeading = false }: { group: GreenPlusGr
             <b>{fact.value}<em>{fact.unit}</em></b>
           </article>
         ))}
+        {usesMetricMatrix ? narrative : null}
       </div>
-      {group.id !== "town-operations" ? (
-      <div className={styles.greenPlusNarrative} data-green-plus-narrative="profile">
-        <div className={styles.greenPlusDescription} title={group.detail}>
-          <small>业务进展</small>
-          <p>{group.detail}</p>
-        </div>
-        <ul className={styles.greenPlusHighlights} aria-label={`${group.label}案例与荣誉`}>
-          {group.highlights.map((highlight) => (
-            <li key={highlight.label} data-green-plus-highlight={highlight.kind} title={highlight.label}>
-              <small>{highlight.kind === "case" ? "项目" : "荣誉"}</small>
-              <span>{highlight.label}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      ) : null}
+      {usesMetricMatrix ? null : narrative}
     </section>
   );
 }
@@ -1111,6 +1125,7 @@ function ManagedBusinessPanel() {
       sourceKind="disclosure"
     >
       <div className={styles.managedPerformanceBoard}>
+        <small className={styles.managedPanelPeriod}>2026上半年</small>
         <div className={styles.managedGrid} aria-label="代建业绩指标">
           {managed.map((item, index) => (
             <article
@@ -1121,7 +1136,7 @@ function ManagedBusinessPanel() {
               title={item.note}
             >
               <span className={styles.managedMetricTitle}>
-                {item.label}<small>（{item.displayPeriod}）</small>
+                {item.label}
               </span>
               <ValueLine item={item} compact />
               {item.note ? <small className={styles.managedMetricNote}>{item.note}</small> : null}
@@ -1182,8 +1197,14 @@ function RegionControl({
     >
       <div className={styles.regionPanelTopline}>
         <div className={styles.regionScope}>
-          <span>{scopeLabel}</span>
-          <h2>{scopeName}</h2>
+          {scopeName === "集团" ? (
+            <h2>绿城中国</h2>
+          ) : (
+            <>
+              <span>{scopeLabel}</span>
+              <h2>{scopeName}</h2>
+            </>
+          )}
         </div>
         <div className={styles.regionPanelActions}>
           {projectCount !== null ? (
@@ -1204,10 +1225,10 @@ function RegionControl({
       <nav className={styles.organizationNav} aria-label="选择区域公司">
         <button
           type="button"
-          className={activeOrganization === null && scopeName === "全国" ? styles.isActive : ""}
-          aria-pressed={activeOrganization === null && scopeName === "全国"}
+          className={activeOrganization === null && scopeName === "集团" ? styles.isActive : ""}
+          aria-pressed={activeOrganization === null && scopeName === "集团"}
           onClick={onReset}
-        >全国</button>
+        >集团</button>
         {OPERATING_ORGANIZATIONS.map((organization) => {
           const isActive = activeOrganization?.code === organization.code;
           return (
@@ -1504,7 +1525,7 @@ export default function HalfYear2026Dashboard() {
         ? [...new Set(activeOrganizationCities.map((city) => city.provinceAdcode))]
         : (activeOrganization?.adcodes ?? [])
   ), [activeOrganization, activeOrganizationCities, activeProvince]);
-  const mapScopeName = activeCity?.name ?? activeProvince?.name ?? activeOrganization?.name ?? "全国";
+  const mapScopeName = activeCity?.name ?? activeProvince?.name ?? activeOrganization?.name ?? "集团";
   const isNationalMapScope = !activeOrganization && !activeProvince && !activeCity;
   const activeOrganizationCityDevelopment = useMemo(() => (
     activeOrganizationDevelopment && activeCity
@@ -1627,7 +1648,7 @@ export default function HalfYear2026Dashboard() {
       ? WENSHU_PROJECT_SNAPSHOT_DATE
       : WENSHU_SNAPSHOT_DATE;
   const regionSourceDataset = activeOrganization || !administrativeRegionMetrics ? "3002" : "6,3001";
-  const salesScopeName = activeCity?.name ?? activeOrganization?.name ?? activeProvince?.name ?? "全国";
+  const salesScopeName = activeCity?.name ?? activeOrganization?.name ?? activeProvince?.name ?? "集团";
   const activeCitySalesFallback = activeCity ? WENSHU_CITY_SALES_6283[activeCity.name] ?? null : null;
   const scopedOrganizationSalesFallback = activeOrganization ?? (isAdministrativeMapScope ? null : ROOT_ORGANIZATION);
   const rollingSalesFallback = administrativeRegionMetrics?.contractSalesYi
