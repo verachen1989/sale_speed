@@ -818,6 +818,11 @@ test("sales panel balances its two visible content rows", async () => {
     /\.dashboard\[data-dashboard-view="half-year-2026"\] \.panel\[data-panel-index="03"\] \.panelBody \{\s*grid-template-rows: minmax\(0, 1\.85fr\) minmax\(72px, 1fr\);\s*\}/,
     "the sales panel should reserve balanced height for dynamic sales and inventory KPIs",
   );
+  assert.match(
+    dashboardCss,
+    /\.dashboard\[data-dashboard-view="half-year-2026"\] \.panel\[data-panel-index="03"\] \.inventoryLine > article \{\s*grid-template-rows: 14px 20px 18px;/,
+    "all three inventory KPI cards should reserve identical rows so labels and values align",
+  );
 });
 
 test("dense desktop mode removes empty bands before shrinking readable KPIs", async () => {
@@ -1120,8 +1125,13 @@ test("UI-014 gives Green+ cards the command-module treatment from the approved c
   );
   assert.match(
     dashboardCss,
-    /\.greenPlusFacts article\[data-green-plus-featured="true"\] > b \{[^}]*text-shadow:[^}]*rgba\(255, 212, 121/s,
-    "the featured KPI should get the warm glowing numeral treatment",
+    /\.greenPlusFacts article\[data-green-plus-featured="true"\] > b \{[^}]*text-shadow:[^}]*rgba\(99, 216, 255/s,
+    "the featured KPI should use the unified cyan glowing numeral treatment",
+  );
+  assert.doesNotMatch(
+    dashboardCss,
+    /--green-plus-accent: #(?:5adcaf|f5bd63|ef9c92);/,
+    "right-rail business modules should stay within the shared blue-cyan palette",
   );
   assert.match(
     dashboardCss,
@@ -1218,7 +1228,7 @@ test("compact left rail keeps all six panels inside the command-centre viewport"
   assert.match(dashboardCss, /\.developmentDock \{[\s\S]*?height: auto;/);
   assert.match(
     dashboardCss,
-    /@media \(min-width: 1201px\) and \(max-height: 1079px\) \{[\s\S]*?\.rail:global\(\.is-left\) \.panel \{ padding: 4px; \}[\s\S]*?\.developmentDock \.annualTimeline article \{ min-height: 48px;/,
+    /@media \(min-width: 1201px\) and \(max-height: 1079px\) \{[\s\S]*?\.rail:global\(\.is-left\) \.panel \{ padding: 4px 7px; \}[\s\S]*?\.developmentDock \.annualTimeline article \{ min-height: 48px;/,
   );
   assert.match(
     dashboardCss,
@@ -1226,7 +1236,27 @@ test("compact left rail keeps all six panels inside the command-centre viewport"
   );
   assert.match(
     dashboardCss,
-    /@media \(min-width: 1201px\) and \(max-height: 875px\) \{[\s\S]*?\.rail:global\(\.is-left\) \{[^}]*grid-template-rows: auto minmax\(0, 1\.7fr\) minmax\(0, 2\.05fr\) minmax\(54px, \.62fr\) minmax\(50px, \.55fr\) minmax\(0, \.85fr\) minmax\(0, \.8fr\);/,
+    /@media \(min-width: 1201px\) and \(max-height: 875px\) \{[\s\S]*?--half-rail-left-template: auto minmax\(0, 1\.7fr\) minmax\(0, 2\.05fr\) minmax\(78px, \.62fr\) minmax\(50px, \.55fr\) minmax\(0, \.85fr\) minmax\(0, \.8fr\);/,
+  );
+  assert.match(
+    dashboardCss,
+    /@media \(min-width: 1601px\) and \(min-height: 820px\) and \(max-height: 875px\) \{[\s\S]*?--half-rail-left-template: auto minmax\(0, 1\.5fr\) minmax\(0, 2\.05fr\) minmax\(90px, \.75fr\)/,
+    "wide command screens should trade excess investment height for a taller delivery panel",
+  );
+  assert.match(
+    dashboardCss,
+    /@media \(min-width: 1601px\) and \(min-height: 876px\) and \(max-height: 1080px\) \{[\s\S]*?--half-rail-left-template: auto minmax\(0, 1\.72fr\)[\s\S]*?\.panel\[data-panel-index="01"\] \.panelBody \{[^}]*grid-template-rows: 52px 48px 40px;[^}]*align-content: start;/,
+    "wide presentation screens should keep the first and middle investment rows close together",
+  );
+  assert.match(
+    dashboardCss,
+    /\.panel\[data-panel-index="01"\] \.projectDynamics \{[^}]*height: 100%;/,
+    "only the middle investment row should fill its track so its labels are not clipped without stretching the headline cards",
+  );
+  assert.match(
+    dashboardCss,
+    /\.deliveryPanel \.salesDeliveryGrid article \{[^}]*row-gap: 6px;[^}]*padding-top: 6px;[^}]*padding-bottom: 6px;/,
+    "delivery KPIs should retain vertical breathing room between labels and values",
   );
 });
 
