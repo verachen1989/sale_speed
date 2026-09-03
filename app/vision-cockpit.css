@@ -1,0 +1,1604 @@
+/* Vision UI-inspired experiment: isolated on the feature branch through .vision-cockpit. */
+.vision-cockpit {
+  --vision-bg: #06101f;
+  --vision-surface: rgba(9, 25, 51, .74);
+  --vision-surface-soft: rgba(7, 18, 38, .6);
+  --vision-line: rgba(91, 145, 207, .14);
+  --vision-logo-blue: #0a2453;
+  --vision-blue: #2f74c0;
+  --vision-blue-bright: #62a8ec;
+  --vision-cyan: #61c9e8;
+  --vision-mint: #64d7b4;
+  --vision-amber: #f0b96d;
+  --vision-accent-cyan: #00d4ff;
+  --vision-accent-mint: #00ff9d;
+  --vision-accent-gold: #ffd700;
+  --vision-copy: #f3f7fc;
+  --vision-muted: #8fa1b8;
+  font-synthesis: none;
+  -webkit-font-smoothing: auto;
+  text-rendering: optimizeLegibility;
+  background:
+    radial-gradient(circle at 70% 36%, rgba(28, 112, 210, .26), transparent 36%),
+    radial-gradient(circle at 17% 84%, rgba(44, 170, 197, .09), transparent 31%),
+    linear-gradient(
+      180deg,
+      rgba(3, 11, 25, .04) 0%,
+      rgba(3, 10, 22, .02) 52%,
+      rgba(1, 5, 16, .08) 100%
+    ),
+    url("/dashboard-bg-cityscape.png") center bottom / cover fixed no-repeat;
+}
+
+/* Keep value and unit on one baseline in the project cockpit as well. */
+.vision-cockpit .grand-composite-value,
+.vision-cockpit .grand-embedded-fact,
+.vision-cockpit .grand-sales-kpi > div {
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.vision-cockpit .grand-composite-value > em,
+.vision-cockpit .grand-embedded-fact > em,
+.vision-cockpit .grand-sales-kpi > div > em {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+.vision-cockpit::before {
+  background:
+    radial-gradient(circle at 72% 47%, rgba(38, 126, 224, .16), transparent 42%),
+    linear-gradient(90deg, rgba(3, 9, 20, .28), rgba(6, 16, 31, .06) 42%, transparent);
+}
+
+.vision-cockpit::after {
+  opacity: .11;
+  background-image:
+    linear-gradient(rgba(108, 154, 210, .08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108, 154, 210, .08) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, transparent 5%, #000 35%, transparent 93%);
+}
+
+.vision-cockpit .grand-unified-header {
+  position: relative;
+}
+
+.vision-cockpit .grand-unified-header::before {
+  content: "";
+  position: absolute;
+  inset: 1px 0 49px;
+  z-index: -1;
+  border: 1px solid rgba(104, 154, 213, .09);
+  border-radius: 18px;
+  background: linear-gradient(128deg, rgba(14, 39, 76, .5), rgba(5, 15, 31, .3));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045), 0 20px 52px rgba(0, 0, 9, .18);
+  backdrop-filter: blur(18px) saturate(112%);
+}
+
+.vision-heading-kicker {
+  margin: 0 0 4px;
+  color: #8196af;
+  font-family: var(--font-geist-mono);
+  font-size: clamp(8px, .46vw, 10px);
+  letter-spacing: .34em;
+}
+
+.vision-cockpit .grand-unified-header .grand-heading h1 {
+  color: rgba(235, 242, 250, .9);
+  background: none;
+  font-weight: 400;
+  filter: none;
+  text-shadow: 0 7px 22px rgba(10, 57, 113, .2);
+}
+
+.vision-cockpit .grand-data-date {
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid rgba(102, 151, 210, .11);
+  border-radius: 12px;
+  background: rgba(7, 20, 43, .56);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045);
+}
+
+.vision-cockpit .grand-header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vision-cockpit.grand-map-dashboard > .grand-header {
+  grid-template-columns: 180px minmax(0, 1fr) minmax(390px, auto);
+}
+
+.vision-cockpit .grand-data-date > div {
+  display: grid;
+  gap: 1px;
+}
+
+.vision-cockpit .grand-data-date span {
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+
+.vision-cockpit .grand-data-date b {
+  font-size: 13px;
+}
+
+.vision-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--vision-mint);
+  box-shadow: 0 0 0 4px rgba(100, 215, 180, .08), 0 0 16px rgba(100, 215, 180, .56);
+  animation: vision-status-pulse 2s ease-in-out infinite;
+}
+
+.vision-cockpit .grand-header-filterbar {
+  border-color: rgba(102, 151, 210, .11);
+  background: linear-gradient(130deg, rgba(13, 37, 73, .7), rgba(5, 17, 36, .58));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 16px 38px rgba(0, 0, 10, .2);
+  backdrop-filter: blur(22px) saturate(118%);
+}
+
+.vision-cockpit .grand-header-filterbar .grand-query-mode button,
+.vision-cockpit .grand-header-filterbar .grand-scope-switch button {
+  color: #94a5ba;
+  border-radius: 10px;
+}
+
+.vision-cockpit .grand-header-filterbar .grand-query-mode button:hover,
+.vision-cockpit .grand-header-filterbar .grand-scope-switch button:hover {
+  color: #f2f7fc;
+  background: rgba(47, 116, 192, .12);
+}
+
+.vision-cockpit .grand-header-filterbar .grand-query-mode button.is-active,
+.vision-cockpit .grand-header-filterbar .grand-scope-switch button.is-active {
+  color: #fff;
+  border-color: rgba(98, 168, 236, .24);
+  background: linear-gradient(135deg, rgba(47, 116, 192, .44), rgba(10, 36, 83, .66));
+  box-shadow: inset 0 -2px 0 var(--vision-accent-cyan), inset 0 1px 0 rgba(255, 255, 255, .08), 0 0 14px rgba(0, 212, 255, .12), 0 8px 20px rgba(5, 39, 84, .26);
+}
+
+.vision-cockpit .grand-city-index-trigger {
+  flex: 0 0 auto;
+  min-width: 112px;
+  height: 38px;
+  padding: 0 12px;
+  color: #a8bbce;
+  font: inherit;
+  font-size: clamp(12px, .64vw, 14px);
+  border: 1px solid rgba(98, 168, 236, .15);
+  border-radius: 10px;
+  background: rgba(24, 72, 128, .1);
+  cursor: pointer;
+}
+
+.vision-cockpit .grand-city-index-trigger:hover,
+.vision-cockpit .grand-city-index-trigger:focus-visible {
+  color: #f2f8ff;
+  border-color: rgba(98, 168, 236, .3);
+  background: rgba(47, 116, 192, .16);
+  outline: none;
+}
+
+.vision-cockpit .grand-city-index-trigger.is-active {
+  color: #fff;
+  border-color: rgba(100, 215, 180, .3);
+  background: rgba(42, 129, 115, .17);
+}
+
+.vision-cockpit .grand-city-index-trigger span {
+  margin-left: 4px;
+  color: #72cdb4;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.vision-cockpit .grand-cockpit-map-layer::before {
+  background:
+    radial-gradient(ellipse at 71% 46%, rgba(35, 122, 218, .23), transparent 38%),
+    radial-gradient(ellipse at 62% 72%, rgba(34, 153, 187, .12), transparent 30%);
+}
+
+.vision-cockpit .grand-cockpit-map-layer::after {
+  background: none;
+}
+
+.vision-cockpit .grand-cockpit-map-layer .tech-map-webgl::after {
+  background:
+    linear-gradient(90deg, rgba(4, 12, 26, .22) 0%, rgba(5, 16, 33, .06) 28%, transparent 49%),
+    linear-gradient(180deg, rgba(5, 16, 33, .04), transparent 18%, rgba(3, 9, 20, .02));
+}
+
+.vision-cockpit .grand-cockpit-map-layer .tech-map-webgl canvas {
+  opacity: 1;
+  filter:
+    saturate(1.04)
+    brightness(1.09)
+    contrast(1.02)
+    hue-rotate(-2deg)
+    drop-shadow(0 0 24px rgba(47, 116, 192, .25))
+    drop-shadow(0 16px 32px rgba(0, 0, 9, .18));
+}
+
+.vision-cockpit .grand-overlay-layout {
+  gap: 18px;
+  grid-template-columns: clamp(650px, 37vw, 820px) minmax(0, 1fr);
+}
+
+.vision-cockpit .grand-command-panel {
+  container-name: command-panel;
+  container-type: inline-size;
+  grid-template-rows: auto auto minmax(220px, 1fr);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(110, 180, 235, .24);
+  border-right-color: rgba(110, 180, 235, .14);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 4% 0%, rgba(54, 139, 232, .12), transparent 30%),
+    linear-gradient(90deg, rgba(5, 22, 50, .8) 0%, rgba(4, 18, 42, .74) 70%, rgba(3, 15, 35, .66) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .065), 0 18px 42px rgba(0, 2, 14, .24);
+  backdrop-filter: blur(14px) saturate(105%);
+  -webkit-backdrop-filter: blur(14px) saturate(105%);
+}
+
+.vision-cockpit .grand-command-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 24px;
+  left: 24px;
+  z-index: 2;
+  display: block;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, .68), rgba(0, 255, 157, .24), transparent);
+}
+
+.vision-cockpit .grand-city-index-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 18px;
+  overflow: hidden;
+  pointer-events: auto;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 8% 0, rgba(47, 116, 192, .18), transparent 34%),
+    linear-gradient(145deg, rgba(5, 22, 48, .965), rgba(3, 13, 30, .95));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 26px 70px rgba(0, 0, 10, .28);
+  backdrop-filter: blur(24px) saturate(112%);
+}
+
+.vision-cockpit .grand-city-index-panel > header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 68px;
+  padding: 0 2px 13px;
+  border-bottom: 1px solid rgba(104, 153, 211, .11);
+}
+
+.vision-cockpit .grand-city-index-panel > header p {
+  margin: 0 0 2px;
+  color: #718ca5;
+  font-size: clamp(8px, .44vw, 10px);
+  letter-spacing: .2em;
+}
+
+.vision-cockpit .grand-city-index-panel > header h2 {
+  margin: 0;
+  color: #eef7ff;
+  font-size: clamp(20px, 1.02vw, 25px);
+  font-weight: 450;
+  letter-spacing: .08em;
+}
+
+.vision-cockpit .grand-city-index-panel > header span {
+  color: #758ca4;
+  font-size: clamp(10px, .54vw, 12px);
+}
+
+.vision-cockpit .grand-city-index-panel > header button {
+  flex: 0 0 auto;
+  min-width: 70px;
+  height: 38px;
+  color: #b7c8d8;
+  font: inherit;
+  border: 1px solid rgba(98, 168, 236, .17);
+  border-radius: 8px;
+  background: rgba(47, 116, 192, .1);
+  cursor: pointer;
+}
+
+.vision-cockpit .grand-city-index-panel > header button:hover,
+.vision-cockpit .grand-city-index-panel > header button:focus-visible {
+  color: #fff;
+  border-color: rgba(98, 168, 236, .32);
+  background: rgba(47, 116, 192, .18);
+  outline: none;
+}
+
+.vision-cockpit .grand-city-index-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-content: start;
+  gap: 7px;
+  min-height: 0;
+  margin-top: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(47, 116, 192, .34) transparent;
+  scrollbar-width: thin;
+}
+
+.vision-cockpit .grand-city-index-grid button {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 50px;
+  padding: 7px 10px;
+  overflow: hidden;
+  text-align: left;
+  border: 1px solid rgba(105, 167, 222, .1);
+  border-radius: 7px;
+  background: rgba(29, 80, 137, .07);
+  cursor: pointer;
+}
+
+.vision-cockpit .grand-city-index-grid button:hover,
+.vision-cockpit .grand-city-index-grid button:focus-visible {
+  border-color: rgba(98, 168, 236, .28);
+  background: rgba(47, 116, 192, .14);
+  outline: none;
+}
+
+.vision-cockpit .grand-city-index-grid button.is-active {
+  border-color: rgba(100, 215, 180, .32);
+  background: rgba(42, 129, 115, .14);
+  box-shadow: inset 2px 0 0 rgba(100, 215, 180, .72);
+}
+
+.vision-cockpit .grand-city-index-grid b {
+  overflow: hidden;
+  color: #edf7ff;
+  font-size: clamp(13px, .68vw, 16px);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vision-cockpit .grand-city-index-grid span {
+  overflow: hidden;
+  color: #718ca5;
+  font-size: clamp(9px, .5vw, 11px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vision-cockpit .grand-metric-group {
+  position: relative;
+  isolation: isolate;
+  padding: 15px 16px 16px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(90deg, rgba(17, 57, 108, .24), rgba(7, 30, 64, .18) 74%, rgba(5, 23, 50, .12));
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  animation: vision-soft-enter .45s ease-out both;
+}
+
+.vision-cockpit .grand-metric-group::after {
+  content: "";
+  position: absolute;
+  top: -90px;
+  right: -48px;
+  z-index: -1;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: rgba(49, 128, 215, .06);
+  filter: blur(24px);
+}
+
+.vision-cockpit .grand-metric-group + .grand-metric-group {
+  border-top: 1px solid rgba(110, 180, 235, .12);
+}
+
+.vision-cockpit .grand-group-heading {
+  margin-bottom: 9px;
+  grid-template-columns: 25px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.vision-cockpit .grand-group-heading > span {
+  width: 25px;
+  height: 25px;
+  color: #91acca;
+  font-size: 10px;
+  border-color: rgba(104, 157, 217, .14);
+  background: rgba(10, 36, 83, .42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045);
+  opacity: .94;
+}
+
+.vision-cockpit .grand-group-heading > div p {
+  margin-bottom: 0;
+  color: #9fb2c8;
+  font-size: clamp(10px, .48vw, 12px);
+  letter-spacing: .17em;
+  font-weight: 400;
+  opacity: .88;
+}
+
+.vision-cockpit .grand-group-heading > div h2 {
+  color: #edf5fc;
+  font-size: clamp(17px, .84vw, 20px);
+  font-weight: 400;
+  line-height: 1.18;
+  letter-spacing: .1em;
+}
+
+.vision-cockpit .grand-metric-group-grid {
+  gap: 8px;
+}
+
+.vision-cockpit .grand-metric-group-grid > article,
+.vision-cockpit .grand-metric-group-grid > article:nth-child(4),
+.vision-cockpit .grand-metric-group-grid > article:nth-child(5) {
+  min-height: 78px;
+  padding: 10px 13px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(61, 148, 236, .06), transparent 40%),
+    linear-gradient(137deg, rgba(18, 64, 118, .18), rgba(7, 27, 57, .08));
+  box-shadow: none;
+}
+
+.vision-cockpit .grand-metric-group-grid > article:nth-child(2),
+.vision-cockpit .grand-metric-group-grid > article:nth-child(3),
+.vision-cockpit .grand-metric-group-grid > article:nth-child(5) {
+  border-left: 1px solid rgba(110, 180, 235, .12);
+}
+
+.vision-cockpit .grand-metric-group-grid > article:nth-child(4),
+.vision-cockpit .grand-metric-group-grid > article:nth-child(5) {
+  border-top: 1px solid rgba(110, 180, 235, .1);
+}
+
+.vision-cockpit .grand-metric-group-grid > article::before {
+  content: none;
+  display: none;
+}
+
+.vision-cockpit .grand-metric-group-grid > article > span {
+  color: #aeb3ca;
+  font-size: clamp(14px, .75vw, 17px);
+}
+
+.vision-cockpit .grand-metric-group-grid > article strong {
+  color: #f8f8ff;
+  font-size: clamp(29px, 1.58vw, 38px);
+}
+
+.vision-cockpit .grand-metric-group-grid > article em {
+  color: #888fa9;
+}
+
+.vision-cockpit .grand-composite-facts {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  min-width: 0;
+  min-height: 112px;
+  overflow: hidden;
+  border: 1px solid rgba(110, 180, 235, .22);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(56, 144, 230, .14), transparent 35%),
+    linear-gradient(137deg, rgba(12, 44, 86, .48), rgba(5, 23, 50, .4));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045);
+}
+
+.vision-cockpit .grand-composite-facts > article {
+  position: relative;
+  grid-column: span 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 12px 14px 10px;
+  overflow: hidden;
+}
+
+.vision-cockpit .grand-metric-group.is-scale .grand-composite-facts {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.vision-cockpit .grand-metric-group.is-scale .grand-composite-facts > article {
+  grid-column: span 1;
+}
+
+.vision-cockpit .grand-composite-facts > article.is-standalone {
+  grid-column: span 2;
+  padding-inline: 16px;
+}
+
+.vision-cockpit .grand-composite-facts > article + article {
+  border-left: 1px solid rgba(110, 180, 235, .2);
+}
+
+.vision-cockpit .grand-composite-facts > article:first-child::before {
+  content: "";
+  position: absolute;
+  top: 14%;
+  bottom: 14%;
+  left: 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(108, 211, 241, .82), rgba(54, 122, 220, .42));
+  box-shadow: 0 0 12px rgba(58, 151, 218, .32);
+}
+
+.vision-cockpit .grand-composite-label {
+  overflow: hidden;
+  color: #dce7f2;
+  font-size: clamp(13px, .66vw, 16px);
+  font-weight: 400;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vision-cockpit .grand-composite-value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  margin-top: 6px;
+}
+
+.vision-cockpit .grand-composite-value strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: clamp(25px, 1.35vw, 32px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -.015em;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vision-cockpit .grand-composite-value em,
+.vision-cockpit .grand-embedded-fact em {
+  flex: 0 0 auto;
+  color: #b7c6d8;
+  font-size: clamp(12px, .58vw, 14px);
+  font-weight: 400;
+  font-style: normal;
+}
+
+.vision-cockpit .grand-embedded-fact {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 9px;
+  padding: 7px 10px 6px;
+  border: 1px solid rgba(104, 177, 235, .32);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(17, 55, 99, .8), rgba(9, 34, 66, .74));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055);
+}
+
+.vision-cockpit .grand-embedded-fact > span {
+  flex: 0 1 auto;
+  overflow: hidden;
+  color: #cbd7e6;
+  font-size: clamp(12px, .58vw, 14px);
+  font-weight: 400;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vision-cockpit .grand-embedded-fact > strong {
+  flex: 0 1 auto;
+  overflow: hidden;
+  color: #fff;
+  font-size: clamp(18px, .9vw, 22px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@container command-panel (max-width: 700px) {
+  .vision-cockpit .grand-embedded-fact {
+    display: grid;
+    grid-template-columns: minmax(0, max-content) auto;
+    justify-content: start;
+    column-gap: 6px;
+    row-gap: 3px;
+  }
+
+  .vision-cockpit .grand-embedded-fact > span {
+    grid-column: 1 / -1;
+  }
+
+  .vision-cockpit .grand-embedded-fact > strong {
+    grid-column: 1;
+  }
+
+  .vision-cockpit .grand-embedded-fact > em {
+    grid-column: 2;
+  }
+}
+
+.vision-cockpit .grand-metric-group.is-sales {
+  padding-bottom: 14px;
+}
+
+.vision-cockpit .grand-sales-story {
+  grid-template-columns: minmax(210px, .88fr) minmax(0, 1.62fr);
+  gap: 11px;
+  margin: 0;
+}
+
+.vision-cockpit .grand-sales-kpi {
+  justify-content: flex-start;
+  padding: 18px 15px 13px;
+  border: 0;
+  border-right: 1px solid rgba(110, 180, 235, .12);
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 100% 0, rgba(61, 148, 236, .12), transparent 45%),
+    linear-gradient(142deg, rgba(15, 55, 108, .48), rgba(5, 22, 49, .38));
+}
+
+.vision-cockpit .grand-sales-kpi > span {
+  color: #aeb3ca;
+  font-size: clamp(13px, .66vw, 16px);
+  font-weight: 400;
+}
+
+.vision-cockpit .grand-sales-kpi strong {
+  color: #fff;
+  font-size: clamp(32px, 1.72vw, 42px);
+  font-weight: 400;
+}
+
+.vision-cockpit .grand-sales-kpi > div > em { font-weight: 400; }
+
+.vision-cockpit [data-counting="true"] {
+  color: #f4fbff;
+  text-shadow: 0 0 14px rgba(0, 212, 255, .28);
+  will-change: contents;
+}
+
+.vision-cockpit .grand-sales-kpi > i {
+  color: var(--vision-amber);
+}
+
+.vision-cockpit .grand-sales-kpi > i.is-negative {
+  color: #ff9c93;
+}
+
+.vision-cockpit .grand-sales-kpi > small {
+  color: #99aac0;
+}
+
+.vision-cockpit .grand-story-chart {
+  min-height: 175px;
+  padding: 25px 10px 2px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(145deg, rgba(15, 49, 94, .4), rgba(4, 19, 42, .3));
+}
+
+.vision-cockpit .grand-story-chart > .grand-story-unit {
+  position: absolute;
+  top: 7px;
+  right: 10px;
+  z-index: 2;
+  color: #9fb3c7;
+  font-family: var(--font-cn);
+  font-size: clamp(10px, .54vw, 12px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: .04em;
+}
+
+.vision-cockpit .grand-story-chart::before {
+  right: 10px;
+  left: 10px;
+  background: repeating-linear-gradient(to top, rgba(107, 151, 204, .05) 0 1px, transparent 1px 33.333%);
+}
+
+.vision-cockpit .grand-story-chart::after {
+  right: 10px;
+  left: 10px;
+  background: rgba(107, 151, 204, .09);
+}
+
+.vision-cockpit .grand-story-chart b {
+  color: #e3ebf5;
+}
+
+.vision-cockpit .grand-story-chart i {
+  background: linear-gradient(180deg, #7bc9ff 0%, #4387df 54%, rgba(10, 36, 83, .34) 100%);
+  box-shadow: 0 0 16px rgba(47, 116, 192, .22);
+}
+
+.vision-cockpit .grand-story-chart > div:nth-last-child(-n + 2) i {
+  background: linear-gradient(180deg, #7be4ee 0%, #55b3e3 57%, rgba(48, 90, 151, .28) 100%);
+  box-shadow: 0 0 16px rgba(82, 190, 222, .18);
+}
+
+.vision-cockpit .grand-story-chart > div:last-child i {
+  background: linear-gradient(180deg, #ffd08a 0%, #e99a5e 58%, rgba(141, 72, 50, .28) 100%);
+  box-shadow: 0 0 17px rgba(240, 185, 109, .2);
+}
+
+.vision-cockpit .grand-story-chart > div.is-negative i {
+  position: relative;
+  width: 3px;
+  height: 13px;
+  min-height: 13px;
+  border-radius: 2px;
+  background: #e87378;
+  box-shadow: 0 0 17px rgba(232, 104, 112, .22);
+  transform: translateY(8px);
+}
+
+.vision-cockpit .grand-story-chart > div.is-negative i::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  border: 5px solid transparent;
+  border-top-color: #e87378;
+  transform: translateX(-50%);
+}
+
+.vision-cockpit .grand-story-chart > div.is-negative b {
+  color: #ffb4aa;
+}
+
+.vision-cockpit .grand-story-chart > div.is-zero i {
+  min-height: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.vision-cockpit .grand-story-chart span {
+  color: #a7b6ca;
+}
+
+.vision-cockpit .grand-story-empty {
+  color: #7f859f;
+  border-color: rgba(104, 153, 211, .13);
+  background: rgba(8, 23, 47, .4);
+}
+
+.vision-cockpit .grand-map-ui {
+  isolation: isolate;
+  border: 1px solid rgba(104, 153, 211, .11);
+  border-radius: 25px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045), 0 26px 70px rgba(0, 0, 10, .16);
+}
+
+.vision-cockpit .grand-map-ui::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 8% 0, rgba(37, 100, 176, .12), transparent 31%),
+    linear-gradient(145deg, rgba(10, 30, 62, .22), rgba(4, 13, 28, .06));
+  pointer-events: none;
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption {
+  right: 16px;
+  bottom: 16px;
+  padding: 12px 14px;
+  border-color: rgba(104, 153, 211, .13);
+  border-radius: 14px;
+  background: linear-gradient(138deg, rgba(12, 36, 72, .78), rgba(5, 16, 34, .72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 18px 42px rgba(0, 0, 10, .24);
+  backdrop-filter: blur(18px);
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption > b {
+  color: #f6f7ff;
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption > span {
+  color: #a5abc2;
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption > small {
+  color: #747b95;
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-project-drilldown {
+  max-height: min(54vh, 560px);
+  border-color: rgba(104, 153, 211, .13);
+  background:
+    radial-gradient(circle at 100% 0, rgba(37, 100, 176, .14), transparent 38%),
+    linear-gradient(145deg, rgba(13, 39, 78, .95), rgba(5, 16, 34, .92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 28px 70px rgba(0, 0, 10, .34);
+  backdrop-filter: blur(6px) saturate(104%);
+  -webkit-backdrop-filter: blur(6px) saturate(104%);
+}
+
+.vision-cockpit .grand-project-drilldown > header,
+.vision-cockpit .grand-project-list > article {
+  border-color: rgba(104, 153, 211, .08);
+}
+
+.vision-cockpit .grand-project-drilldown > header p i {
+  background: var(--vision-blue);
+}
+
+.vision-cockpit .grand-project-drilldown > header button {
+  color: #e5eff9;
+  border-color: rgba(98, 168, 236, .18);
+  background: rgba(47, 116, 192, .13);
+}
+
+.vision-cockpit .grand-project-drilldown > header button:hover {
+  background: rgba(47, 116, 192, .22);
+}
+
+.vision-cockpit .grand-city-directory {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+  gap: 5px;
+  padding: 8px 12px;
+  overflow: visible;
+  border-top: 1px solid rgba(104, 153, 211, .08);
+  border-bottom: 1px solid rgba(104, 153, 211, .08);
+  background: rgba(5, 20, 43, .16);
+}
+
+.vision-cockpit .grand-city-directory button {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 6px 8px;
+  color: #8fa5ba;
+  border: 1px solid rgba(105, 167, 222, .1);
+  border-radius: 5px;
+  background: rgba(29, 80, 137, .06);
+  cursor: pointer;
+}
+
+.vision-cockpit .grand-city-directory button:hover,
+.vision-cockpit .grand-city-directory button:focus-visible {
+  color: #eef7ff;
+  border-color: rgba(91, 182, 236, .28);
+  background: rgba(42, 119, 188, .14);
+  outline: none;
+}
+
+.vision-cockpit .grand-city-directory button.is-active {
+  color: #f4fbff;
+  border-color: rgba(100, 215, 180, .28);
+  background: linear-gradient(135deg, rgba(50, 132, 186, .2), rgba(42, 129, 115, .1));
+  box-shadow: inset 2px 0 0 rgba(100, 215, 180, .72);
+}
+
+.vision-cockpit .grand-city-directory b {
+  overflow: hidden;
+  font-size: clamp(11px, .62vw, 14px);
+  font-weight: 480;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vision-cockpit .grand-city-directory span {
+  flex: 0 0 auto;
+  color: #647e98;
+  font-family: var(--font-num);
+  font-size: clamp(9px, .52vw, 12px);
+  font-variant-numeric: tabular-nums;
+}
+
+.vision-cockpit .grand-city-directory button.is-active span {
+  color: #72cdb4;
+}
+
+.vision-cockpit .grand-project-list > article:hover {
+  background: rgba(47, 116, 192, .08);
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label {
+  color: #f3f7fc;
+  border-color: rgba(117, 190, 240, .24);
+  border-radius: 11px;
+  background: linear-gradient(138deg, rgba(17, 61, 118, .92), rgba(7, 27, 61, .88));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .075), 0 0 18px rgba(54, 145, 224, .14), 0 12px 28px rgba(0, 0, 10, .28);
+  backdrop-filter: blur(13px) saturate(110%);
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label.is-minor.is-national-view {
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: linear-gradient(138deg, rgba(13, 47, 91, .78), rgba(5, 22, 49, .72));
+  transform: translateY(-5px) scale(.82);
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label.is-minor.is-national-view b {
+  font-size: clamp(12px, .64vw, 16px);
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label.is-minor.is-national-view span {
+  display: none;
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label.is-minor.is-national-view::before {
+  width: 6px;
+  height: 6px;
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label::before {
+  background: var(--vision-blue-bright);
+  box-shadow: 0 0 12px rgba(98, 168, 236, .68);
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label.is-hub::before {
+  background: var(--vision-amber);
+  box-shadow: 0 0 12px rgba(240, 185, 109, .68);
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label.is-selected::before {
+  background: var(--vision-accent-mint);
+  box-shadow: 0 0 13px rgba(0, 255, 157, .5);
+  animation: vision-status-pulse 2s ease-in-out infinite;
+}
+
+.vision-cockpit .grand-cockpit-map-layer .three-city-label.is-hub.is-selected::before {
+  background: var(--vision-amber);
+  box-shadow: 0 0 14px rgba(240, 185, 109, .76);
+}
+
+.vision-cockpit .grand-cockpit-map-layer .tech-map-tooltip {
+  color: #f1f6fb;
+  background: rgba(6, 20, 43, .95);
+  box-shadow: inset 0 0 0 1px rgba(98, 153, 215, .15), 0 14px 34px rgba(0, 0, 10, .4);
+}
+
+.vision-cockpit .grand-footer {
+  color: rgba(157, 163, 192, .6);
+}
+
+@media (max-width: 1480px) {
+  .vision-cockpit .grand-overlay-layout {
+    grid-template-columns: minmax(610px, 44vw) minmax(0, 1fr);
+  }
+
+  .vision-cockpit .grand-metric-group {
+    padding-right: 13px;
+    padding-left: 13px;
+  }
+
+  .vision-cockpit .grand-metric-group-grid > article,
+  .vision-cockpit .grand-metric-group-grid > article:nth-child(4),
+  .vision-cockpit .grand-metric-group-grid > article:nth-child(5) {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .vision-cockpit .grand-composite-facts { min-height: 102px; }
+  .vision-cockpit .grand-composite-facts > article { padding-inline: 10px; }
+  .vision-cockpit .grand-composite-facts > article.is-standalone { padding-inline: 12px; }
+  .vision-cockpit .grand-embedded-fact { padding-inline: 6px; }
+}
+
+@media (max-width: 1180px) {
+  .vision-cockpit .grand-overlay-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vision-cockpit .grand-command-panel {
+    min-height: 760px;
+  }
+
+  .vision-cockpit .grand-map-ui {
+    min-height: 540px;
+  }
+}
+
+@media (max-width: 680px) {
+  .vision-cockpit .grand-unified-header::before { bottom: 94px; }
+  .vision-heading-kicker { letter-spacing: .2em; }
+
+  .vision-cockpit .grand-command-panel {
+    min-height: 960px;
+  }
+
+  .vision-cockpit .grand-metric-group-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .vision-cockpit .grand-metric-group-grid > article,
+  .vision-cockpit .grand-metric-group-grid > article:nth-child(4),
+  .vision-cockpit .grand-metric-group-grid > article:nth-child(5) {
+    grid-column: span 1;
+  }
+
+  .vision-cockpit .grand-metric-group-grid > article:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .vision-cockpit .grand-composite-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vision-cockpit .grand-composite-facts > article,
+  .vision-cockpit .grand-composite-facts > article.is-standalone {
+    grid-column: span 1;
+    min-height: 102px;
+  }
+
+  .vision-cockpit .grand-metric-group.is-scale .grand-composite-facts > article.is-standalone,
+  .vision-cockpit .grand-metric-group.is-investment .grand-composite-facts > article.is-standalone {
+    grid-column: 1 / -1;
+    min-height: 68px;
+  }
+
+  .vision-cockpit .grand-metric-group.is-scale .grand-composite-facts > article:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .vision-cockpit .grand-composite-facts > article + article { border-left: 1px solid rgba(110, 180, 235, .1); }
+  .vision-cockpit .grand-metric-group.is-scale .grand-composite-facts > article:nth-child(3) {
+    border-top: 1px solid rgba(110, 180, 235, .1);
+    border-left: 0;
+  }
+
+  .vision-cockpit .grand-metric-group.is-investment .grand-composite-facts > article:nth-child(2) {
+    border-top: 1px solid rgba(110, 180, 235, .1);
+    border-left: 0;
+  }
+
+  .vision-cockpit .grand-metric-group.is-investment .grand-composite-facts > article:nth-child(3) {
+    border-top: 1px solid rgba(110, 180, 235, .1);
+    border-left: 1px solid rgba(110, 180, 235, .1);
+  }
+
+  .vision-cockpit .grand-sales-story {
+    grid-template-columns: 1fr;
+  }
+
+  .vision-cockpit .grand-city-index-trigger {
+    min-width: 94px;
+    padding-inline: 8px;
+  }
+
+  .vision-cockpit .grand-city-index-panel {
+    padding: 13px;
+  }
+
+  .vision-cockpit .grand-city-index-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vision-cockpit .grand-city-directory {
+    display: flex;
+    max-height: 54px;
+    padding: 7px 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+  }
+
+  .vision-cockpit .grand-city-directory button {
+    flex: 0 0 88px;
+    min-height: 38px;
+  }
+
+  .vision-cockpit .grand-project-table-head {
+    display: none;
+  }
+
+  .vision-cockpit .grand-project-list > article {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .vision-cockpit .grand-project-list > article > span {
+    display: none;
+  }
+
+  .vision-cockpit .grand-project-list > article > em {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+}
+
+@media (max-width: 480px) {
+  .vision-cockpit .grand-composite-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vision-cockpit .grand-composite-facts > article,
+  .vision-cockpit .grand-composite-facts > article.is-standalone,
+  .vision-cockpit .grand-metric-group.is-scale .grand-composite-facts > article,
+  .vision-cockpit .grand-metric-group.is-scale .grand-composite-facts > article.is-standalone,
+  .vision-cockpit .grand-metric-group.is-investment .grand-composite-facts > article.is-standalone {
+    grid-column: 1;
+    min-height: 88px;
+    border-top: 1px solid rgba(110, 180, 235, .1);
+    border-left: 0;
+  }
+
+  .vision-cockpit .grand-composite-facts > article:first-child {
+    border-top: 0;
+  }
+
+  .vision-cockpit .grand-metric-group.is-investment .grand-composite-facts > article:nth-child(3) {
+    border-left: 0;
+  }
+}
+
+@keyframes vision-soft-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vision-status-pulse {
+  0%, 100% { filter: brightness(1); opacity: 1; }
+  50% { filter: brightness(1.08); opacity: .9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vision-cockpit *,
+  .vision-cockpit *::before,
+  .vision-cockpit *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* Near-square LED wall, such as a roughly 3.4 m × 2.8 m landscape installation. */
+@media (min-width: 900px) and (min-aspect-ratio: 1/1) and (max-aspect-ratio: 4/3) {
+  .vision-cockpit.grand-map-dashboard {
+    height: 100dvh;
+    min-height: 0;
+    grid-template-rows: 108px minmax(0, 1fr) 20px;
+    overflow: hidden;
+  }
+
+  .vision-cockpit .grand-overlay-layout {
+    grid-template-columns: clamp(500px, 34vw, 760px) minmax(0, 1fr);
+    gap: clamp(12px, 1vw, 20px);
+    min-height: 0;
+  }
+
+  .vision-cockpit .grand-command-panel {
+    grid-template-rows: auto auto auto;
+    align-self: start;
+    min-height: 0;
+    max-height: calc(100vh - 150px);
+  }
+
+  .vision-cockpit .grand-map-ui {
+    min-height: 0;
+  }
+
+  .vision-cockpit .grand-metric-group.is-sales {
+    min-height: clamp(340px, 38vh, 520px);
+    max-height: 520px;
+  }
+
+  .vision-cockpit .grand-sales-story,
+  .vision-cockpit .grand-story-chart {
+    min-height: 280px;
+    max-height: 440px;
+  }
+
+  .vision-cockpit .grand-story-chart > div {
+    grid-template-rows: 28px minmax(180px, 1fr) 32px;
+  }
+
+  .vision-cockpit .grand-group-heading > div h2 {
+    font-size: clamp(20px, .95vw, 26px);
+  }
+
+  .vision-cockpit .grand-composite-label {
+    font-size: clamp(14px, .72vw, 18px);
+  }
+
+  .vision-cockpit .grand-composite-value strong {
+    font-size: clamp(31px, 1.55vw, 44px);
+  }
+
+  .vision-cockpit .grand-embedded-fact > span {
+    font-size: clamp(13px, .62vw, 17px);
+  }
+
+  .vision-cockpit .grand-embedded-fact > strong {
+    font-size: clamp(18px, .92vw, 26px);
+  }
+
+  .vision-cockpit .grand-cockpit-map-layer .three-city-label b,
+  .vision-cockpit .grand-cockpit-map-layer .three-city-label.is-minor.is-national-view b {
+    font-size: clamp(14px, .72vw, 21px);
+  }
+
+  .vision-cockpit .grand-city-index-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .vision-cockpit .grand-city-index-grid button {
+    min-height: 52px;
+  }
+
+  .vision-cockpit .grand-city-directory {
+    grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+    gap: 7px;
+    max-height: 154px;
+    padding: 10px 14px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .vision-cockpit .grand-city-directory button {
+    min-height: 44px;
+    padding: 8px 10px;
+  }
+
+  .vision-cockpit .grand-city-directory b {
+    font-size: clamp(14px, .7vw, 19px);
+  }
+
+  .vision-cockpit .grand-city-directory span {
+    font-size: clamp(11px, .58vw, 16px);
+  }
+
+  .vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-project-drilldown {
+    top: clamp(132px, 10vh, 190px);
+    max-height: min(56vh, 720px);
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1040px) and (min-aspect-ratio: 1/1) and (max-aspect-ratio: 4/3) {
+  .vision-cockpit .grand-command-panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: rgba(47, 116, 192, .34) transparent;
+    scrollbar-width: thin;
+  }
+
+  .vision-cockpit .grand-metric-group {
+    padding: 10px 11px;
+  }
+
+  .vision-cockpit .grand-group-heading {
+    margin-bottom: 6px;
+  }
+
+  .vision-cockpit .grand-composite-facts {
+    min-height: 88px;
+  }
+
+  .vision-cockpit .grand-composite-facts > article {
+    padding: 8px 9px;
+  }
+
+  .vision-cockpit .grand-metric-group.is-sales {
+    min-height: 240px;
+    max-height: 280px;
+  }
+
+  .vision-cockpit .grand-sales-story,
+  .vision-cockpit .grand-story-chart {
+    min-height: 190px;
+    max-height: 240px;
+  }
+
+  .vision-cockpit .grand-story-chart > div {
+    grid-template-rows: 24px minmax(110px, 1fr) 27px;
+  }
+
+  .vision-cockpit .grand-city-directory {
+    display: flex;
+    max-height: 56px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .vision-cockpit .grand-city-directory button {
+    flex: 0 0 96px;
+  }
+
+  .vision-cockpit .grand-project-table-head {
+    display: none;
+  }
+
+  .vision-cockpit .grand-project-list > article {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .vision-cockpit .grand-project-list > article > span {
+    display: none;
+  }
+
+  .vision-cockpit .grand-project-list > article > em {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
+
+@media (max-height: 800px) and (min-width: 1181px) {
+  .vision-cockpit.grand-map-dashboard {
+    height: 100vh;
+    min-height: 0;
+  }
+
+  .vision-cockpit .grand-overlay-layout,
+  .vision-cockpit .grand-command-panel {
+    min-height: 0;
+  }
+
+  .vision-cockpit .grand-command-panel {
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: rgba(47, 116, 192, .34) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+/* Project register: larger typography, explicit close action and a non-overlapping map viewport. */
+.vision-cockpit .grand-project-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.vision-cockpit .grand-project-drilldown > header .grand-project-close {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.vision-cockpit .grand-project-drilldown > header { padding: 17px 20px 14px; }
+.vision-cockpit .grand-project-drilldown > header,
+.vision-cockpit .grand-project-drilldown > .grand-city-directory,
+.vision-cockpit .grand-project-drilldown > .grand-project-table-head { flex: 0 0 auto; }
+.vision-cockpit .grand-project-drilldown > .grand-city-directory {
+  display: flex;
+  flex-wrap: nowrap;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.vision-cockpit .grand-project-drilldown > .grand-city-directory button {
+  flex: 0 0 auto;
+  min-width: 96px;
+}
+.vision-cockpit .grand-project-drilldown > header p { font-size: clamp(13px, .66vw, 15px); }
+.vision-cockpit .grand-project-drilldown > header h3 { font-size: clamp(24px, 1.25vw, 30px); }
+.vision-cockpit .grand-project-drilldown > header span,
+.vision-cockpit .grand-project-drilldown > header button { font-size: clamp(13px, .68vw, 16px); }
+.vision-cockpit .grand-project-drilldown > header button { min-height: 40px; padding-inline: 14px; }
+.vision-cockpit .grand-city-directory { gap: 7px; padding: 10px 14px; }
+.vision-cockpit .grand-city-directory button { min-height: 42px; }
+.vision-cockpit .grand-city-directory b { font-size: clamp(14px, .76vw, 18px); }
+.vision-cockpit .grand-city-directory span { font-size: clamp(12px, .64vw, 15px); }
+.vision-cockpit .grand-project-table-head { min-height: 42px; font-size: clamp(13px, .68vw, 16px); }
+.vision-cockpit .grand-project-list > article { min-height: 64px; font-size: clamp(14px, .76vw, 18px); }
+.vision-cockpit .grand-project-list > article > div b { font-size: clamp(16px, .86vw, 20px); }
+.vision-cockpit .grand-project-list > article > div span { font-size: clamp(12px, .64vw, 15px); }
+.vision-cockpit .grand-project-list > article > em { font-size: clamp(12px, .64vw, 15px); }
+.vision-cockpit .grand-project-list {
+  contain: layout paint;
+}
+.vision-cockpit .grand-project-list > article {
+  content-visibility: auto;
+  contain-intrinsic-size: 64px;
+}
+.vision-cockpit .grand-project-number {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.vision-cockpit .grand-project-number b {
+  overflow: visible;
+  color: #f2f8fc;
+  font-family: var(--font-num);
+  font-size: clamp(17px, .92vw, 21px);
+  font-weight: 400;
+  line-height: 1;
+  text-overflow: clip;
+}
+.vision-cockpit .grand-project-number small {
+  flex: 0 0 auto;
+  color: #9fb2c0;
+  font-family: var(--font-cn);
+  font-size: clamp(12px, .64vw, 15px);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+@media (min-width: 1181px) {
+  .vision-cockpit {
+    --grand-command-width: clamp(650px, 37vw, 820px);
+    --grand-stage-gap: 18px;
+    --grand-project-list-height: min(var(--grand-project-content-height, 480px), 58vh, 480px);
+  }
+
+  .vision-cockpit .grand-overlay-layout {
+    grid-template-columns: var(--grand-command-width) minmax(0, 1fr);
+    gap: var(--grand-stage-gap);
+  }
+
+  .vision-cockpit[data-project-list-open="true"] .grand-cockpit-map-layer {
+    inset:
+      124px
+      26px
+      calc(20px + var(--grand-project-list-height) + 28px)
+      calc(26px + var(--grand-command-width) + var(--grand-stage-gap));
+    border: 1px solid rgba(104, 153, 211, .11);
+    border-radius: 24px;
+  }
+
+  .vision-cockpit[data-project-list-open="true"] .grand-cockpit-map-layer::after,
+  .vision-cockpit[data-project-list-open="true"] .grand-cockpit-map-layer .tech-map-webgl::after {
+    background: linear-gradient(180deg, rgba(2, 8, 20, .08), transparent 24%, rgba(2, 7, 18, .12));
+  }
+
+  .vision-cockpit[data-project-list-open="true"] .grand-map-ui > .grand-project-drilldown {
+    inset: auto 0 0 auto;
+    top: auto;
+    width: 100%;
+    height: var(--grand-project-list-height);
+    max-height: none;
+  }
+}
+
+@media (min-width: 1181px) and (min-aspect-ratio: 1/1) and (max-aspect-ratio: 4/3) {
+  .vision-cockpit {
+    --grand-command-width: clamp(500px, 34vw, 760px);
+    --grand-stage-gap: clamp(12px, 1vw, 20px);
+  }
+}
+
+/* Organization is the only primary query dimension. Administrative regions
+   remain available as nested map drilldowns instead of a competing mode. */
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar {
+  width: min(1260px, calc(100% - 340px));
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 54px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 54px), transparent 100%);
+}
+
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar .grand-scope-switch {
+  justify-content: flex-start;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-right: 74px;
+}
+
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar .grand-scope-switch button {
+  flex: 0 0 clamp(84px, 5.2vw, 104px);
+  min-width: 84px;
+  scroll-snap-align: start;
+}
+
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar .grand-scope-switch button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.vision-cockpit[data-query-mode="organization"] .grand-header-filterbar::after {
+  content: "›";
+  position: absolute;
+  z-index: 3;
+  right: 7px;
+  top: 50%;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  color: rgba(184, 229, 247, .78);
+  font-size: 22px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  border: 1px solid rgba(97, 201, 232, .2);
+  border-radius: 50%;
+  background: rgba(7, 31, 67, .82);
+  box-shadow: 0 0 18px rgba(66, 179, 235, .18);
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  max-width: min(760px, calc(100% - 32px));
+  pointer-events: none;
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption > small {
+  grid-column: 1 / 3;
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption > .grand-map-caption-action {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  align-self: center;
+  min-height: 38px;
+  padding: 0 14px;
+  color: #e6f7ff;
+  font: inherit;
+  font-size: clamp(12px, .64vw, 15px);
+  font-weight: 400;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  border: 1px solid rgba(91, 205, 231, .24);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(28, 119, 172, .34), rgba(13, 53, 101, .48));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 22px rgba(0, 15, 40, .24);
+}
+
+.vision-cockpit.grand-map-dashboard .grand-map-ui > .grand-map-caption > .grand-map-caption-action:hover {
+  border-color: rgba(102, 226, 239, .42);
+  background: linear-gradient(135deg, rgba(34, 139, 191, .46), rgba(14, 63, 117, .58));
+}
+
+/* Let roughly 10% more of the map pass through the command panel. */
+.vision-cockpit .grand-command-panel {
+  background:
+    radial-gradient(circle at 4% 0%, rgba(54, 139, 232, .1), transparent 30%),
+    linear-gradient(90deg, rgba(5, 22, 50, .7) 0%, rgba(4, 18, 42, .64) 70%, rgba(3, 15, 35, .56) 100%);
+}
