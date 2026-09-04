@@ -752,6 +752,7 @@ function InvestmentPanel({
   const tier12Share = metric("h1-investment-tier12-share");
   const coreCityValue = metric("h1-investment-core-city-value");
   const usesOperatingOverview = state === "ready" && operatingOverview !== null;
+  const usesStaticFallback = !usesOperatingOverview && facts.length > 0;
   const liveFacts: readonly RegionFact[] = usesOperatingOverview
     ? [
         {
@@ -817,7 +818,7 @@ function InvestmentPanel({
         data-source-date={activeDate}
         data-query-state={state}
       >
-        {/* {state === "error" ? (
+        {state === "error" && !usesStaticFallback ? (
           <button
             type="button"
             className={`${styles.dataRetryButton} ${styles.investmentRetryButton}`}
@@ -826,7 +827,7 @@ function InvestmentPanel({
           >
             重新获取
           </button>
-        ) : null} */}
+        ) : null}
         <div className={styles.investmentLiveGrid} data-fact-count={liveFacts.length}>
           {liveFacts.map((fact, index) => {
             const showsNewValueRank = showGroupRank && usesOperatingOverview && fact.label === "新拓货值";
