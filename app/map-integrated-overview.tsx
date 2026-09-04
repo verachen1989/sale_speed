@@ -708,7 +708,7 @@ export default function MapIntegratedOverview({
               <div>
                 <span>{activeOrganizationCityDevelopment && activeOrganization
                   ? `${activeOrganization.name} · ${activeRegionMetrics.projectCount} 个项目`
-                  : `${activeRegionMetrics.cityCount} 城 · ${activeRegionMetrics.projectCount} 个境内有效项目`}</span>
+                  : `${activeRegionMetrics.cityCount} 城 · ${activeRegionMetrics.projectCount} 个境内项目`}</span>
                 <small>数据截至 {activeRegionMetrics.salesSnapshotDate}</small>
                 <small>点击查看项目明细</small>
               </div>

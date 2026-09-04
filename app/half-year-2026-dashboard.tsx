@@ -62,7 +62,7 @@ const GROUP_DISCLOSURE_RANKS = {
 } as const;
 const GREEN_PLUS_FEATURED_FACT_IDS: Record<GreenPlusGroup["id"], string> = {
   "commercial-operations": "green-plus-commercial-project-count",
-  "town-operations": "green-plus-town-industries",
+  "town-operations": "green-plus-town-light-projects",
   "life-technology": "green-plus-life-new-construction",
   wellness: "green-plus-wellness-managed-projects",
 };
@@ -651,8 +651,10 @@ function SalesPanel({
         </article>
         <article className={styles.progressMetric} {...metricAttributes(oldProgress)}>
           <span>{oldProgress.label}</span>
-          <ValueLine item={oldProgress} compact />
-          <i aria-hidden="true"><u style={{ "--bar-width": `${oldProgress.numericValue}%` } as CSSProperties} /></i>
+          <div className={styles.progressMetricRow}>
+            <ValueLine item={oldProgress} compact />
+            <i aria-hidden="true"><u style={{ "--bar-width": `${oldProgress.numericValue}%` } as CSSProperties} /></i>
+          </div>
         </article>
         <MetricCard item={unsold} compact showComparison={false} />
       </div>
@@ -833,6 +835,7 @@ function InvestmentPanel({
                 key={fact.label}
                 data-live-metric="true"
                 data-kpi-level={index === 0 ? "primary" : "secondary"}
+                data-rank-highlight={showsNewValueRank ? "true" : undefined}
               >
                 <span>{fact.label}</span>
                 <div><strong>{fact.value}</strong><em>{fact.unit}</em></div>
@@ -842,7 +845,7 @@ function InvestmentPanel({
                       className={styles.rankBadge}
                       data-rank-badge="new-value"
                       title={`2026中期披露：新增货值${GROUP_DISCLOSURE_RANKS.newValue}`}
-                    >{GROUP_DISCLOSURE_RANKS.newValue}</b>
+                    >{GROUP_DISCLOSURE_RANKS.newValue.replace("行业 ", "")}</b>
                   </small>
                 ) : null}
               </article>
@@ -977,10 +980,17 @@ function ResourcesPanel() {
 
 function GreenPlusGroupBody({ group, showHeading = false }: { group: GreenPlusGroup; showHeading?: boolean }) {
   const featuredFactId = GREEN_PLUS_FEATURED_FACT_IDS[group.id];
+  const isTownOperations = group.id === "town-operations";
+  const industryFact = isTownOperations
+    ? group.facts.find((fact) => fact.id === "green-plus-town-industries")
+    : undefined;
+  const visibleFacts = industryFact
+    ? group.facts.filter((fact) => fact.id !== industryFact.id)
+    : group.facts;
   const hasDetail = Boolean(group.detail);
   const hasHighlights = group.highlights.length > 0;
   const hasNarrative = hasDetail || hasHighlights;
-  const usesMetricMatrix = group.facts.length > 2;
+  const usesMetricMatrix = visibleFacts.length > 2;
   const narrative = hasNarrative ? (
     <div className={styles.greenPlusNarrative} data-green-plus-narrative="profile">
       {hasDetail ? (
@@ -1008,6 +1018,7 @@ function GreenPlusGroupBody({ group, showHeading = false }: { group: GreenPlusGr
       {...greenPlusGroupAttributes(group)}
       data-green-plus-variant={group.id}
       data-green-plus-layout={usesMetricMatrix ? "metric-matrix" : undefined}
+      data-green-plus-structure={industryFact ? "industry-kpis" : undefined}
       data-green-plus-has-highlights={hasHighlights ? "true" : undefined}
       data-green-plus-frame="command-module"
       aria-label={`${group.label}：${group.summary}`}
@@ -1018,8 +1029,16 @@ function GreenPlusGroupBody({ group, showHeading = false }: { group: GreenPlusGr
           <span>{group.label}</span><small>{group.summary}</small>
         </div>
       ) : null}
+      {industryFact?.items?.length ? (
+        <div className={styles.townIndustryBand} aria-label="小镇产业布局">
+          <span className={styles.townIndustryLabel}>产业布局</span>
+          <ul className={styles.townIndustryList}>
+            {industryFact.items.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+      ) : null}
       <div className={styles.greenPlusFacts}>
-        {group.facts.map((fact) => (
+        {visibleFacts.map((fact) => (
           <article
             key={fact.id}
             {...greenPlusFactAttributes(group, fact)}
@@ -1252,7 +1271,7 @@ function NationalMapLegend() {
   return (
     <aside
       className={styles.mapCoverageLegend}
-      aria-label={`全国项目覆盖图例：覆盖${WENSHU_COVERED_CITY_COUNT}个城市，共${WENSHU_DOMESTIC_PROJECT_COUNT}个境内有效项目`}
+      aria-label={`全国项目覆盖图例：覆盖${WENSHU_COVERED_CITY_COUNT}个城市，共${WENSHU_DOMESTIC_PROJECT_COUNT}个境内项目`}
       data-half-map-occlusion="true"
       data-map-coverage-legend="true"
       data-source-dataset="6,3001"
@@ -1288,7 +1307,7 @@ function CityProjectDrilldown({
   return (
     <section
       className={`fusion-project-drilldown ${styles.projectDrilldown}`}
-      aria-label={focusedProject ? `${focusedProject.name}项目详情` : `${city.name}境内有效项目清单`}
+      aria-label={focusedProject ? `${focusedProject.name}项目详情` : `${city.name}境内项目清单`}
       data-half-map-occlusion="true"
       data-source-dataset="6,3001,1016"
       data-source-snapshot={WENSHU_PROJECT_SNAPSHOT_DATE}
@@ -1298,7 +1317,7 @@ function CityProjectDrilldown({
       <header>
         <div>
           <p>全国 <i /> {city.provinceName} <i /> {city.name}{focusedProject ? <><i /> 项目直达</> : null}</p>
-          <h3>{focusedProject?.name ?? `${city.name}境内有效项目`}</h3>
+          <h3>{focusedProject?.name ?? `${city.name}境内`}</h3>
           <span>{focusedProject ? "重资产案例 · 项目级穿透" : `共 ${projects.length} 个项目`}</span>
         </div>
         <div className="fusion-project-actions">

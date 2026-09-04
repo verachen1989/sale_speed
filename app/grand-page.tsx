@@ -706,7 +706,7 @@ export default function GrandDashboard({
 
       <footer className="grand-footer">
         <span>{displayScopeName}经营概览 · 全业态</span>
-        <span>经营组织 → 覆盖行政区 → 城市 → 项目清单 · {WENSHU_COVERED_CITY_COUNT} 城 · {WENSHU_DOMESTIC_PROJECT_COUNT} 个国内有效项目</span>
+        <span>经营组织 → 覆盖行政区 → 城市 → 项目清单 · {WENSHU_COVERED_CITY_COUNT} 城 · {WENSHU_DOMESTIC_PROJECT_COUNT} 个国内项目</span>
         <span>销售数据截至 {salesAsOfLabel} · 不含目标及预测</span>
       </footer>
     </main>

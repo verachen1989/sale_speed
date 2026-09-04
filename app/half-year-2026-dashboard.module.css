@@ -4862,3 +4862,281 @@
   background: linear-gradient(138deg, rgba(12, 55, 101, .95), rgba(4, 24, 52, .93));
   box-shadow: 0 10px 24px rgba(0, 14, 38, .3), inset 0 1px 0 rgba(216, 241, 255, .08);
 }
+
+/* Supporting insight labels use the same responsive type scale as KPI names. */
+.dashboard[data-dashboard-view="half-year-2026"] .managedInsightStrip > article > span,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusHighlights small,
+.dashboard[data-dashboard-view="half-year-2026"] .managedInsightNote,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusHighlights span {
+  font-size: clamp(10px, .7vw, 13px) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .managedInsightStrip > article > span,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusHighlights small {
+  min-width: clamp(40px, 2.6vw, 48px);
+  height: clamp(19px, 1.55vh, 22px);
+  padding-inline: clamp(6px, .45vw, 8px);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .managedInsightNote,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusHighlights span {
+  line-height: 1.2;
+}
+
+/* Red-box KPI typography: one value level and one DIN number system. */
+.dashboard[data-dashboard-view="half-year-2026"] {
+  --half-kpi-label-unified-size: 11px;
+  --half-kpi-value-regular-size: 18px;
+  --half-kpi-unit-unified-size: 9px;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] :is(
+  .panel[data-panel-index="01"] .investmentLiveGrid article > span,
+  .panel[data-panel-index="01"] .projectDynamicsGrid article > span,
+  .panel[data-panel-index="01"] .ratioRow article > span,
+  .panel[data-panel-index="03"] .latestSalesFacts article > span,
+  .panel[data-panel-index="03"] .inventoryLine article > span,
+  .deliveryPanel .salesDeliveryGrid article > span,
+  .customerEvaluationPanel .salesCustomerEvaluationGrid article > span,
+  .resourceDock .recognitionSummary article > span,
+  .resourceDock .recognitionChart article > span,
+  .developmentDock .annualTimeline article > span,
+  .panel[data-panel-index="04"] .managedMetricTitle
+) {
+  font-family: var(--font-cn) !important;
+  font-size: var(--half-kpi-label-unified-size) !important;
+  font-weight: 550 !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] :is(
+  .panel[data-panel-index="01"] .investmentLiveGrid strong,
+  .panel[data-panel-index="01"] .projectDynamicsGrid strong,
+  .panel[data-panel-index="01"] .ratioRow strong,
+  .panel[data-panel-index="03"] .latestSalesFacts strong,
+  .panel[data-panel-index="03"] .inventoryLine .valueLineCompact strong,
+  .deliveryPanel .salesDeliveryGrid b,
+  .customerEvaluationPanel .valueLineCompact strong,
+  .resourceDock .recognitionSummary .valueLineCompact strong,
+  .resourceDock .recognitionChart article > b,
+  .developmentDock .annualTimeline article > b,
+  .panel[data-panel-index="04"] .managedGrid .valueLineCompact strong
+) {
+  font-family: "DIN Alternate", "DINPro", "DIN", "Helvetica Neue", Arial, var(--font-cn) !important;
+  font-size: var(--half-kpi-value-regular-size) !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  line-height: 1 !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] :is(
+  .panel[data-panel-index="01"] .investmentLiveGrid em,
+  .panel[data-panel-index="01"] .projectDynamicsGrid em,
+  .panel[data-panel-index="01"] .ratioRow em,
+  .panel[data-panel-index="03"] .latestSalesFacts em,
+  .panel[data-panel-index="03"] .inventoryLine em,
+  .deliveryPanel .salesDeliveryGrid em,
+  .customerEvaluationPanel .valueLineCompact em,
+  .resourceDock .recognitionSummary em,
+  .resourceDock .recognitionChart article > b em,
+  .developmentDock .annualTimeline article > b em,
+  .panel[data-panel-index="04"] .managedGrid .valueLineCompact em
+) {
+  font-family: "DIN Alternate", "DINPro", "DIN", "Helvetica Neue", Arial, var(--font-cn) !important;
+  font-size: var(--half-kpi-unit-unified-size) !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+}
+
+/* Keep the ranked new-value label intact while the compact Top badge owns its own column. */
+@media (min-width: 1201px) {
+  .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .investmentLiveGrid article[data-rank-highlight="true"] {
+    grid-template-columns: max-content max-content;
+    column-gap: 4px;
+    justify-content: space-between;
+  }
+
+  .dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="01"] .investmentLiveGrid article[data-rank-highlight="true"] > span {
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
+/* Town separates its operating scope from quantitative KPIs. */
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] {
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  gap: clamp(5px, .55vh, 8px) !important;
+  overflow: visible;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .townIndustryBand {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  min-height: 24px;
+  gap: clamp(7px, .55vw, 10px);
+  padding: 3px clamp(7px, .6vw, 11px);
+  border: 1px solid rgba(99, 184, 255, .14);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(13, 57, 94, .7), rgba(7, 31, 60, .42));
+  box-shadow: inset 0 1px 0 rgba(190, 239, 255, .07);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .townIndustryLabel {
+  color: #d8e8f5;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .townIndustryList {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .townIndustryList li {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 17px;
+  padding-inline: 3px;
+  color: #bcd9ec;
+  font-size: 9px;
+  font-weight: 550;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid rgba(96, 237, 253, .22);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(29, 107, 157, .36), rgba(10, 48, 84, .3));
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] .greenPlusFacts {
+  grid-template-columns:
+    minmax(0, .92fr)
+    minmax(0, .92fr)
+    minmax(0, 1.18fr)
+    minmax(0, .94fr)
+    minmax(0, 1.04fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-auto-rows: unset;
+  align-content: stretch;
+  gap: clamp(4px, .45vh, 7px) clamp(7px, .5vw, 10px);
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-layout="metric-matrix"][data-green-plus-structure="industry-kpis"] .greenPlusFacts > article[data-green-plus-metric-id] {
+  display: grid;
+  grid-column: auto;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: start;
+  min-height: 0;
+  gap: 3px;
+  padding: clamp(4px, .55vh, 7px) clamp(8px, .6vw, 11px) !important;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] .greenPlusFacts > article > span {
+  overflow: visible;
+  font-size: 11px !important;
+  line-height: 1.05;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] .greenPlusFacts > article > b,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] .greenPlusFacts > article[data-green-plus-featured="true"] > b {
+  justify-self: start;
+  min-width: max-content;
+  margin-top: 0;
+  font-family: "DIN Alternate", "DINPro", "DIN", "Helvetica Neue", Arial, var(--font-cn);
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] .greenPlusNarrative {
+  grid-column: 1 / -1;
+  align-self: stretch;
+  height: auto;
+  min-height: 0;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] .greenPlusHighlights,
+.dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] .greenPlusHighlights li {
+  height: 100%;
+  min-height: 0;
+}
+
+@media (min-width: 1201px) and (max-height: 875px) {
+  .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] {
+    gap: 4px !important;
+  }
+
+  .dashboard[data-dashboard-view="half-year-2026"] .townIndustryBand {
+    min-height: 20px;
+    padding-block: 2px;
+  }
+
+  .dashboard[data-dashboard-view="half-year-2026"] .townIndustryList li {
+    min-height: 15px;
+    font-size: 8px;
+  }
+
+  .dashboard[data-dashboard-view="half-year-2026"] .greenPlusGroup[data-green-plus-structure="industry-kpis"] .greenPlusFacts {
+    gap: 3px 5px;
+  }
+}
+
+/* Keep the three inventory KPIs visually centered; the progress value and bar share one fluid row. */
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="03"] .inventoryLine > article {
+  grid-template-rows: auto auto;
+  align-content: center;
+  row-gap: clamp(5px, .55vh, 8px);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="03"] .inventoryLine > article > small {
+  display: none;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="03"] .progressMetricRow {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(9px, .7vw, 13px);
+  min-width: 0;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="03"] .progressMetricRow .valueLineCompact {
+  min-width: max-content;
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="03"] .progressMetricRow > i {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 5px;
+  overflow: visible;
+  border-radius: 4px;
+  background: var(--half-chart-track);
+}
+
+.dashboard[data-dashboard-view="half-year-2026"] .panel[data-panel-index="03"] .progressMetricRow > i u {
+  display: block;
+  width: var(--bar-width);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--half-bar-cyan);
+  box-shadow: var(--half-glow-cyan);
+}

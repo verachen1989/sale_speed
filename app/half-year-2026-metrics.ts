@@ -24,6 +24,7 @@ export type GreenPlusFact = {
   value: string;
   numericValue: number;
   unit: string;
+  items?: readonly string[];
 };
 
 export type GreenPlusHighlight = {
@@ -108,9 +109,9 @@ export const HALF_YEAR_2026_GREEN_PLUS_GROUPS = [
     sourcePages: [13],
     materialPages: [12],
     facts: [
-      { id: "green-plus-life-new-construction", label: "年度新拓施工项目", value: "1", numericValue: 1, unit: "个" },
-      { id: "green-plus-life-delivery-projects", label: "年度累计交付项目", value: "61", numericValue: 61, unit: "个项目" },
-      { id: "green-plus-life-new-design", label: "年度新拓设计项目", value: "13", numericValue: 13, unit: "个" },
+      { id: "green-plus-life-new-construction", label: "新拓施工项目", value: "1", numericValue: 1, unit: "个" },
+      { id: "green-plus-life-delivery-projects", label: "年度累计交付项目", value: "61", numericValue: 61, unit: "个" },
+      { id: "green-plus-life-new-design", label: "新拓设计项目", value: "13", numericValue: 13, unit: "个" },
     ],
     highlights: [
       { kind: "case", label: "杭州晓风朗月｜在浙首个施工大总包项目·品质兑现" },
@@ -126,12 +127,12 @@ export const HALF_YEAR_2026_GREEN_PLUS_GROUPS = [
     sourcePages: [13],
     materialPages: [12],
     facts: [
-      { id: "green-plus-commercial-project-count", label: "管理项目数量（含轻资产）", value: "2", numericValue: 2, unit: "个" },
-      { id: "green-plus-commercial-managed-area", label: "管理面积", value: "4.8", numericValue: 4.8, unit: "万㎡" },
-      { id: "green-plus-commercial-revenue", label: "年度累计营收", value: "3.2", numericValue: 3.2, unit: "亿元" },
-      { id: "green-plus-commercial-members", label: "桂玥会会员数量", value: "18", numericValue: 18, unit: "万+" },
-      { id: "green-plus-commercial-traffic", label: "商业总客流量", value: "620", numericValue: 620, unit: "万+" },
-      { id: "green-plus-commercial-hotel-satisfaction", label: "酒店满意度评分", value: "96.8", numericValue: 96.8, unit: "分" },
+      { id: "green-plus-commercial-project-count", label: "管理项目数量", value: "129", numericValue: 129, unit: "个" },
+      { id: "green-plus-commercial-managed-area", label: "管理面积", value: "400", numericValue: 400, unit: "万㎡" },
+      { id: "green-plus-commercial-revenue", label: "年度累计营收", value: "8.2", numericValue: 8.2, unit: "亿元" },
+      { id: "green-plus-commercial-members", label: "会员数量", value: "148", numericValue: 148, unit: "万人" },
+      { id: "green-plus-commercial-traffic", label: "商业总客流量", value: "2700", numericValue: 2700, unit: "万人次" },
+      { id: "green-plus-commercial-hotel-satisfaction", label: "酒店满意度", value: "95.6", numericValue: 95.6, unit: "分" },
     ],
     highlights: [
       { kind: "case", label: "上海北中环中心｜长租公寓轻资产运营项目" },
@@ -166,11 +167,18 @@ export const HALF_YEAR_2026_GREEN_PLUS_GROUPS = [
     sourcePages: [13],
     materialPages: [12],
     facts: [
-      { id: "green-plus-town-industries", label: "五大产业", value: "商业、教育、文旅、康养、农业", numericValue: 5, unit: "" },
-      { id: "green-plus-town-members", label: "会员数", value: "4", numericValue: 4, unit: "万+" },
-      { id: "green-plus-town-first-year-sales", label: "旅居产品首年销量", value: "4", numericValue: 4, unit: "万套" },
+      {
+        id: "green-plus-town-industries",
+        label: "产业内容",
+        value: "商业、教育、文旅、康养、农业",
+        numericValue: 5,
+        unit: "",
+        items: ["商业", "教育", "文旅", "康养", "农业"],
+      },
+      { id: "green-plus-town-light-projects", label: "项目数量", value: "9", numericValue: 9, unit: "个" },
+      { id: "green-plus-town-members", label: "会员数量", value: "4", numericValue: 4, unit: "万+" },
+      { id: "green-plus-town-first-year-sales", label: "旅居产品销量", value: "4", numericValue: 4, unit: "万套" },
       { id: "green-plus-town-exposure", label: "年曝光量", value: "1", numericValue: 1, unit: "亿+" },
-      { id: "green-plus-town-light-projects", label: "项目数", value: "9", numericValue: 9, unit: "个" },
       { id: "green-plus-town-honors", label: "累计荣誉", value: "60+", numericValue: 60, unit: "项" },
     ],
     highlights: [
