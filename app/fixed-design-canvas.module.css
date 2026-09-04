@@ -1,0 +1,39 @@
+.viewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #031f43;
+}
+
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--design-width);
+  height: var(--design-height);
+  overflow: hidden;
+  transform: translateX(-50%) scale(var(--canvas-scale));
+  transform-origin: top center;
+}
+
+.frame,
+.fallback {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+}
+
+.fallback {
+  z-index: 0;
+}
+
+.frame {
+  z-index: 1;
+}

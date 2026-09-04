@@ -2069,3 +2069,19 @@ test("keeps browser-loaded public assets compatible with the GitHub Pages base p
   assert.match(cockpitSource, /publicAssetPath\("\/greentown-logo-header\.png"\)/);
   assert.match(integratedSource, /publicAssetPath\("\/greentown-logo-header\.png"\)/);
 });
+
+test("keeps the dashboard on a fixed design canvas across browser zoom levels", async () => {
+  const [shellSource, canvasSource, canvasStyles] = await Promise.all([
+    readFile(new URL("../app/dashboard-shell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/fixed-design-canvas.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/fixed-design-canvas.module.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(shellSource, /DASHBOARD_DESIGN_WIDTH = 1920/);
+  assert.match(shellSource, /DASHBOARD_DESIGN_HEIGHT = 960/);
+  assert.match(canvasSource, /const scale = viewportWidth \/ designWidth/);
+  assert.match(canvasSource, /height: viewportHeight \/ scale/);
+  assert.match(canvasSource, /window\.visualViewport\?\.addEventListener\("resize"/);
+  assert.match(canvasSource, /createPortal\(children, portalTarget\)/);
+  assert.match(canvasStyles, /transform: translateX\(-50%\) scale\(var\(--canvas-scale\)\)/);
+});

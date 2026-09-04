@@ -570,11 +570,11 @@ function SalesTrendChart({
         <div className={styles.salesTrendEmpty} role="status">
           <i />
           <span>{statusLabel}</span>
-          {state === "error" ? (
+          {/* {state === "error" ? (
             <button type="button" className={styles.dataRetryButton} data-retry-action="latest-sales" onClick={onRetry}>
               重新获取
             </button>
-          ) : null}
+          ) : null} */}
         </div>
       )}
     </section>
@@ -815,7 +815,7 @@ function InvestmentPanel({
         data-source-date={activeDate}
         data-query-state={state}
       >
-        {state === "error" ? (
+        {/* {state === "error" ? (
           <button
             type="button"
             className={`${styles.dataRetryButton} ${styles.investmentRetryButton}`}
@@ -824,7 +824,7 @@ function InvestmentPanel({
           >
             重新获取
           </button>
-        ) : null}
+        ) : null} */}
         <div className={styles.investmentLiveGrid} data-fact-count={liveFacts.length}>
           {liveFacts.map((fact, index) => {
             const showsNewValueRank = showGroupRank && usesOperatingOverview && fact.label === "新拓货值";
