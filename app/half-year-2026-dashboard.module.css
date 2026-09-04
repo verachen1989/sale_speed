@@ -40,7 +40,7 @@
   --half-rail-min-width: 360px;
   --half-rail-left-width: clamp(420px, 27vw, 620px);
   --half-rail-right-width: clamp(420px, 27vw, 620px);
-  --half-rail-left-template: auto minmax(0, 1.9fr) minmax(0, 2.15fr) minmax(88px, .84fr) minmax(72px, .64fr) minmax(0, 1fr) minmax(0, 1fr);
+  --half-rail-left-template: auto minmax(0, 1.9fr) minmax(0, 2.15fr) minmax(88px, .84fr) minmax(0, 1fr) minmax(0, 1fr);
   --half-rail-right-template: auto minmax(0, 1.34fr) minmax(0, .92fr) minmax(0, .92fr) minmax(0, .74fr) minmax(0, .74fr);
   --half-coral: #f08e82;
   --half-accent-cyan: #00d4ff;
@@ -1655,7 +1655,6 @@
     minmax(0, 1.9fr)
     minmax(0, 2.35fr)
     minmax(72px, .64fr)
-    minmax(72px, .64fr)
     minmax(0, 1fr)
     minmax(0, 1fr);
   align-content: stretch;
@@ -2212,7 +2211,7 @@
 
 @media (min-width: 1201px) and (max-height: 875px) {
   .rail:global(.is-left) {
-    grid-template-rows: auto minmax(0, 1.7fr) minmax(0, 2.05fr) minmax(54px, .62fr) minmax(50px, .55fr) minmax(0, .85fr) minmax(0, .8fr);
+    grid-template-rows: auto minmax(0, 1.7fr) minmax(0, 2.05fr) minmax(54px, .62fr) minmax(0, .85fr) minmax(0, .8fr);
   }
   .investmentLive { padding-block: 3px; }
   .investmentLiveGrid { margin-top: 2px; }
@@ -3488,7 +3487,7 @@
     --half-panel-gap: clamp(4px, .45vw, 8px);
     --half-rail-left-width: clamp(420px, 27vw, 620px);
     --half-rail-right-width: clamp(420px, 27vw, 620px);
-    --half-rail-left-template: auto minmax(0, 1.9fr) minmax(0, 2.15fr) minmax(88px, .84fr) minmax(72px, .64fr) minmax(0, 1fr) minmax(0, 1fr);
+    --half-rail-left-template: auto minmax(0, 1.9fr) minmax(0, 2.15fr) minmax(88px, .84fr) minmax(0, 1fr) minmax(0, 1fr);
     --half-rail-right-template: auto minmax(0, 1.34fr) minmax(0, .92fr) minmax(0, .92fr) minmax(0, .74fr) minmax(0, .74fr);
   }
 
@@ -3548,7 +3547,7 @@
     --half-panel-gap: clamp(3px, .34vw, 6px);
     --half-rail-left-width: clamp(390px, 28vw, 520px);
     --half-rail-right-width: clamp(390px, 28vw, 520px);
-    --half-rail-left-template: auto minmax(0, 1.75fr) minmax(0, 2fr) minmax(88px, .9fr) minmax(58px, .65fr) minmax(0, .98fr) minmax(0, .92fr);
+    --half-rail-left-template: auto minmax(0, 1.75fr) minmax(0, 2fr) minmax(88px, .9fr) minmax(0, .98fr) minmax(0, .92fr);
     --half-rail-right-template: auto minmax(0, 1.24fr) minmax(0, .84fr) minmax(0, .84fr) minmax(0, .66fr) minmax(0, .66fr);
   }
 
@@ -3577,7 +3576,7 @@
     --half-panel-gap: 4px;
     --half-rail-left-width: clamp(380px, 29vw, 510px);
     --half-rail-right-width: clamp(380px, 29vw, 510px);
-    --half-rail-left-template: auto minmax(0, 1.7fr) minmax(0, 1.85fr) minmax(84px, .82fr) minmax(50px, .55fr) minmax(0, .85fr) minmax(0, .8fr);
+    --half-rail-left-template: auto minmax(0, 1.7fr) minmax(0, 1.85fr) minmax(84px, .82fr) minmax(0, .85fr) minmax(0, .8fr);
     --half-rail-right-template: auto minmax(0, 1.18fr) minmax(0, .78fr) minmax(0, .78fr) minmax(0, .62fr) minmax(0, .62fr);
   }
 
@@ -3599,7 +3598,7 @@
   .dashboard[data-dashboard-view="half-year-2026"] {
     --half-screen-density: presentation;
     --half-panel-gap: 5px;
-    --half-rail-left-template: auto minmax(0, 2fr) minmax(0, 1.86fr) minmax(90px, .88fr) minmax(58px, .64fr) minmax(0, .92fr) minmax(0, .98fr);
+    --half-rail-left-template: auto minmax(0, 2fr) minmax(0, 1.86fr) minmax(90px, .88fr) minmax(0, .92fr) minmax(0, .98fr);
     --half-rail-right-template: auto minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, .8fr) minmax(0, .8fr);
   }
 
@@ -4349,7 +4348,7 @@
     --half-rail-min-width: 380px;
     --half-rail-left-width: clamp(396px, 29.5vw, 432px);
     --half-rail-right-width: clamp(396px, 29.5vw, 432px);
-    --half-rail-left-template: auto minmax(0, 1.82fr) minmax(0, 2.05fr) minmax(88px, .88fr) minmax(54px, .62fr) minmax(0, .92fr) minmax(0, .86fr);
+    --half-rail-left-template: auto minmax(0, 1.82fr) minmax(0, 2.05fr) minmax(88px, .88fr) minmax(0, .92fr) minmax(0, .86fr);
     --half-rail-right-template: auto minmax(0, 1.18fr) minmax(0, .85fr) minmax(0, .85fr) minmax(0, .67fr) minmax(0, .67fr);
   }
 
@@ -4393,7 +4392,7 @@
     --half-panel-title-size-canonical: 16px;
     --half-rail-left-width: clamp(416px, 28vw, 470px);
     --half-rail-right-width: clamp(416px, 28vw, 470px);
-    --half-rail-left-template: auto minmax(0, 2.05fr) minmax(0, 2.12fr) minmax(90px, .92fr) minmax(62px, .64fr) minmax(0, 1.02fr) minmax(0, .88fr);
+    --half-rail-left-template: auto minmax(0, 2.05fr) minmax(0, 2.12fr) minmax(90px, .92fr) minmax(0, 1.02fr) minmax(0, .88fr);
     --half-rail-right-template: auto minmax(0, 1.16fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, .8fr) minmax(0, .8fr);
   }
 

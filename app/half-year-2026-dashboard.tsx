@@ -84,8 +84,6 @@ const DISPLAYED_HALF_YEAR_METRIC_IDS = [
   "h1-inventory-old-sales",
   "h1-inventory-old-progress",
   "h1-inventory-unsold-value",
-  "h1-customer-satisfaction",
-  "h1-customer-loyalty",
   "h2-resource-sold-unrecognized",
   "h2-recognition-2026-total",
   "h2-recognition-2027-total",
@@ -687,42 +685,6 @@ function DeliveryPanel() {
             <span>{item.label}</span>
             <b>{item.value}<em>{item.unit}</em></b>
             <small>{item.plan}</small>
-          </article>
-        ))}
-      </div>
-    </Panel>
-  );
-}
-
-function CustomerEvaluationPanel() {
-  const customerEvaluation = [
-    metric("h1-customer-satisfaction"),
-    metric("h1-customer-loyalty"),
-  ];
-
-  return (
-    <Panel
-      index="11"
-      title="客户评价"
-      className={styles.customerEvaluationPanel}
-      sourceLabel="2026中期披露"
-      sourcePeriod={HALF_YEAR_2026_SOURCE.period}
-      sourceScope="group"
-      sourceKind="disclosure"
-    >
-      <div
-        className={styles.salesCustomerEvaluationGrid}
-        aria-label="客户评价"
-        data-sales-customer-evaluation="group-disclosure"
-        data-source-kind="disclosure"
-        data-source-period={HALF_YEAR_2026_SOURCE.period}
-        data-scope="group"
-      >
-        {customerEvaluation.map((item) => (
-          <article key={item.id} {...metricAttributes(item)} title={item.note}>
-            <span>{item.label}</span>
-            <ValueLine item={item} compact />
-            <small>{item.comparison}</small>
           </article>
         ))}
       </div>
@@ -1891,7 +1853,6 @@ export default function HalfYear2026Dashboard() {
             }}
           />
           <DeliveryPanel />
-          <CustomerEvaluationPanel />
           <ResourcesPanel />
           <ConstructionPanel />
         </aside>
