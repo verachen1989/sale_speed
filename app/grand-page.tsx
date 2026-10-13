@@ -1,5 +1,6 @@
 "use client";
 
+import { prioritizeLiveProjects, ProjectLiveSiteLink } from "./project-live-site";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import TechMap from "./tech-map";
@@ -662,12 +663,12 @@ export default function GrandDashboard({
                 <span>销售状态</span>
               </div>
               <div className="grand-project-list" role="list" data-project-count={drilldownProjects.length}>
-                {drilldownProjects.map((project) => {
+                {prioritizeLiveProjects(drilldownProjects).map((project) => {
                   const attribute = WENSHU_PROJECT_ATTRIBUTES[project.id];
                   const equityRatio = attribute?.greentownEquityRatio;
                   return (
                     <article key={project.id} role="listitem">
-                      <div><b>{project.name}</b><span>{project.cityName} · {project.developmentStatus}</span></div>
+                      <div><b>{project.name} <ProjectLiveSiteLink projectId={project.id} /></b><span>{project.cityName} · {project.developmentStatus}</span></div>
                       <span>{attribute?.propertyTypes ?? "—"}</span>
                       <span className="grand-project-number">
                         <b>{equityRatio == null ? "—" : formatNumber(equityRatio, Number.isInteger(equityRatio) ? 0 : 1)}</b>

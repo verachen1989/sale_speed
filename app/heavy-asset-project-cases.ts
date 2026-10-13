@@ -47,6 +47,17 @@ export const ENGINEERING_SITE_PROJECTS = [
     url: YIWU_CHAOMING_HAISHANG_URL,
     locationPrecision: "city",
   },
+  {
+    id: "hangzhou-huilan-yuehua",
+    projectRecordId: "P4006",
+    projectName: "杭州蕙澜月华",
+    cityName: "杭州",
+    cityAdcode: 330100,
+    label: "工程现场",
+    destination: "engineering-site",
+    url: "https://gc.gtcloud.cn/home.html#/project_bigscreen/homeIntelligentMonitorings/homeIntelligentMonitoring_ep?tenantId=5600007&orgId=155989001961536&orgType=PROJECT",
+    locationPrecision: "city",
+  },
 ] as const satisfies readonly EngineeringSiteProject[];
 
 // These cases are attached to the existing city anchors. The source material

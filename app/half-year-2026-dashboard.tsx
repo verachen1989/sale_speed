@@ -1,5 +1,6 @@
 "use client";
 
+import { prioritizeLiveProjects, ProjectLiveSiteLink } from "./project-live-site";
 import {
   createContext,
   lazy,
@@ -31,14 +32,9 @@ import {
   WENSHU_PROJECTS,
   WENSHU_PROJECT_SNAPSHOT_DATE,
 } from "./wenshu-projects-snapshot";
-import {
-  WENSHU_CITY_SALES_6283,
-  WENSHU_CITY_SALES_6283_SNAPSHOT_DATE,
-} from "./wenshu-city-sales-snapshot";
 import { WENSHU_PROJECT_ATTRIBUTES } from "./wenshu-project-attributes";
 import {
   WENSHU_ORGANIZATION_DEVELOPMENT_3002,
-  WENSHU_ORGANIZATION_DEVELOPMENT_SNAPSHOT_DATE,
 } from "./wenshu-organization-development-snapshot";
 import {
   WENSHU_FIRST_LEVEL_ORGANIZATIONS,
@@ -47,7 +43,6 @@ import {
   WENSHU_SNAPSHOT_DATE,
   type WenshuOrganizationSnapshot,
 } from "./wenshu-snapshot";
-import { getMapRegionMetrics } from "./map-region-metrics";
 import styles from "./half-year-2026-dashboard.module.css";
 
 const TechMap = lazy(() => import("./tech-map"));
@@ -219,10 +214,6 @@ function formatNumber(value: number, digits = 2) {
     minimumFractionDigits: 0,
     maximumFractionDigits: digits,
   }).format(value);
-}
-
-function squareMetresToWan(value: number) {
-  return value / 10_000;
 }
 
 function metric(id: string) {
@@ -490,7 +481,6 @@ function SalesTrendChart({
   fallbackMonthlySales,
   fallbackSourceDate,
   fallbackDataset,
-  onRetry,
 }: {
   latestSales: LatestSalesSnapshot | null;
   state: LatestSalesState;
@@ -1265,12 +1255,12 @@ function CityProjectDrilldown({
   const focusedProject = focusedProjectId
     ? projects.find((project) => project.id === focusedProjectId) ?? null
     : null;
-  const displayedProjects = focusedProject ? [focusedProject] : projects;
+  const displayedProjects = focusedProject ? [focusedProject] : prioritizeLiveProjects(projects);
 
   return (
     <section
       className={`fusion-project-drilldown ${styles.projectDrilldown}`}
-      aria-label={focusedProject ? `${focusedProject.name}项目详情` : `${city.name}境内项目清单`}
+      aria-label={focusedProject ? `${focusedProject.name}项目详情` : `${city.name}项目清单`}
       data-half-map-occlusion="true"
       data-source-dataset="6,3001,1016"
       data-source-snapshot={WENSHU_PROJECT_SNAPSHOT_DATE}
@@ -1280,12 +1270,12 @@ function CityProjectDrilldown({
       <header>
         <div>
           <p>全国 <i /> {city.provinceName} <i /> {city.name}{focusedProject ? <><i /> 项目直达</> : null}</p>
-          <h3>{focusedProject?.name ?? `${city.name}境内`}</h3>
+          <h3>{focusedProject?.name ?? city.name}</h3>
           <span>{focusedProject ? "重资产案例 · 项目级穿透" : `共 ${projects.length} 个项目`}</span>
         </div>
         <div className="fusion-project-actions">
           <button type="button" onClick={focusedProject ? onShowCityProjects : onClose}>
-            {focusedProject ? "查看城市全部项目" : "返回城市指标"}
+            {focusedProject ? "查看城市全部项目" : "收起项目列表"}
           </button>
           <button
             type="button"
@@ -1313,7 +1303,7 @@ function CityProjectDrilldown({
               data-project-case-focus={focusedProject ? "true" : undefined}
             >
               <div>
-                <b>{project.name}</b>
+                <b>{project.name} <ProjectLiveSiteLink projectId={project.id} /></b>
                 <span>{project.developmentStatus} · {attribute?.propertyTypes ?? "业态未接入"}</span>
               </div>
               <span className="fusion-project-number">
@@ -1359,28 +1349,18 @@ export default function HalfYear2026Dashboard() {
   const activeOrganization = useMemo(() => (
     OPERATING_ORGANIZATIONS.find((organization) => organization.code === activeOrganizationCode) ?? null
   ), [activeOrganizationCode]);
-  const isAdministrativeMapScope = Boolean(activeProvince || activeCity);
-  const operatingOverviewRequestKey = isAdministrativeMapScope
-    ? `unavailable::${activeCity?.cityAdcode ?? activeProvince?.adcode ?? "map"}`
-    : `fetch::${activeOrganization?.code ?? ROOT_ORGANIZATION.code}`;
+  const operatingOverviewRequestKey = `fetch::${ROOT_ORGANIZATION.code}`;
   const operatingOverview = operatingOverviewResult.requestKey === operatingOverviewRequestKey
     ? operatingOverviewResult.snapshot
     : null;
-  const operatingOverviewState: OperatingOverviewState = isAdministrativeMapScope
-    ? "unavailable"
-    : operatingOverviewResult.requestKey === operatingOverviewRequestKey
+  const operatingOverviewState: OperatingOverviewState = operatingOverviewResult.requestKey === operatingOverviewRequestKey
       ? operatingOverviewResult.state
       : "loading";
-  const isProvinceOnlyScope = Boolean(activeProvince && !activeCity && !activeOrganization);
-  const latestSalesRequestKey = isProvinceOnlyScope
-    ? `unavailable::${activeProvince?.adcode ?? activeProvince?.name ?? "province"}`
-    : `fetch::${activeOrganization?.code ?? ROOT_ORGANIZATION.code}::${activeCity?.name ?? ""}`;
+  const latestSalesRequestKey = `fetch::${ROOT_ORGANIZATION.code}::`;
   const latestSales = latestSalesResult.requestKey === latestSalesRequestKey
     ? latestSalesResult.snapshot
     : null;
-  const salesState: LatestSalesState = isProvinceOnlyScope
-    ? "unavailable"
-    : latestSalesResult.requestKey === latestSalesRequestKey
+  const salesState: LatestSalesState = latestSalesResult.requestKey === latestSalesRequestKey
       ? latestSalesResult.state
       : "loading";
 
@@ -1509,147 +1489,13 @@ export default function HalfYear2026Dashboard() {
   ), [activeOrganization, activeOrganizationCities, activeProvince]);
   const mapScopeName = activeCity?.name ?? activeProvince?.name ?? activeOrganization?.name ?? "集团";
   const isNationalMapScope = !activeOrganization && !activeProvince && !activeCity;
-  const activeOrganizationCityDevelopment = useMemo(() => (
-    activeOrganizationDevelopment && activeCity
-      ? activeOrganizationDevelopment.cities.find((city) => city.name === activeCity.name) ?? null
-      : null
-  ), [activeCity, activeOrganizationDevelopment]);
-  const administrativeRegionMetrics = useMemo(() => (
-    activeProvince && !activeOrganization
-      ? getMapRegionMetrics({
-        provinceAdcode: activeProvince.adcode,
-        cityAdcode: activeCity?.cityAdcode,
-      })
-      : null
-  ), [activeCity, activeOrganization, activeProvince]);
-  const regionFacts = useMemo<readonly RegionFact[]>(() => {
-    if (activeOrganizationCityDevelopment) {
-      return [
-        {
-          label: "土储总建面",
-          value: formatNumber(squareMetresToWan(activeOrganizationCityDevelopment.soilAreaM2)),
-          unit: "万㎡",
-          detail: `${activeOrganizationCityDevelopment.totalProjects} 个项目`,
-        },
-        {
-          label: "在建总建面",
-          value: formatNumber(squareMetresToWan(activeOrganizationCityDevelopment.constructionAreaM2)),
-          unit: "万㎡",
-          detail: `${activeOrganizationCityDevelopment.constructionProjects} 个在建`,
-        },
-        {
-          label: "未开发建面",
-          value: formatNumber(squareMetresToWan(activeOrganizationCityDevelopment.pendingAreaM2)),
-          unit: "万㎡",
-          detail: `纯待开发项目 ${activeOrganizationCityDevelopment.pendingProjects} 个`,
-        },
-        {
-          label: "组织城市项目",
-          value: activeOrganizationCityDevelopment.totalProjects,
-          unit: "个",
-          detail: `${activeOrganization?.name ?? "经营组织"}·城市口径`,
-        },
-      ];
-    }
-    if (activeOrganization && activeOrganizationDevelopment) {
-      return [
-        {
-          label: "土储总建面",
-          value: formatNumber(squareMetresToWan(activeOrganizationDevelopment.soilAreaM2)),
-          unit: "万㎡",
-          detail: `${activeOrganizationDevelopment.totalProjects} 个项目`,
-        },
-        {
-          label: "在建总建面",
-          value: formatNumber(squareMetresToWan(activeOrganizationDevelopment.constructionAreaM2)),
-          unit: "万㎡",
-          detail: `${activeOrganizationDevelopment.constructionProjects} 个在建`,
-        },
-        {
-          label: "未开发建面",
-          value: formatNumber(squareMetresToWan(activeOrganizationDevelopment.pendingAreaM2)),
-          unit: "万㎡",
-          detail: `纯待开发项目 ${activeOrganizationDevelopment.pendingProjects} 个`,
-        },
-        {
-          label: "覆盖城市",
-          value: activeOrganizationDevelopment.cities.length,
-          unit: "城",
-          detail: "点击城市可查看组织城市口径",
-        },
-      ];
-    }
-    if (administrativeRegionMetrics) {
-      return [
-        {
-          label: "项目总建面",
-          value: formatNumber(administrativeRegionMetrics.projectBuildingAreaWan),
-          unit: "万㎡",
-          detail: `${administrativeRegionMetrics.projectCount} 个境内项目`,
-        },
-        {
-          label: "在建及待开发建面",
-          value: formatNumber(administrativeRegionMetrics.activeDevelopmentBuildingAreaWan),
-          unit: "万㎡",
-          detail: `${administrativeRegionMetrics.activeDevelopmentProjectCount} 个项目`,
-        },
-        { label: "境内项目", value: administrativeRegionMetrics.projectCount, unit: "个", detail: "地图项目快照" },
-        { label: "覆盖城市", value: administrativeRegionMetrics.cityCount, unit: "城", detail: "行政区口径" },
-      ];
-    }
-    return [
-      {
-        label: "集团经营项目",
-        value: ROOT_ORGANIZATION.totalProjects,
-        unit: "个",
-        detail: "滚动经营项目台账",
-      },
-      {
-        label: "在建项目",
-        value: ROOT_ORGANIZATION.constructionProjects,
-        unit: "个",
-        detail: `在建总建面 ${formatNumber(ROOT_ORGANIZATION.constructionArea)} 万㎡`,
-      },
-      {
-        label: "纯待开发项目",
-        value: ROOT_ORGANIZATION.pendingProjects,
-        unit: "个",
-        detail: `未开发建面 ${formatNumber(ROOT_ORGANIZATION.pendingArea)} 万㎡`,
-      },
-      {
-        label: "经营项目土储总建面",
-        value: formatNumber(ROOT_ORGANIZATION.soilArea),
-        unit: "万㎡",
-        detail: "与中期披露总建面分口径展示",
-      },
-    ];
-  }, [activeOrganization, activeOrganizationCityDevelopment, activeOrganizationDevelopment, administrativeRegionMetrics]);
-  const regionSourceDate = activeOrganization
-    ? WENSHU_ORGANIZATION_DEVELOPMENT_SNAPSHOT_DATE
-    : administrativeRegionMetrics
-      ? WENSHU_PROJECT_SNAPSHOT_DATE
-      : WENSHU_SNAPSHOT_DATE;
-  const regionSourceDataset = activeOrganization || !administrativeRegionMetrics ? "3002" : "6,3001";
-  const salesScopeName = activeCity?.name ?? activeOrganization?.name ?? activeProvince?.name ?? "集团";
-  const activeCitySalesFallback = activeCity ? WENSHU_CITY_SALES_6283[activeCity.name] ?? null : null;
-  const scopedOrganizationSalesFallback = activeOrganization ?? (isAdministrativeMapScope ? null : ROOT_ORGANIZATION);
-  const rollingSalesFallback = administrativeRegionMetrics?.contractSalesYi
-    ?? activeCitySalesFallback?.contractSalesYi
-    ?? scopedOrganizationSalesFallback?.sales
-    ?? null;
-  const rollingMonthlySalesFallback = activeCitySalesFallback?.monthlyContractSalesYi
-    ?? scopedOrganizationSalesFallback?.monthlySales
-    ?? [];
-  const rollingSalesFallbackDate = activeCitySalesFallback
-    ? WENSHU_CITY_SALES_6283_SNAPSHOT_DATE
-    : scopedOrganizationSalesFallback
-      ? WENSHU_SNAPSHOT_DATE
-      : null;
-  const rollingSalesFallbackDataset = activeCitySalesFallback
-    ? "6283" as const
-    : scopedOrganizationSalesFallback
-      ? "6286" as const
-      : null;
+  const regionSourceDate = WENSHU_SNAPSHOT_DATE;
+  const regionSourceDataset = "3002";
+  const salesScopeName = "集团";
+  const rollingSalesFallback = ROOT_ORGANIZATION.sales;
+  const rollingMonthlySalesFallback = ROOT_ORGANIZATION.monthlySales;
+  const rollingSalesFallbackDate = WENSHU_SNAPSHOT_DATE;
+  const rollingSalesFallbackDataset = "6286" as const;
   const cityProjects = useMemo(() => (
     activeCity
       ? WENSHU_PROJECTS
@@ -1684,17 +1530,10 @@ export default function HalfYear2026Dashboard() {
   };
 
   const handleCitySelect = (city: CitySelection) => {
-    const isCurrentCity = activeCity?.cityAdcode === city.cityAdcode;
-    const belongsToActiveOrganization = activeOrganizationCityAdcodes.includes(city.cityAdcode);
     setFocusedProjectId(null);
-    if (isCurrentCity) {
-      setIsProjectListOpen(true);
-      return;
-    }
-    setIsProjectListOpen(false);
-    if (!belongsToActiveOrganization) setActiveOrganizationCode(null);
     setActiveProvince({ adcode: city.provinceAdcode, name: city.provinceName });
     setActiveCity(city);
+    setIsProjectListOpen(true);
   };
 
   const handleProjectCaseSelect = (projectCase: HeavyAssetProjectCase) => {
@@ -1779,8 +1618,8 @@ export default function HalfYear2026Dashboard() {
               viewOffsetX={0}
               labelOcclusionSelector='[data-half-map-occlusion="true"], .fusion-module-rail'
               viewportOcclusionSelector='.fusion-module-rail'
-              interactionMode="metrics"
-              selectedCityActionLabel="再次点击查看项目清单"
+              interactionMode="drilldown"
+              selectedCityActionLabel="点击查看项目清单"
               onProjectCaseSelect={handleProjectCaseSelect}
               onProvinceSelect={handleProvinceSelect}
               onCitySelect={handleCitySelect}
@@ -1826,11 +1665,11 @@ export default function HalfYear2026Dashboard() {
           <InvestmentPanel
             operatingOverview={operatingOverview}
             state={operatingOverviewState}
-            scopeName={mapScopeName}
-            facts={isAdministrativeMapScope ? regionFacts : operatingOverviewFallbackFacts}
+            scopeName="集团"
+            facts={operatingOverviewFallbackFacts}
             sourceDataset={regionSourceDataset}
             sourceDate={regionSourceDate}
-            showGroupRank={isNationalMapScope}
+            showGroupRank={true}
             onRetry={() => {
               setOperatingOverviewResult({ requestKey: operatingOverviewRequestKey, snapshot: null, state: "loading" });
               setOperatingOverviewRetryToken((token) => token + 1);
@@ -1846,7 +1685,7 @@ export default function HalfYear2026Dashboard() {
             rollingMonthlySalesFallback={rollingMonthlySalesFallback}
             rollingSalesFallbackDate={rollingSalesFallbackDate}
             rollingSalesFallbackDataset={rollingSalesFallbackDataset}
-            showGroupRank={isNationalMapScope}
+            showGroupRank={true}
             onRetrySales={() => {
               setLatestSalesResult({ requestKey: latestSalesRequestKey, snapshot: null, state: "loading" });
               setLatestSalesRetryToken((token) => token + 1);
