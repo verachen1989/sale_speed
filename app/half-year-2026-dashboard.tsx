@@ -1283,57 +1283,26 @@ function RegionControl({
 }
 
 // 经营指挥 · 2026 年 10 月版，集团 1–10 月累计综合红榜。
-const RED_RANKING = {
-  absolute: [
-    ["杭州枫丹玫瑰园", "9.5亿"],
-    ["上海悦海棠", "9.2亿"],
-    ["义乌潮鸣海上", "5.3亿"],
-    ["慈溪凤起潮鸣", "4.5亿"],
-    ["杭州知海棠", "3.9亿"],
-  ],
-  rate: [
-    ["义乌潮鸣海上", "395.9%"],
-    ["大连桂语朝阳", "248.6%"],
-    ["杭州星映金沙", "226.7%"],
-    ["杭州枫丹玫瑰园", "223.9%"],
-    ["上海悦海棠", "156.7%"],
-  ],
-} as const;
+const RED_RANKING = [
+  { id: "P4098", name: "杭州枫丹玫瑰园" },
+  { id: "P4102", name: "上海悦海棠" },
+  { id: "P4097", name: "义乌潮鸣海上" },
+] as const;
 
 function RedRankingPanel({ onProjectSelect }: { onProjectSelect: (projectId: string) => void }) {
-  const [mode, setMode] = useState<keyof typeof RED_RANKING>("absolute");
   return (
-    <section className={styles.redRanking} aria-label="红榜项目" data-half-map-occlusion="true">
-      <header>
-        <strong>红榜项目</strong>
-        <a href="https://om.gtcloud.cn/#/region/ranking/redBlack" target="_blank" rel="noopener noreferrer">
-          2026年10月版 · 1–10月累计综合
-        </a>
-        <div role="group" aria-label="排名口径">
-          <button type="button" aria-pressed={mode === "absolute"} onClick={() => setMode("absolute")}>超额达成</button>
-          <button type="button" aria-pressed={mode === "rate"} onClick={() => setMode("rate")}>完成率</button>
-        </div>
-      </header>
-      <ol aria-live="polite">
-        {RED_RANKING[mode].map(([name, value], index) => {
-          const project = WENSHU_PROJECTS.find((item) => item.name.split("（")[0] === name);
-          const cover = project && projectGalleryImages(project.id)[0];
-          return (
-            <li key={name}>
-              <button type="button" disabled={!project} onClick={() => project && onProjectSelect(project.id)}>
-                <b>TOP{index + 1}</b>
-                <span title={name}>{name}</span>
-                <strong>{mode === "absolute" ? "超额 " : ""}{value}</strong>
-              </button>
-              {cover ? (
-                <div className={styles.redRankingPreview} aria-hidden="true">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cover} alt="" loading="lazy" />
-                </div>
-              ) : null}
-            </li>
-          );
-        })}
+    <section className={styles.redRanking} aria-label="项目精选" data-half-map-occlusion="true">
+      <header><strong>项目精选</strong></header>
+      <ol>
+        {RED_RANKING.map(({ id, name }) => (
+          <li key={id}>
+            <button type="button" onClick={() => onProjectSelect(id)}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={projectGalleryImages(id)[0]} alt="" loading="lazy" />
+              <span title={name}>{name}</span>
+            </button>
+          </li>
+        ))}
       </ol>
     </section>
   );

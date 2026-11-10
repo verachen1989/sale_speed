@@ -5347,35 +5347,28 @@ button.tourCover { cursor: zoom-in; }
   background: #0a223c;
   color: #e3f3ff;
 }
-.redRanking header { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
-.redRanking header a { color: #a5c5df; font-size: 11px; }
-.redRanking header div { display: flex; gap: 4px; margin-inline-start: auto; }
-.redRanking button { padding: 3px 7px; border: 1px solid #426484; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; }
-.redRanking button[aria-pressed="true"] { background: #87352f; border-color: #b45c50; }
-.redRanking ol { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 5px; padding: 0; margin: 7px 0 0; list-style: none; }
-.redRanking li { position: relative; min-width: 0; }
-.redRanking li button { display: grid; gap: 3px; width: 100%; height: 100%; min-width: 0; padding: 5px; border-color: transparent; background: #142e49; text-align: left; font-size: 12px; }
-.redRanking li button:hover:not(:disabled) { border-color: #6592b7; }
-.redRanking li button:disabled { cursor: default; }
 .redRankingCoverage { color: #a5c5df; font-size: 11px; }
-.redRanking li b, .redRanking li strong { color: #ffab99; }
-.redRanking li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.redRanking header button { font-size: 12px; }
-
-.redRankingPreview {
-  position: absolute;
-  inset-block-end: calc(100% + 8px);
-  inset-inline-start: 50%;
-  transform: translateX(-50%);
-  width: min(120px, 100%);
-  padding: 3px;
-  border: 1px solid #426484;
-  border-radius: 8px;
-  background: #0a223c;
-  box-shadow: 0 8px 24px #041222aa;
-  visibility: hidden;
-  pointer-events: none;
+.redRanking ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 7px 0 0;
+  padding: 0;
+  list-style: none;
 }
-.redRanking li:hover .redRankingPreview,
-.redRanking li:has(:focus-visible) .redRankingPreview { visibility: visible; }
-.redRankingPreview img { display: block; width: 100%; height: 68px; object-fit: cover; border-radius: 4px; }
+.redRanking li { min-width: 0; }
+.redRanking li button {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #426484;
+  border-radius: 5px;
+  background: #142e49;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.redRanking li img { display: block; width: 100%; height: clamp(58px, 9vh, 100px); object-fit: cover; }
+.redRanking li span { display: block; padding: 4px 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
