@@ -1238,6 +1238,9 @@ function RegionControl({
           )}
         </div>
         <div className={styles.regionPanelActions}>
+          {scopeName === "集团" ? (
+          <span className={styles.redRankingCoverage}>全国覆盖 {WENSHU_COVERED_CITY_COUNT} 城 · {WENSHU_DOMESTIC_PROJECT_COUNT} 个项目</span>
+          ) : null}
           {projectCount !== null ? (
             <button
               type="button"
@@ -1279,22 +1282,60 @@ function RegionControl({
   );
 }
 
-function NationalMapLegend() {
+// 经营指挥 · 2026 年 10 月版，集团 1–10 月累计综合红榜。
+const RED_RANKING = {
+  absolute: [
+    ["杭州枫丹玫瑰园", "9.5亿"],
+    ["上海悦海棠", "9.2亿"],
+    ["义乌潮鸣海上", "5.3亿"],
+    ["慈溪凤起潮鸣", "4.5亿"],
+    ["杭州知海棠", "3.9亿"],
+  ],
+  rate: [
+    ["义乌潮鸣海上", "395.9%"],
+    ["大连桂语朝阳", "248.6%"],
+    ["杭州星映金沙", "226.7%"],
+    ["杭州枫丹玫瑰园", "223.9%"],
+    ["上海悦海棠", "156.7%"],
+  ],
+} as const;
+
+function RedRankingPanel({ onProjectSelect }: { onProjectSelect: (projectId: string) => void }) {
+  const [mode, setMode] = useState<keyof typeof RED_RANKING>("absolute");
   return (
-    <aside
-      className={styles.mapCoverageLegend}
-      aria-label={`全国项目覆盖图例：覆盖${WENSHU_COVERED_CITY_COUNT}个城市，共${WENSHU_DOMESTIC_PROJECT_COUNT}个境内项目`}
-      data-half-map-occlusion="true"
-      data-map-coverage-legend="true"
-      data-source-dataset="6,3001"
-      data-source-snapshot={WENSHU_PROJECT_SNAPSHOT_DATE}
-    >
-      <span><i />全国项目覆盖</span>
-      <dl>
-        <div><dt>城市</dt><dd><strong>{WENSHU_COVERED_CITY_COUNT}</strong><em>城</em></dd></div>
-        <div><dt>项目</dt><dd><strong>{WENSHU_DOMESTIC_PROJECT_COUNT}</strong><em>个</em></dd></div>
-      </dl>
-    </aside>
+    <section className={styles.redRanking} aria-label="红榜项目" data-half-map-occlusion="true">
+      <header>
+        <strong>红榜项目</strong>
+        <a href="https://om.gtcloud.cn/#/region/ranking/redBlack" target="_blank" rel="noopener noreferrer">
+          2026年10月版 · 1–10月累计综合
+        </a>
+        <div role="group" aria-label="排名口径">
+          <button type="button" aria-pressed={mode === "absolute"} onClick={() => setMode("absolute")}>超额达成</button>
+          <button type="button" aria-pressed={mode === "rate"} onClick={() => setMode("rate")}>完成率</button>
+        </div>
+      </header>
+      <ol aria-live="polite">
+        {RED_RANKING[mode].map(([name, value], index) => {
+          const project = WENSHU_PROJECTS.find((item) => item.name.split("（")[0] === name);
+          const cover = project && projectGalleryImages(project.id)[0];
+          return (
+            <li key={name}>
+              <button type="button" disabled={!project} onClick={() => project && onProjectSelect(project.id)}>
+                <b>TOP{index + 1}</b>
+                <span title={name}>{name}</span>
+                <strong>{mode === "absolute" ? "超额 " : ""}{value}</strong>
+              </button>
+              {cover ? (
+                <div className={styles.redRankingPreview} aria-hidden="true">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={cover} alt="" loading="lazy" />
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }
 
@@ -1306,24 +1347,28 @@ const PROJECT_GALLERY_IMAGES = import.meta.glob<string>("./project-covers/*/*.{j
   eager: true, query: "?url", import: "default",
 });
 
+function projectGalleryImages(projectId: string) {
+  const cover = ["jpg", "jpeg", "png", "webp"]
+    .map((extension) => PROJECT_COVERS[`./project-covers/${projectId}.${extension}`])
+    .find(Boolean);
+  const more = Object.keys(PROJECT_GALLERY_IMAGES)
+    .filter((path) => path.startsWith(`./project-covers/${projectId}/`))
+    .sort()
+    .map((path) => PROJECT_GALLERY_IMAGES[path]);
+  return cover ? [cover, ...more] : more;
+}
+
 function ProjectTourCover({ projectId, name, onPreview }: {
   projectId: string;
   name: string;
-  onPreview: (images: string[], name: string) => void;
+  onPreview: (images: string[], name: string, projectId: string) => void;
 }) {
   const [failed, setFailed] = useState(false);
-  const src = ["jpg", "jpeg", "png", "webp"]
-    .map((extension) => PROJECT_COVERS[`./project-covers/${projectId}.${extension}`])
-    .find(Boolean);
+  const images = projectGalleryImages(projectId);
+  const src = images[0];
   return src && !failed ? (
     <button className={styles.tourCover} type="button" aria-label={`打开${name}画册`}
-      onClick={() => {
-        const more = Object.keys(PROJECT_GALLERY_IMAGES)
-          .filter((path) => path.startsWith(`./project-covers/${projectId}/`))
-          .sort()
-          .map((path) => PROJECT_GALLERY_IMAGES[path]);
-        onPreview([src, ...more], name);
-      }}>
+      onClick={() => onPreview(images, name, projectId)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={name} loading="lazy" decoding="async" onError={() => setFailed(true)} />
     </button>
@@ -1335,16 +1380,21 @@ function CityProjectDrilldown({
   projects,
   focusedProjectId,
   onShowCityProjects,
+  openAlbumDirectly,
   onClose,
 }: {
   city: CitySelection;
   projects: readonly (typeof WENSHU_PROJECTS)[number][];
   focusedProjectId: string | null;
   onShowCityProjects: () => void;
+  openAlbumDirectly: boolean;
   onClose: () => void;
 }) {
   const tourRef = useRef<HTMLElement>(null);
-  const [preview, setPreview] = useState<{ images: string[]; name: string } | null>(null);
+  const [preview, setPreview] = useState<{ images: string[]; name: string; projectId: string } | null>(() => {
+    const project = openAlbumDirectly && projects.find((item) => item.id === focusedProjectId);
+    return project ? { images: projectGalleryImages(project.id), name: project.name, projectId: project.id } : null;
+  });
   const [photoIndex, setPhotoIndex] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
   const gridScroll = useRef(0);
@@ -1361,9 +1411,9 @@ function CityProjectDrilldown({
     const handleEscape = (event: KeyboardEvent) => {
       if (event.defaultPrevented) return;
       if (event.key === "Escape") {
-        if (preview) setPreview(null);
+        if (preview && !openAlbumDirectly) setPreview(null);
         else onClose();
-      } else if (preview && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+      } else if (preview && preview.images.length > 1 && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
         const direction = event.key === "ArrowLeft" ? -1 : 1;
         event.preventDefault();
         setPhotoIndex((index) => Math.max(0, Math.min(preview.images.length - 1, index + direction)));
@@ -1371,15 +1421,15 @@ function CityProjectDrilldown({
     };
     doc.addEventListener("keydown", handleEscape);
     return () => doc.removeEventListener("keydown", handleEscape);
-  }, [onClose, preview]);
+  }, [onClose, openAlbumDirectly, preview]);
   useEffect(() => {
     if (!preview && gridRef.current) gridRef.current.scrollTop = gridScroll.current;
   }, [preview]);
 
-  const openPreview = (images: string[], name: string) => {
+  const openPreview = (images: string[], name: string, projectId: string) => {
     gridScroll.current = gridRef.current?.scrollTop ?? 0;
     setPhotoIndex(0);
-    setPreview({ images, name });
+    setPreview({ images, name, projectId });
   };
 
   const resetProjectScroll = () => {
@@ -1418,6 +1468,7 @@ function CityProjectDrilldown({
         <div>
           <p>全国 <i /> {city.provinceName} <i /> {city.name}{focusedProject ? <><i /> 项目直达</> : null}</p>
           <h3>{preview ? `${preview.name} · 项目画册` : focusedProject?.name ?? `${city.name} · 项目巡礼`}</h3>
+          {preview ? <ProjectLiveSiteLink key={preview.projectId} projectId={preview.projectId} /> : null}
           {!preview && !focusedProject ? <span>共 {projects.length + additionalMedia.length} 个项目 · 工程现场接入 {liveSiteCount} 个</span> : null}
         </div>
         <div className="fusion-project-actions">
@@ -1430,8 +1481,8 @@ function CityProjectDrilldown({
               现场/全景项目
             </label>
           ) : null}
-          <button type="button" onClick={preview ? () => setPreview(null) : focusedProject ? onShowCityProjects : onClose}>
-            {preview ? "返回项目墙" : focusedProject ? "查看城市全部项目" : "收起项目列表"}
+          <button type="button" onClick={preview && !openAlbumDirectly ? () => setPreview(null) : focusedProject ? onShowCityProjects : onClose}>
+            {preview && !openAlbumDirectly ? "返回项目墙" : focusedProject ? "查看城市全部项目" : "收起项目列表"}
           </button>
           <button
             type="button"
@@ -1447,12 +1498,12 @@ function CityProjectDrilldown({
         <figure className={styles.tourPreview}>
           <div className={styles.tourPreviewFrame}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview.images[photoIndex]} alt={`${preview.name} · 第 ${photoIndex + 1} 张`} />
+            {preview.images.length ? <img src={preview.images[photoIndex]} alt={`${preview.name} · 第 ${photoIndex + 1} 张`} /> : <p className={styles.tourEmpty}>暂无项目照片</p>}
           </div>
           <figcaption>
             {preview.name}
-            <a href={preview.images[photoIndex]} target="_blank" rel="noopener noreferrer"
-              aria-label="查看原图（在新标签页打开）">查看原图</a>
+            {preview.images.length ? <a href={preview.images[photoIndex]} target="_blank" rel="noopener noreferrer"
+              aria-label="查看原图（在新标签页打开）">查看原图</a> : null}
           </figcaption>
           {preview.images.length > 1 ? (
             <div className={styles.tourGalleryControls}>
@@ -1526,6 +1577,7 @@ export default function HalfYear2026Dashboard() {
   const [activeCity, setActiveCity] = useState<CitySelection | null>(null);
   const [activeOrganizationCode, setActiveOrganizationCode] = useState<string | null>(null);
   const [isProjectListOpen, setIsProjectListOpen] = useState(false);
+  const [openedFromRedRanking, setOpenedFromRedRanking] = useState(false);
   const [focusedProjectId, setFocusedProjectId] = useState<string | null>(null);
   const [latestSalesRetryToken, setLatestSalesRetryToken] = useState(0);
   const [operatingOverviewRetryToken, setOperatingOverviewRetryToken] = useState(0);
@@ -1714,8 +1766,8 @@ export default function HalfYear2026Dashboard() {
     setIsProjectListOpen(true);
   };
 
-  const handleProjectCaseSelect = (projectCase: HeavyAssetProjectCase) => {
-    const project = WENSHU_PROJECTS.find((item) => item.id === projectCase.projectRecordId);
+  const openProjectDetails = (projectId: string) => {
+    const project = WENSHU_PROJECTS.find((item) => item.id === projectId);
     if (!project) return;
     const citySummary = CITY_SUMMARY_BY_NAME.get(project.cityName);
     setActiveOrganizationCode(null);
@@ -1727,7 +1779,7 @@ export default function HalfYear2026Dashboard() {
       name: project.cityName,
       count: citySummary?.count ?? 1,
     });
-    setFocusedProjectId(projectCase.projectRecordId);
+    setFocusedProjectId(projectId);
     setIsProjectListOpen(true);
   };
 
@@ -1740,6 +1792,7 @@ export default function HalfYear2026Dashboard() {
   };
 
   const resetMapScope = () => {
+    setOpenedFromRedRanking(false);
     setFocusedProjectId(null);
     setIsProjectListOpen(false);
     setActiveOrganizationCode(null);
@@ -1796,14 +1849,19 @@ export default function HalfYear2026Dashboard() {
               viewportOcclusionSelector='.fusion-module-rail'
               interactionMode="drilldown"
               selectedCityActionLabel="点击查看项目清单"
-              onProjectCaseSelect={handleProjectCaseSelect}
+              onProjectCaseSelect={(projectCase) => openProjectDetails(projectCase.projectRecordId)}
               onProvinceSelect={handleProvinceSelect}
               onCitySelect={handleCitySelect}
             />
           </Suspense>
         </div>
 
-        {isNationalMapScope ? <NationalMapLegend /> : null}
+        {isNationalMapScope || openedFromRedRanking ? (
+          <RedRankingPanel onProjectSelect={(projectId) => {
+            setOpenedFromRedRanking(true);
+            openProjectDetails(projectId);
+          }} />
+        ) : null}
 
         <RegionControl
           activeOrganization={activeOrganization}
@@ -1827,8 +1885,13 @@ export default function HalfYear2026Dashboard() {
             city={activeCity}
             projects={cityProjects}
             focusedProjectId={focusedProjectId}
+            openAlbumDirectly={openedFromRedRanking && focusedProjectId !== null}
             onShowCityProjects={() => setFocusedProjectId(null)}
             onClose={() => {
+              if (openedFromRedRanking) {
+                resetMapScope();
+                return;
+              }
               setFocusedProjectId(null);
               setIsProjectListOpen(false);
             }}
