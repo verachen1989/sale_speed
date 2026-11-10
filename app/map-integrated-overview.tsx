@@ -806,7 +806,8 @@ export default function MapIntegratedOverview({
                 return (
                   <article key={project.id} role="listitem">
                     <div>
-                      <b>{project.name} <ProjectLiveSiteLink projectId={project.id} /></b>
+                      <b>{project.name}</b>
+                <ProjectLiveSiteLink projectId={project.id} />
                       <span>{project.cityName} · {project.developmentStatus} · {attribute?.propertyTypes ?? "业态未接入"} · 权益 {equityRatio == null ? "—" : `${formatNumber(equityRatio, Number.isInteger(equityRatio) ? 0 : 1)}%`}</span>
                     </div>
                     <span className="fusion-project-number">

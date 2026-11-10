@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties } from "react";
 import * as THREE from "three";
+import { exteriorPaths } from "./map-exterior.mjs";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
@@ -629,6 +630,7 @@ export default function TechMap({
     mapRoot.scale.setScalar(reducedMotion ? 1.03 : .92);
     scene.add(mapRoot);
 
+    const borderFlowTime = { value: 0 };
     const glowTexture = createGlowTexture();
     const pulseRings: Array<{ mesh: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>; phase: number }> = [];
     const travellingLights: Array<{ sprite: THREE.Sprite; curve: THREE.QuadraticBezierCurve3; phase: number; speed: number }> = [];
@@ -972,6 +974,46 @@ export default function TechMap({
             selected: false,
           });
         });
+
+        // National exterior only: shared province edges must never carry the flow.
+        if (!isOutline && !isLightTheme) {
+          const paths = exteriorPaths(allPolygons) as Position[][];
+          paths.forEach((path) => {
+            const curve = new THREE.CurvePath<THREE.Vector3>();
+            for (let i = 0; i < path.length - 1; i++) {
+              const a = projectPosition(path[i]);
+              const b = projectPosition(path[i + 1]);
+              curve.add(new THREE.LineCurve3(
+                new THREE.Vector3(a.x, a.y, MAP_DEPTH + .055),
+                new THREE.Vector3(b.x, b.y, MAP_DEPTH + .055),
+              ));
+            }
+            const length = curve.getLength();
+            if (length < 6) return;
+            for (const halo of [true, false]) {
+              const geometry = new THREE.TubeGeometry(curve, Math.min(1800, Math.max(48, Math.ceil(length * 12))), halo ? .13 : .036, 5, false);
+              const material = new THREE.ShaderMaterial({
+                uniforms: { flowTime: borderFlowTime, still: { value: reducedMotion ? 1 : 0 }, halo: { value: halo ? 1 : 0 } },
+                vertexShader: `varying vec2 vUv;
+                  void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+                fragmentShader: `uniform float flowTime; uniform float still; uniform float halo; varying vec2 vUv;
+                  void main() {
+                    float phase = fract(vUv.x * 3.0 - flowTime * .12);
+                    float trail = pow(1.0 - phase, 9.0) * (1.0 - still);
+                    float brightness = .16 + trail * .84;
+                    vec3 color = mix(vec3(.05, .55, 1.0), vec3(.7, 1.0, 1.0), trail);
+                    gl_FragColor = vec4(color * (1.0 + trail), brightness * mix(.95, .24, halo));
+                  }`,
+                transparent: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending,
+              });
+              const flow = new THREE.Mesh(geometry, material);
+              flow.raycast = () => {};
+              mapRoot.add(flow);
+            }
+          });
+        }
 
         // Interior sparkle points are decorative and expensive to sample against
         // every polygon. Build them after the map and city anchors have already
@@ -1503,6 +1545,7 @@ export default function TechMap({
       if (disposed || !sceneVisible) return;
       if (!isOutline || !introFinished) animationFrame = requestAnimationFrame(animate);
       const elapsed = Math.max(0, (now - introStart) / 1000);
+      borderFlowTime.value = reducedMotion ? 0 : elapsed;
 
       if (!introFinished) {
         const progress = Math.min(1, (now - introStart) / 1100);
@@ -1619,7 +1662,7 @@ export default function TechMap({
       renderer.forceContextLoss();
       mount.replaceChildren();
     };
-  }, [engineeringSites, interactionMode, isLightTheme, isOutline, labelOcclusionSelector, palette, projectCases, selectedCityActionLabel, viewportOcclusionSelector, viewOffsetX, visualTheme]);
+  }, [engineeringSites, interactionMode, isLightTheme, isOutline, labelOcclusionSelector, palette, projectCases, selectedCityActionLabel, sideEmissiveIntensity, viewportOcclusionSelector, viewOffsetX, visualTheme]);
 
   return (
     <div

@@ -1,17 +1,22 @@
+/// <reference types="vite/client" />
 "use client";
 
-import { prioritizeLiveProjects, ProjectLiveSiteLink } from "./project-live-site";
+import { hasProjectLiveSite, hasProjectMedia, prioritizeLiveProjects, ProjectLiveSiteLink, unmatchedCityMedia } from "./project-live-site";
 import {
   createContext,
   lazy,
   Suspense,
   useContext,
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
+import { mountPanelMagnifier } from "./panel-magnifier";
 import type { CitySelection, ProvinceSelection } from "./tech-map";
 import {
   buildSalesTrendBars,
@@ -32,7 +37,6 @@ import {
   WENSHU_PROJECTS,
   WENSHU_PROJECT_SNAPSHOT_DATE,
 } from "./wenshu-projects-snapshot";
-import { WENSHU_PROJECT_ATTRIBUTES } from "./wenshu-project-attributes";
 import {
   WENSHU_ORGANIZATION_DEVELOPMENT_3002,
 } from "./wenshu-organization-development-snapshot";
@@ -289,12 +293,65 @@ function Panel({
   const coverItems = useContext(PanelCoverContext);
   const flipEnabled = visualTheme === "light" && coverItems.length > 0;
   const [isFlipped, setIsFlipped] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleRef = useRef<HTMLButtonElement | null>(null);
+  const magnifierRef = useRef<HTMLDivElement>(null);
+  const cleanupMagnifier = useRef<(() => void) | undefined>(undefined);
+  useEffect(() => () => cleanupMagnifier.current?.(), []);
+  const [focusHost, setFocusHost] = useState<HTMLElement | null>(null);
+  const bindTitle = useCallback((element: HTMLButtonElement | null) => {
+    titleRef.current = element;
+    if (element) setFocusHost(element.ownerDocument.body);
+  }, []);
+  const openFocus = () => {
+    const source = titleRef.current?.closest<HTMLElement>("section[data-panel-index]");
+    if (!source || !magnifierRef.current || !dialogRef.current) return;
+    cleanupMagnifier.current?.();
+    cleanupMagnifier.current = mountPanelMagnifier(source, magnifierRef.current);
+    source.ownerDocument.querySelectorAll<HTMLDialogElement>('dialog[data-magnifier-dialog][open]').forEach((other) => {
+      if (other !== dialogRef.current) other.close();
+    });
+    if (!dialogRef.current.open) dialogRef.current.show();
+    dialogRef.current.querySelector("button")?.focus();
+  };
+  const closeFocus = () => dialogRef.current?.close();
+  useEffect(() => {
+    if (!focusHost) return;
+    const doc = focusHost.ownerDocument;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && dialogRef.current?.open) dialogRef.current.close();
+    };
+    const onOutside = (event: PointerEvent) => {
+      const dialog = dialogRef.current;
+      if (dialog?.open && !event.composedPath().includes(dialog)) dialog.close();
+    };
+    doc.addEventListener("keydown", onKey);
+    doc.addEventListener("pointerdown", onOutside);
+    return () => {
+      doc.removeEventListener("keydown", onKey);
+      doc.removeEventListener("pointerdown", onOutside);
+    };
+  }, [focusHost]);
+  const titleButton = <button ref={bindTitle} type="button" className={styles.focusTitleButton}
+    onClick={openFocus} aria-haspopup="dialog" aria-label={`展开${title}`}>{title}</button>;
+  const focusDialog = (
+    <dialog ref={dialogRef} data-magnifier-dialog className={styles.focusDialog} aria-label={`${title}放大视图`}
+      onClose={() => {
+        cleanupMagnifier.current?.();
+        cleanupMagnifier.current = undefined;
+        titleRef.current?.focus();
+      }}>
+      <button className={styles.focusTitleToggle} type="button" onClick={closeFocus} aria-label={`收起${title}`} />
+      <button className={styles.focusCloseButton} type="button" onClick={closeFocus} aria-label={`关闭${title}`}>×</button>
+      <div ref={magnifierRef} className={styles.focusMagnifierViewport} />
+    </dialog>
+  );
 
   const renderHeader = (face: "front" | "back") => (
     <header className={styles.panelHeader}>
       <div className={styles.panelTitle}>
         <span>{index}</span>
-        <h2 id={(face === "front") !== isFlipped ? `half-year-panel-${index}` : undefined}>{title}</h2>
+        <h2 id={(face === "front") !== isFlipped ? `half-year-panel-${index}` : undefined}>{titleButton}</h2>
       </div>
       {face === "back" ? (
         <button
@@ -326,6 +383,7 @@ function Panel({
         data-flipped={isFlipped ? "true" : "false"}
         style={style}
       >
+        {focusHost ? createPortal(focusDialog, focusHost) : null}
         <div className={styles.flipStage}>
           <div className={`${styles.flipFace} ${styles.flipFront}`} aria-hidden={isFlipped}>
             {renderHeader("front")}
@@ -375,10 +433,11 @@ function Panel({
       data-layout-role={layoutRole}
       style={style}
     >
+      {focusHost ? createPortal(focusDialog, focusHost) : null}
       <header className={styles.panelHeader}>
         <div className={styles.panelTitle}>
           <span>{index}</span>
-          <h2 id={`half-year-panel-${index}`}>{title}</h2>
+          <h2 id={`half-year-panel-${index}`}>{titleButton}</h2>
         </div>
       </header>
       <div className={styles.panelBody}>{children}</div>
@@ -1239,6 +1298,38 @@ function NationalMapLegend() {
   );
 }
 
+const PROJECT_COVERS = import.meta.glob<string>("./project-covers/*.{jpg,jpeg,png,webp}", {
+  eager: true, query: "?url", import: "default",
+});
+
+const PROJECT_GALLERY_IMAGES = import.meta.glob<string>("./project-covers/*/*.{jpg,jpeg,png,webp}", {
+  eager: true, query: "?url", import: "default",
+});
+
+function ProjectTourCover({ projectId, name, onPreview }: {
+  projectId: string;
+  name: string;
+  onPreview: (images: string[], name: string) => void;
+}) {
+  const [failed, setFailed] = useState(false);
+  const src = ["jpg", "jpeg", "png", "webp"]
+    .map((extension) => PROJECT_COVERS[`./project-covers/${projectId}.${extension}`])
+    .find(Boolean);
+  return src && !failed ? (
+    <button className={styles.tourCover} type="button" aria-label={`打开${name}画册`}
+      onClick={() => {
+        const more = Object.keys(PROJECT_GALLERY_IMAGES)
+          .filter((path) => path.startsWith(`./project-covers/${projectId}/`))
+          .sort()
+          .map((path) => PROJECT_GALLERY_IMAGES[path]);
+        onPreview([src, ...more], name);
+      }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={name} loading="lazy" decoding="async" onError={() => setFailed(true)} />
+    </button>
+  ) : <div className={styles.tourCover}>暂无项目照片</div>;
+}
+
 function CityProjectDrilldown({
   city,
   projects,
@@ -1252,16 +1343,72 @@ function CityProjectDrilldown({
   onShowCityProjects: () => void;
   onClose: () => void;
 }) {
+  const tourRef = useRef<HTMLElement>(null);
+  const [preview, setPreview] = useState<{ images: string[]; name: string } | null>(null);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const gridScroll = useRef(0);
+  const additionalMedia = projects.some((project) => project.id === focusedProjectId)
+    ? []
+    : unmatchedCityMedia(city.name);
+  const [mediaOnly, setMediaOnly] = useState(
+    () => additionalMedia.length > 0 || projects.some((project) => hasProjectMedia(project.id)),
+  );
+  useEffect(() => {
+    const tour = tourRef.current;
+    const doc = tour?.ownerDocument;
+    if (!doc) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.key === "Escape") {
+        if (preview) setPreview(null);
+        else onClose();
+      } else if (preview && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+        const direction = event.key === "ArrowLeft" ? -1 : 1;
+        event.preventDefault();
+        setPhotoIndex((index) => Math.max(0, Math.min(preview.images.length - 1, index + direction)));
+      }
+    };
+    doc.addEventListener("keydown", handleEscape);
+    return () => doc.removeEventListener("keydown", handleEscape);
+  }, [onClose, preview]);
+  useEffect(() => {
+    if (!preview && gridRef.current) gridRef.current.scrollTop = gridScroll.current;
+  }, [preview]);
+
+  const openPreview = (images: string[], name: string) => {
+    gridScroll.current = gridRef.current?.scrollTop ?? 0;
+    setPhotoIndex(0);
+    setPreview({ images, name });
+  };
+
+  const resetProjectScroll = () => {
+    gridScroll.current = 0;
+    if (gridRef.current) gridRef.current.scrollTop = 0;
+  };
   const focusedProject = focusedProjectId
     ? projects.find((project) => project.id === focusedProjectId) ?? null
     : null;
-  const displayedProjects = focusedProject ? [focusedProject] : prioritizeLiveProjects(projects);
+  const displayedProjects = focusedProject
+    ? [focusedProject]
+    : mediaOnly
+      ? projects.filter((project) => hasProjectMedia(project.id))
+      : prioritizeLiveProjects(projects);
+
+  const liveSiteCount = preview || focusedProject ? 0
+    : projects.filter((project) => hasProjectLiveSite(project.id)).length + unmatchedCityMedia(city.name, true).length;
+
+  const entries = [
+    ...additionalMedia.map((name) => ({ kind: "media" as const, name })),
+    ...displayedProjects.map((project) => ({ kind: "project" as const, project })),
+  ];
 
   return (
     <section
-      className={`fusion-project-drilldown ${styles.projectDrilldown}`}
+      className={`fusion-project-drilldown ${styles.projectTour}`}
+      ref={tourRef}
+      role="dialog"
       aria-label={focusedProject ? `${focusedProject.name}项目详情` : `${city.name}项目清单`}
-      data-half-map-occlusion="true"
       data-source-dataset="6,3001,1016"
       data-source-snapshot={WENSHU_PROJECT_SNAPSHOT_DATE}
       data-active-city-adcode={city.cityAdcode}
@@ -1270,12 +1417,21 @@ function CityProjectDrilldown({
       <header>
         <div>
           <p>全国 <i /> {city.provinceName} <i /> {city.name}{focusedProject ? <><i /> 项目直达</> : null}</p>
-          <h3>{focusedProject?.name ?? city.name}</h3>
-          <span>{focusedProject ? "重资产案例 · 项目级穿透" : `共 ${projects.length} 个项目`}</span>
+          <h3>{preview ? `${preview.name} · 项目画册` : focusedProject?.name ?? `${city.name} · 项目巡礼`}</h3>
+          {!preview && !focusedProject ? <span>共 {projects.length + additionalMedia.length} 个项目 · 工程现场接入 {liveSiteCount} 个</span> : null}
         </div>
         <div className="fusion-project-actions">
-          <button type="button" onClick={focusedProject ? onShowCityProjects : onClose}>
-            {focusedProject ? "查看城市全部项目" : "收起项目列表"}
+          {!preview && !focusedProject ? (
+            <label className={styles.tourMediaFilter}>
+              <input type="checkbox" checked={mediaOnly} onChange={(event) => {
+                setMediaOnly(event.currentTarget.checked);
+                resetProjectScroll();
+              }} />
+              现场/全景项目
+            </label>
+          ) : null}
+          <button type="button" onClick={preview ? () => setPreview(null) : focusedProject ? onShowCityProjects : onClose}>
+            {preview ? "返回项目墙" : focusedProject ? "查看城市全部项目" : "收起项目列表"}
           </button>
           <button
             type="button"
@@ -1287,34 +1443,71 @@ function CityProjectDrilldown({
         </div>
       </header>
 
-      <div className="fusion-project-table-head" aria-hidden="true">
-        <span>项目名称 / 业态</span>
-        <span>总建面</span>
-        <span>销售状态</span>
-      </div>
-      <div className="fusion-project-list" role="list" data-project-count={projects.length}
-        data-visible-project-count={displayedProjects.length}
+      {preview ? (
+        <figure className={styles.tourPreview}>
+          <div className={styles.tourPreviewFrame}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview.images[photoIndex]} alt={`${preview.name} · 第 ${photoIndex + 1} 张`} />
+          </div>
+          <figcaption>
+            {preview.name}
+            <a href={preview.images[photoIndex]} target="_blank" rel="noopener noreferrer"
+              aria-label="查看原图（在新标签页打开）">查看原图</a>
+          </figcaption>
+          {preview.images.length > 1 ? (
+            <div className={styles.tourGalleryControls}>
+              <button type="button" disabled={photoIndex === 0} onClick={() => setPhotoIndex(photoIndex - 1)}>上一张</button>
+              <div className={styles.tourThumbnails}>
+                {preview.images.map((image, index) => (
+                  <button key={image} type="button" aria-label={`查看第 ${index + 1} 张`}
+                    aria-pressed={index === photoIndex} onClick={() => setPhotoIndex(index)}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={image} alt="" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+              <button type="button" disabled={photoIndex === preview.images.length - 1} onClick={() => setPhotoIndex(photoIndex + 1)}>下一张</button>
+              <span aria-live="polite">{photoIndex + 1} / {preview.images.length}</span>
+            </div>
+          ) : null}
+        </figure>
+      ) : (
+      <div ref={gridRef} className={styles.tourGrid} role="list" data-project-count={projects.length}
+        data-visible-project-count={entries.length}
         data-project-focus={focusedProject ? "direct" : "city-list"}>
-        {displayedProjects.map((project) => {
-          const attribute = WENSHU_PROJECT_ATTRIBUTES[project.id];
+        {entries.map((entry) => {
+          if (entry.kind === "media") return (
+            <article key={`media-${entry.name}`} role="listitem" data-media-only="true">
+              <div className={styles.tourCover}>暂无项目照片</div>
+              <div>
+                <b>{entry.name}</b>
+                <ProjectLiveSiteLink mediaName={entry.name} />
+              </div>
+            </article>
+          );
+          const project = entry.project;
           return (
             <article key={project.id} role="listitem" data-project-id={project.id}
-              className={focusedProject ? styles.focusedProjectRow : undefined}
               data-project-case-focus={focusedProject ? "true" : undefined}
             >
+              <ProjectTourCover projectId={project.id} name={project.name} onPreview={openPreview} />
               <div>
-                <b>{project.name} <ProjectLiveSiteLink projectId={project.id} /></b>
-                <span>{project.developmentStatus} · {attribute?.propertyTypes ?? "业态未接入"}</span>
+                <b>{project.name}</b>
+                <ProjectLiveSiteLink projectId={project.id} />
               </div>
-              <span className="fusion-project-number">
-                <b>{project.totalBuildingAreaWan > 0 ? formatNumber(project.totalBuildingAreaWan, 2) : "—"}</b>
-                {project.totalBuildingAreaWan > 0 ? <small>万㎡</small> : null}
+              <span className={`fusion-project-number ${styles.tourProjectFacts}`}>
+                {project.projectGainTime ? <span>拿地 <time dateTime={project.projectGainTime}>{project.projectGainTime}</time></span> : null}
+                {project.totalBuildingAreaWan > 0 ? (
+                  <span>总建面 <b>{formatNumber(project.totalBuildingAreaWan, 2)}</b><small>万㎡</small></span>
+                ) : null}
               </span>
-              <em className={`is-status-${project.saleStatus}`}>{project.saleStatus}</em>
+              <em className={`is-status-${project.saleStatus}`}>{[project.developmentStatus, project.saleStatus].filter(Boolean).join(" · ")}</em>
             </article>
           );
         })}
       </div>
+      )}
+      {!preview && entries.length === 0 ? <p className={styles.tourEmpty}>{mediaOnly ? "当前城市暂无现场或全景项目，可取消勾选查看全部项目。" : "当前城市暂无项目。"}</p> : null}
     </section>
   );
 }
@@ -1506,21 +1699,6 @@ export default function HalfYear2026Dashboard() {
         ))
       : []
   ), [activeCity]);
-  const visibleProjectRows = focusedProjectId ? 1 : Math.min(Math.max(cityProjects.length, 1), 5);
-  const projectPanelContentHeight = focusedProjectId ? 318 : 170 + visibleProjectRows * 64;
-
-  useEffect(() => {
-    if (!isProjectListOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setFocusedProjectId(null);
-        setIsProjectListOpen(false);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isProjectListOpen]);
-
   const handleProvinceSelect = (province: ProvinceSelection) => {
     setFocusedProjectId(null);
     setIsProjectListOpen(false);
@@ -1600,8 +1778,6 @@ export default function HalfYear2026Dashboard() {
         className={`fusion-workspace ${styles.workspace}`}
         aria-label="滚动经营与集团披露融合驾驶舱"
         data-active-organization-code={activeOrganizationCode ?? "none"}
-        data-project-list-open={isProjectListOpen ? "true" : "false"}
-        style={{ "--fusion-project-content-height": `${projectPanelContentHeight}px` } as CSSProperties}
       >
         <div className={`fusion-map-field ${styles.mapField}`}>
           <Suspense fallback={<MapLoadingState />}>
@@ -1647,6 +1823,7 @@ export default function HalfYear2026Dashboard() {
 
         {isProjectListOpen && activeCity ? (
           <CityProjectDrilldown
+            key={`${activeCity.cityAdcode}:${focusedProjectId ?? "city"}`}
             city={activeCity}
             projects={cityProjects}
             focusedProjectId={focusedProjectId}

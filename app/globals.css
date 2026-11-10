@@ -376,3 +376,15 @@ a.project-live-site-link {
 }
 a.project-live-site-link:hover { background: rgba(32, 168, 192, .32); color: #c3fbff; }
 a.project-live-site-link:focus-visible { outline: 2px solid #77edf5; outline-offset: 3px; }
+
+/* Keep project media in one compact line inside the existing dashboard list. */
+.project-media-controls {
+  display: inline-flex !important; align-items: center; gap: 6px;
+  margin: 4px 0 0 !important; vertical-align: middle; white-space: nowrap;
+}
+.project-media-controls a.project-live-site-link { margin: 0; height: 26px; padding: 3px 8px; }
+.project-media-phase {
+  height: 26px; max-width: 100px; padding: 0 5px; border: 1px solid #33758d;
+  border-radius: 4px; background: #123952; color: #a6e6f0; font: inherit; font-size: 12px;
+}
+.project-media-phase:focus-visible { outline: 2px solid #77edf5; outline-offset: 3px; }

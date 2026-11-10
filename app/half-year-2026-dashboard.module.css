@@ -5139,3 +5139,197 @@
   background: var(--half-bar-cyan);
   box-shadow: var(--half-glow-cyan);
 }
+
+/* Magnifier: preserve the source card layout and scale the entire surface. */
+.focusTitleButton {
+  all: unset;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color .18s, text-shadow .18s;
+}
+.focusTitleButton:hover { color: #d5ffff; text-shadow: 0 0 12px #54dfff; }
+.focusTitleButton:focus-visible { outline: 2px solid #8defff; outline-offset: 5px; }
+.focusDialog {
+  position: fixed;
+  z-index: 10000;
+  box-sizing: border-box;
+  width: max-content;
+  height: max-content;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  color: #e6f8ff;
+  border: 0;
+  border-radius: 12px;
+  background: #0b2842;
+  box-shadow: 0 4px 20px #00101e66;
+  overflow: hidden;
+}
+.focusDialog::backdrop { background: transparent; backdrop-filter: none; }
+.focusTitleToggle {
+  position: absolute; z-index: 2; top: 0; left: 0;
+  width: calc(100% - 32px); height: 36px;
+  background: transparent; border: 0; padding: 0; cursor: pointer;
+}
+.focusCloseButton {
+  position: absolute; z-index: 3; top: 3px; right: 6px;
+  width: 26px; height: 26px; padding: 0;
+  background: transparent; color: #a6d5e8; border: 0;
+  border-radius: 4px; font-size: 22px; line-height: 1; cursor: pointer;
+}
+.focusCloseButton:focus-visible,
+.focusTitleToggle:focus-visible { outline: 2px solid #8defff; outline-offset: -3px; }
+.focusMagnifierViewport { position: relative; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .focusTitleButton { transition: none; } }
+
+.dashboard .workspace .projectTour {
+  position: fixed;
+  inset: 7% 7% 6%;
+  z-index: 11000;
+  display: flex;
+  flex-direction: column;
+  width: auto;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #437eaa;
+  border-radius: 14px;
+  background: #081e35;
+  color: #e3f3ff;
+  box-shadow: 0 12px 36px #04122277;
+}
+.dashboard .workspace .projectTour > header { flex: 0 0 auto; padding: 20px 24px; }
+.dashboard .workspace .projectTour > header h3 { font-size: 28px; }
+.dashboard .workspace .projectTour > header span { font-size: 16px; }
+.dashboard .workspace .projectTour > header button { font-size: 16px; height: 40px; }
+.tourGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: max(205px, calc((100% - 18px) / 2));
+  align-content: start;
+  flex: 1 1 0;
+  gap: 18px;
+  padding: 18px 24px;
+  min-height: 0;
+  overflow: auto;
+}
+.tourGrid > article {
+  min-width: 0;
+  overflow: clip;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) 61px 20px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px 9px;
+  border: 1px solid #23577c;
+  border-radius: 10px;
+  background: #102f4e;
+  font-size: 14px;
+}
+.tourGrid > article > div:not(.tourCover) { grid-column: 1 / -1; align-self: start; overflow-wrap: anywhere; }
+.tourGrid > article > div > b {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 16px;
+  line-height: 18px;
+  margin-bottom: 3px;
+}
+.tourGrid > article > div > span,
+.tourGrid > article > div > p { color: #b7d3e7; font-size: 13px; }
+.tourGrid > article > em { font-style: normal; color: #a8e8e4; }
+.tourCover {
+  position: relative;
+  align-self: start;
+  overflow: hidden;
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  width: calc(100% + 28px);
+  margin: 0 -14px;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  color: #a3bfd5;
+  background: #09213a;
+}
+button.tourCover { cursor: zoom-in; }
+.tourCover img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.tourPreview { display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 14px 24px; text-align: center; }
+.tourPreviewFrame {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #09213a;
+}
+.tourPreviewFrame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.tourPreview figcaption, .tourEmpty { padding: 12px; font-size: 19px; }
+.tourPreview figcaption a {
+  margin-inline-start: 16px;
+  color: #9ce8ff;
+  white-space: nowrap;
+}
+.dashboard .workspace .projectTour { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.tourGalleryControls, .tourThumbnails {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.tourGalleryControls { flex: 0 0 auto; padding: 0 0 10px; }
+.tourGalleryControls button {
+  border: 1px solid #42799e;
+  border-radius: 6px;
+  padding: 7px 12px;
+  color: inherit;
+  background: #123a59;
+  cursor: pointer;
+}
+.tourGalleryControls button:disabled { opacity: .45; cursor: default; }
+.tourThumbnails button { width: 92px; height: 58px; padding: 2px; }
+.tourThumbnails button[aria-pressed="true"] { border: 2px solid #6ce2fa; }
+.tourThumbnails button img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.dashboard .workspace .projectTour {
+  grid-area: auto;
+  align-self: auto;
+  justify-self: auto;
+  height: 87vh;
+  box-sizing: border-box;
+}
+.tourMediaFilter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tourMediaFilter input { accent-color: #59e4ef; cursor: pointer; }
+.tourProjectFacts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 14px;
+  row-gap: 2px;
+  min-width: 0;
+}
+.tourProjectFacts > span { white-space: nowrap; }
+.tourProjectFacts time { font-variant-numeric: tabular-nums; }
